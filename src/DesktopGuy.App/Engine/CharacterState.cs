@@ -9,6 +9,7 @@ public enum CharacterState
     Dragging,
     Dancing,
     Watching,
+    Hacking,
     AnsweringCall,
     ReadingMessage,
 }

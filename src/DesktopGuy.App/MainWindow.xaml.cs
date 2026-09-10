@@ -21,9 +21,11 @@ public partial class MainWindow : Window
     private readonly CharacterController _controller;
     private readonly MediaContextWatcher _mediaContext = new();
     private readonly NotificationWatcher _notificationWatcher = new();
+    private readonly TerminalWatcher _terminalWatcher = new();
     private readonly CancellationTokenSource _lifetimeCts = new();
     private readonly Stopwatch _clock = new();
     private DispatcherTimer? _speechHideTimer;
+    private Point _dragGrabOffset;
 
     public MainWindow(CharacterDefinition definition)
     {
@@ -38,8 +40,15 @@ public partial class MainWindow : Window
         Height = windowHeight;
 
         var workArea = SystemParameters.WorkArea;
-        double startX = workArea.Right - windowWidth - 40;
-        double startY = workArea.Bottom - windowHeight;
+        double minX = workArea.Left;
+        double maxX = workArea.Right - windowWidth;
+        double groundY = workArea.Bottom - windowHeight;
+
+        // Only the horizontal spot is remembered - he always starts resting
+        // on the ground rather than wherever he happened to be lifted to.
+        var remembered = PositionStore.TryLoad(definition.Id);
+        double startX = remembered is { } p ? Math.Clamp(p.X, minX, maxX) : workArea.Right - windowWidth - 40;
+        double startY = groundY;
         Left = startX;
         Top = startY;
 
@@ -48,8 +57,8 @@ public partial class MainWindow : Window
         _animator.AnimationCompleted += OnAnimatorAnimationCompleted;
         CharacterImage.Source = _animator.CurrentFrame;
 
-        _controller = new CharacterController(definition, startX, startY, _mediaContext);
-        _controller.SetBounds(workArea.Left, workArea.Right - windowWidth, workArea.Bottom - windowHeight);
+        _controller = new CharacterController(definition, startX, startY, _mediaContext, _terminalWatcher);
+        _controller.SetBounds(minX, maxX, groundY);
         _controller.StateChanged += OnControllerStateChanged;
         _controller.PositionChanged += OnControllerPositionChanged;
         _controller.SpeechRequested += ShowSpeech;
@@ -58,17 +67,22 @@ public partial class MainWindow : Window
 
         SourceInitialized += (_, _) =>
             Win32Interop.HideFromAltTabAndTaskbar(new WindowInteropHelper(this).Handle);
-        Closed += (_, _) => _lifetimeCts.Cancel();
+        Closed += (_, _) =>
+        {
+            PositionStore.Save(_definition.Id, Left, Top);
+            _lifetimeCts.Cancel();
+        };
 
         CompositionTarget.Rendering += OnRenderingFrame;
         _clock.Start();
 
-        // Context awareness talks to Windows over WinRT APIs, which are
-        // inherently async and can quietly fail (unsupported OS build,
-        // permission denied) - none of this blocks startup or the rest of
-        // the character if it doesn't pan out.
+        // Context awareness talks to Windows over WinRT APIs and process
+        // lists, which can quietly fail (unsupported OS build, permission
+        // denied) - none of this blocks startup or the rest of the
+        // character if it doesn't pan out.
         _ = _mediaContext.StartAsync(_lifetimeCts.Token);
         _ = _notificationWatcher.StartAsync(_lifetimeCts.Token);
+        _terminalWatcher.Start(_lifetimeCts.Token);
     }
 
     private static BitmapImage LoadSpriteSheet(CharacterDefinition definition)
@@ -113,6 +127,14 @@ public partial class MainWindow : Window
             case "openMail":
                 _controller.OnReactionAnimationFinished();
                 break;
+            case "pickUp":
+                // The startled "just grabbed" animation finished - settle
+                // into the ongoing drag wobble for as long as the drag lasts.
+                if (_controller.State == CharacterState.Dragging)
+                {
+                    _animator.Play(CharacterAnimationMap.GetAnimationName(CharacterState.Dragging));
+                }
+                break;
         }
     }
 
@@ -125,6 +147,15 @@ public partial class MainWindow : Window
 
     private void OnControllerStateChanged(CharacterState state)
     {
+        // Grabbing him plays a brief startled "pickUp" animation first (if
+        // the character defines one), then bridges into the drag loop via
+        // OnAnimatorAnimationCompleted above.
+        if (state == CharacterState.Dragging && _animator.HasAnimation("pickUp"))
+        {
+            _animator.Play("pickUp");
+            return;
+        }
+
         _animator.Play(CharacterAnimationMap.GetAnimationName(state));
     }
 
@@ -141,19 +172,37 @@ public partial class MainWindow : Window
             return;
         }
 
+        // Manual capture-and-follow rather than the simpler Window.DragMove()
+        // - DragMove() blocks the UI thread in a native modal loop for the
+        // whole drag, which would freeze the pickUp/drag animations. This
+        // way CompositionTarget.Rendering keeps ticking the whole time.
+        _dragGrabOffset = e.GetPosition(this);
+        CharacterImage.CaptureMouse();
         _controller.BeginDrag();
-        _animator.Play(CharacterAnimationMap.GetAnimationName(CharacterState.Dragging));
+        e.Handled = true;
+    }
 
-        try
+    private void OnCharacterMouseMove(object sender, MouseEventArgs e)
+    {
+        if (e.LeftButton != MouseButtonState.Pressed || !CharacterImage.IsMouseCaptured)
         {
-            DragMove();
-        }
-        catch (InvalidOperationException)
-        {
-            // Mouse was released before the OS-level drag actually started.
+            return;
         }
 
-        _controller.SyncPosition(Left, Top);
+        var cursorScreenPos = PointToScreen(e.GetPosition(this));
+        _controller.UpdateDrag(
+            cursorScreenPos.X - _dragGrabOffset.X,
+            cursorScreenPos.Y - _dragGrabOffset.Y);
+    }
+
+    private void OnCharacterMouseUp(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ChangedButton != MouseButton.Left || !CharacterImage.IsMouseCaptured)
+        {
+            return;
+        }
+
+        CharacterImage.ReleaseMouseCapture();
         _controller.EndDrag();
         e.Handled = true;
     }

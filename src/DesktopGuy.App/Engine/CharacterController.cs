@@ -16,15 +16,19 @@ namespace DesktopGuy.App.Engine;
 ///   1. A pending reaction (Discord call/message) - interrupts anything
 ///      except an active drag, plays once, then falls through to whatever
 ///      is appropriate next tick.
-///   2. Media context (music -> dance, video -> watch) - while active this
+///   2. A terminal being open (hacking) - checked before media, since "I'm
+///      clearly at the keyboard doing something" is a stronger signal than
+///      background music.
+///   3. Media context (music -> dance, video -> watch) - while active this
 ///      also suppresses the idle/sleep timer, since playing something is a
 ///      perfectly good reason not to be "away".
-///   3. The regular idle/sleep/wander/speech behavior.
+///   4. The regular idle/sleep/wander/speech behavior.
 /// </summary>
 public sealed class CharacterController
 {
     private readonly CharacterDefinition _definition;
     private readonly MediaContextWatcher? _mediaContext;
+    private readonly TerminalWatcher? _terminalContext;
     private readonly Random _random = new();
 
     private double _minX;
@@ -49,10 +53,15 @@ public sealed class CharacterController
     public event Action<string>? SpeechRequested;
 
     public CharacterController(
-        CharacterDefinition definition, double startX, double startY, MediaContextWatcher? mediaContext = null)
+        CharacterDefinition definition,
+        double startX,
+        double startY,
+        MediaContextWatcher? mediaContext = null,
+        TerminalWatcher? terminalContext = null)
     {
         _definition = definition;
         _mediaContext = mediaContext;
+        _terminalContext = terminalContext;
         PositionX = startX;
         PositionY = startY;
         _secondsUntilNextWalk = RandomBetween(
@@ -69,17 +78,18 @@ public sealed class CharacterController
         _groundY = groundY;
     }
 
-    /// <summary>Lets MainWindow tell the controller where the OS-level DragMove() actually left the window.</summary>
-    public void SyncPosition(double x, double y)
-    {
-        PositionX = x;
-        PositionY = y;
-    }
-
     public void BeginDrag()
     {
         _isFalling = false;
         TransitionTo(CharacterState.Dragging);
+    }
+
+    /// <summary>Called on every mouse-move while dragging, in screen coordinates.</summary>
+    public void UpdateDrag(double newX, double newY)
+    {
+        PositionX = Clamp(newX, _minX, _maxX);
+        PositionY = newY;
+        PositionChanged?.Invoke();
     }
 
     public void EndDrag()
@@ -160,6 +170,11 @@ public sealed class CharacterController
             return;
         }
 
+        if (TickTerminalContext())
+        {
+            return;
+        }
+
         if (TickMediaContext())
         {
             return;
@@ -208,6 +223,29 @@ public sealed class CharacterController
             ? CharacterState.AnsweringCall
             : CharacterState.ReadingMessage);
         return true;
+    }
+
+    /// <summary>Returns true if a terminal being open took over this tick.</summary>
+    private bool TickTerminalContext()
+    {
+        bool terminalOpen = _terminalContext?.IsActive ?? false;
+
+        if (terminalOpen && HasAnimation(CharacterState.Hacking))
+        {
+            if (State != CharacterState.Hacking)
+            {
+                TransitionTo(CharacterState.Hacking);
+            }
+            return true;
+        }
+
+        if (State == CharacterState.Hacking)
+        {
+            TransitionTo(CharacterState.Idle);
+            ScheduleNextWalk();
+        }
+
+        return false;
     }
 
     /// <summary>Returns true if a media context (music/video) took over this tick.</summary>

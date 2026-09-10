@@ -18,6 +18,7 @@ public static class CharacterAnimationMap
         CharacterState.Dragging => "drag",
         CharacterState.Dancing => "dance",
         CharacterState.Watching => "watch",
+        CharacterState.Hacking => "hacking",
         CharacterState.AnsweringCall => "answerCall",
         CharacterState.ReadingMessage => "openMail",
         _ => "idle",

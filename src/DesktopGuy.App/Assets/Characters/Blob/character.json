@@ -13,7 +13,9 @@
     "dance": { "row": 5, "frameCount": 4, "fps": 5, "loop": true },
     "watch": { "row": 6, "frameCount": 4, "fps": 2, "loop": true },
     "answerCall": { "row": 7, "frameCount": 3, "fps": 4, "loop": false },
-    "openMail": { "row": 8, "frameCount": 3, "fps": 4, "loop": false }
+    "openMail": { "row": 8, "frameCount": 3, "fps": 4, "loop": false },
+    "hacking": { "row": 9, "frameCount": 4, "fps": 3, "loop": true },
+    "pickUp": { "row": 10, "frameCount": 2, "fps": 8, "loop": false }
   },
   "behavior": {
     "idleTimeoutSeconds": 90,

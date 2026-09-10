@@ -47,6 +47,8 @@ public sealed class SpriteAnimator : INotifyPropertyChanged
 
     public string CurrentAnimationName => _currentName;
 
+    public bool HasAnimation(string animationName) => _definition.Animations.ContainsKey(animationName);
+
     public void Play(string animationName, bool restartIfSame = false)
     {
         if (!restartIfSame && animationName == _currentName)
