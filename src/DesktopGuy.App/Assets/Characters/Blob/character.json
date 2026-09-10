@@ -1,0 +1,35 @@
+{
+  "id": "blob",
+  "displayName": "Blob",
+  "spriteSheet": "spritesheet.png",
+  "frameSize": { "width": 32, "height": 32 },
+  "scale": 4,
+  "animations": {
+    "idle": { "row": 0, "frameCount": 4, "fps": 2, "loop": true },
+    "walk": { "row": 1, "frameCount": 4, "fps": 6, "loop": true },
+    "sleep": { "row": 2, "frameCount": 4, "fps": 1.5, "loop": true },
+    "drag": { "row": 3, "frameCount": 2, "fps": 4, "loop": true },
+    "wake": { "row": 4, "frameCount": 2, "fps": 2, "loop": false }
+  },
+  "behavior": {
+    "idleTimeoutSeconds": 90,
+    "walkSpeedPxPerSec": 45,
+    "walkIntervalMinSeconds": 10,
+    "walkIntervalMaxSeconds": 30,
+    "walkDurationMinSeconds": 2,
+    "walkDurationMaxSeconds": 5,
+    "speechIntervalMinSeconds": 40,
+    "speechIntervalMaxSeconds": 120,
+    "speechDurationSeconds": 4.5
+  },
+  "phrases": [
+    "Just hanging out with you!",
+    "Don't forget to stretch a little~",
+    "*happy wiggle*",
+    "You're doing great today.",
+    "Boop!",
+    "Comfy over here.",
+    "Take a sip of water, maybe?",
+    "I like it when you're around."
+  ]
+}

@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>DesktopGuy.App</RootNamespace>
+    <AssemblyName>DesktopGuy</AssemblyName>
+    <StartupObject>DesktopGuy.App.App</StartupObject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Character templates: each subfolder under Assets/Characters is a
+         self-contained companion (character.json + sprite sheet) copied
+         next to the built exe so new characters can be added without
+         touching any code. -->
+    <None Update="Assets\Characters\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
