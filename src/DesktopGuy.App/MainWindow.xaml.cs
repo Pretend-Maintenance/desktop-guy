@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Threading;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -8,6 +9,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using DesktopGuy.App.Characters;
+using DesktopGuy.App.Context;
 using DesktopGuy.App.Engine;
 
 namespace DesktopGuy.App;
@@ -17,6 +19,9 @@ public partial class MainWindow : Window
     private readonly CharacterDefinition _definition;
     private readonly SpriteAnimator _animator;
     private readonly CharacterController _controller;
+    private readonly MediaContextWatcher _mediaContext = new();
+    private readonly NotificationWatcher _notificationWatcher = new();
+    private readonly CancellationTokenSource _lifetimeCts = new();
     private readonly Stopwatch _clock = new();
     private DispatcherTimer? _speechHideTimer;
 
@@ -43,17 +48,27 @@ public partial class MainWindow : Window
         _animator.AnimationCompleted += OnAnimatorAnimationCompleted;
         CharacterImage.Source = _animator.CurrentFrame;
 
-        _controller = new CharacterController(definition, startX, startY);
+        _controller = new CharacterController(definition, startX, startY, _mediaContext);
         _controller.SetBounds(workArea.Left, workArea.Right - windowWidth, workArea.Bottom - windowHeight);
         _controller.StateChanged += OnControllerStateChanged;
         _controller.PositionChanged += OnControllerPositionChanged;
         _controller.SpeechRequested += ShowSpeech;
 
+        _notificationWatcher.DiscordEventDetected += OnDiscordEventDetected;
+
         SourceInitialized += (_, _) =>
             Win32Interop.HideFromAltTabAndTaskbar(new WindowInteropHelper(this).Handle);
+        Closed += (_, _) => _lifetimeCts.Cancel();
 
         CompositionTarget.Rendering += OnRenderingFrame;
         _clock.Start();
+
+        // Context awareness talks to Windows over WinRT APIs, which are
+        // inherently async and can quietly fail (unsupported OS build,
+        // permission denied) - none of this blocks startup or the rest of
+        // the character if it doesn't pan out.
+        _ = _mediaContext.StartAsync(_lifetimeCts.Token);
+        _ = _notificationWatcher.StartAsync(_lifetimeCts.Token);
     }
 
     private static BitmapImage LoadSpriteSheet(CharacterDefinition definition)
@@ -89,24 +104,28 @@ public partial class MainWindow : Window
 
     private void OnAnimatorAnimationCompleted()
     {
-        if (_animator.CurrentAnimationName == "wake")
+        switch (_animator.CurrentAnimationName)
         {
-            _controller.OnWakeAnimationFinished();
+            case "wake":
+                _controller.OnWakeAnimationFinished();
+                break;
+            case "answerCall":
+            case "openMail":
+                _controller.OnReactionAnimationFinished();
+                break;
         }
+    }
+
+    private void OnDiscordEventDetected(DiscordEvent discordEvent)
+    {
+        // NotificationWatcher polls on a background task - hop back to the
+        // UI thread before touching the controller/window.
+        Dispatcher.Invoke(() => _controller.RequestReaction(discordEvent));
     }
 
     private void OnControllerStateChanged(CharacterState state)
     {
-        string animation = state switch
-        {
-            CharacterState.Idle => "idle",
-            CharacterState.Walking => "walk",
-            CharacterState.Sleeping => "sleep",
-            CharacterState.Waking => "wake",
-            CharacterState.Dragging => "drag",
-            _ => "idle",
-        };
-        _animator.Play(animation);
+        _animator.Play(CharacterAnimationMap.GetAnimationName(state));
     }
 
     private void OnControllerPositionChanged()
@@ -123,7 +142,7 @@ public partial class MainWindow : Window
         }
 
         _controller.BeginDrag();
-        _animator.Play("drag");
+        _animator.Play(CharacterAnimationMap.GetAnimationName(CharacterState.Dragging));
 
         try
         {

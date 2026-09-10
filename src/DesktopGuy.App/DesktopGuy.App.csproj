@@ -2,7 +2,14 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0-windows</TargetFramework>
+    <!-- The windows10.0.19041.0 suffix (rather than plain net8.0-windows) is
+         what gives us direct access to the WinRT "Windows.*" APIs used for
+         context awareness (now-playing media sessions, notification
+         listening) without any extra NuGet packages. TargetPlatformMinVersion
+         is kept lower so the app still runs on older Windows 10 - those APIs
+         are guarded with try/catch and degrade gracefully if unavailable. -->
+    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>

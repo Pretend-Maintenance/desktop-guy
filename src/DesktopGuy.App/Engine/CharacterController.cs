@@ -1,17 +1,30 @@
 using System;
 using DesktopGuy.App.Characters;
+using DesktopGuy.App.Context;
 
 namespace DesktopGuy.App.Engine;
 
 /// <summary>
 /// Drives the little guy's behavior: noticing you've gone idle and
 /// snoozing, occasionally wandering along the desktop, popping up random
-/// remarks, and reacting to being picked up. Knows nothing about WPF -
-/// MainWindow listens to its events and moves/animates the actual window.
+/// remarks, reacting to being picked up, and reacting to what's going on
+/// on the PC (music/video playing, a Discord call or message). Knows
+/// nothing about WPF - MainWindow listens to its events and moves/animates
+/// the actual window.
+///
+/// Priority each tick, highest first:
+///   1. A pending reaction (Discord call/message) - interrupts anything
+///      except an active drag, plays once, then falls through to whatever
+///      is appropriate next tick.
+///   2. Media context (music -> dance, video -> watch) - while active this
+///      also suppresses the idle/sleep timer, since playing something is a
+///      perfectly good reason not to be "away".
+///   3. The regular idle/sleep/wander/speech behavior.
 /// </summary>
 public sealed class CharacterController
 {
     private readonly CharacterDefinition _definition;
+    private readonly MediaContextWatcher? _mediaContext;
     private readonly Random _random = new();
 
     private double _minX;
@@ -24,6 +37,7 @@ public sealed class CharacterController
     private double _secondsUntilNextWalk;
     private double _secondsUntilNextSpeech;
     private bool _isFalling;
+    private DiscordEvent? _pendingReaction;
 
     public CharacterState State { get; private set; } = CharacterState.Idle;
     public double PositionX { get; private set; }
@@ -34,9 +48,11 @@ public sealed class CharacterController
     public event Action? PositionChanged;
     public event Action<string>? SpeechRequested;
 
-    public CharacterController(CharacterDefinition definition, double startX, double startY)
+    public CharacterController(
+        CharacterDefinition definition, double startX, double startY, MediaContextWatcher? mediaContext = null)
     {
         _definition = definition;
+        _mediaContext = mediaContext;
         PositionX = startX;
         PositionY = startY;
         _secondsUntilNextWalk = RandomBetween(
@@ -81,10 +97,37 @@ public sealed class CharacterController
         }
     }
 
+    /// <summary>
+    /// Queues a one-shot reaction (phone up for a call, envelope for a
+    /// message). Picked up on the next Tick unless the character is
+    /// mid-drag, in which case it waits until the drag ends.
+    /// </summary>
+    public void RequestReaction(DiscordEvent discordEvent)
+    {
+        if (!HasAnimation(discordEvent == DiscordEvent.IncomingCall
+                ? CharacterState.AnsweringCall
+                : CharacterState.ReadingMessage))
+        {
+            return;
+        }
+
+        _pendingReaction = discordEvent;
+    }
+
     /// <summary>Called by MainWindow once the (non-looping) wake animation finishes playing.</summary>
     public void OnWakeAnimationFinished()
     {
         if (State == CharacterState.Waking)
+        {
+            TransitionTo(CharacterState.Idle);
+            ScheduleNextWalk();
+        }
+    }
+
+    /// <summary>Called by MainWindow once a one-shot reaction animation (answerCall/openMail) finishes.</summary>
+    public void OnReactionAnimationFinished()
+    {
+        if (State == CharacterState.AnsweringCall || State == CharacterState.ReadingMessage)
         {
             TransitionTo(CharacterState.Idle);
             ScheduleNextWalk();
@@ -100,9 +143,25 @@ public sealed class CharacterController
             return;
         }
 
+        if (TryStartPendingReaction())
+        {
+            return;
+        }
+
+        if (State == CharacterState.AnsweringCall || State == CharacterState.ReadingMessage)
+        {
+            // Waiting on OnReactionAnimationFinished to move on.
+            return;
+        }
+
         if (_isFalling)
         {
             TickFalling(dt);
+            return;
+        }
+
+        if (TickMediaContext())
+        {
             return;
         }
 
@@ -132,6 +191,57 @@ public sealed class CharacterController
 
         TickWalking(dt);
         TickSpeech(dt);
+    }
+
+    private bool TryStartPendingReaction()
+    {
+        if (_pendingReaction is null)
+        {
+            return false;
+        }
+
+        var reaction = _pendingReaction.Value;
+        _pendingReaction = null;
+        _isFalling = false;
+
+        TransitionTo(reaction == DiscordEvent.IncomingCall
+            ? CharacterState.AnsweringCall
+            : CharacterState.ReadingMessage);
+        return true;
+    }
+
+    /// <summary>Returns true if a media context (music/video) took over this tick.</summary>
+    private bool TickMediaContext()
+    {
+        var context = _mediaContext?.Current ?? MediaPlaybackContext.None;
+
+        if (context == MediaPlaybackContext.Video && HasAnimation(CharacterState.Watching))
+        {
+            if (State != CharacterState.Watching)
+            {
+                TransitionTo(CharacterState.Watching);
+            }
+            return true;
+        }
+
+        if (context == MediaPlaybackContext.Music && HasAnimation(CharacterState.Dancing))
+        {
+            if (State != CharacterState.Dancing)
+            {
+                TransitionTo(CharacterState.Dancing);
+            }
+            return true;
+        }
+
+        // Media stopped while we were still showing a media state - fall
+        // back to idle so the rest of Tick can take over normally.
+        if (State == CharacterState.Dancing || State == CharacterState.Watching)
+        {
+            TransitionTo(CharacterState.Idle);
+            ScheduleNextWalk();
+        }
+
+        return false;
     }
 
     private void TickFalling(double dt)
@@ -222,6 +332,9 @@ public sealed class CharacterController
                 _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
         }
     }
+
+    private bool HasAnimation(CharacterState state) =>
+        _definition.Animations.ContainsKey(CharacterAnimationMap.GetAnimationName(state));
 
     private void TransitionTo(CharacterState newState)
     {

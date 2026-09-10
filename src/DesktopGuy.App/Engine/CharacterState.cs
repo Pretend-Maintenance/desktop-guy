@@ -7,4 +7,8 @@ public enum CharacterState
     Sleeping,
     Waking,
     Dragging,
+    Dancing,
+    Watching,
+    AnsweringCall,
+    ReadingMessage,
 }
