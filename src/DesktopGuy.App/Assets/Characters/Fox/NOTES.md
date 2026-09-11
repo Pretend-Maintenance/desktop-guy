@@ -17,23 +17,29 @@ clean, uniform 128x128-per-frame grid.
 ## Rows worth double-checking against what you actually wanted
 
 The sheet mostly follows the intended 6-column x 15-row layout (see the
-main README's AI-art prompt), but a few rows drifted from their intended
-pose - they're wired up as-is (nothing crashes, they just don't quite
-match their label) rather than left broken:
+main README's AI-art prompt), but a couple of rows drifted from their
+intended pose:
 
-- **`wake`** (row 4, index from 0): came out as more of an
-  annoyed/startled expression than "waking up sleepily."
-- **`pickUp`** (row 10): came out as a sneezing pose rather than a
-  startled "just been grabbed" reaction.
 - **`cold`** (row 11): came out as the fox reading a book, not wearing a
   jacket/breathing condensation - it still triggers correctly when it's
   cold outside, it just doesn't visually read as "cold."
 - **`hot`** (row 12): came out as holding a lollipop/ice pop rather than a
   fan - close enough thematically (cooling off) that this one's fine as is.
 
-If you want any of these regenerated, the AI-art prompt in the main
-README documents exactly what each row is supposed to show - you could
-re-run just those rows through your art tool and splice them back in.
+If you want either regenerated, the AI-art prompt in the main README
+documents exactly what each row is supposed to show - re-run just those
+rows through your art tool and splice them back in.
+
+`wake` and `pickUp` originally had the same problem (an annoyed
+expression and a sneeze, respectively, instead of "waking up" / "just
+grabbed") - there's no AI image-generation tool available in this dev
+environment, so rather than leave them mismatched, they were rebuilt by
+recomposing the fox's own existing frames instead of new art: `wake` is a
+dimmed "groggy" idle pose brightening into the normal idle pose, and
+`pickUp` reuses `drag`'s already-good startled pose for frame 1 and a
+squashed + motion-lined version of it for frame 2. If you'd rather have
+real distinct art for these two, they're also in the AI-art prompt in the
+README.
 
 ## Try it
 
