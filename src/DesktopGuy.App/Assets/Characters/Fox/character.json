@@ -1,0 +1,47 @@
+{
+  "id": "fox",
+  "displayName": "Fox",
+  "spriteSheet": "spritesheet.png",
+  "frameSize": { "width": 64, "height": 64 },
+  "scale": 3,
+  "animations": {
+    "idle": { "row": 0, "frameCount": 4, "fps": 2, "loop": true },
+    "walk": { "row": 1, "frameCount": 4, "fps": 6, "loop": true },
+    "sleep": { "row": 2, "frameCount": 4, "fps": 1.5, "loop": true },
+    "drag": { "row": 3, "frameCount": 2, "fps": 4, "loop": true },
+    "wake": { "row": 4, "frameCount": 2, "fps": 2, "loop": false },
+    "dance": { "row": 5, "frameCount": 4, "fps": 5, "loop": true },
+    "watch": { "row": 6, "frameCount": 4, "fps": 2, "loop": true },
+    "answerCall": { "row": 7, "frameCount": 3, "fps": 4, "loop": false },
+    "openMail": { "row": 8, "frameCount": 3, "fps": 4, "loop": false },
+    "hacking": { "row": 9, "frameCount": 4, "fps": 3, "loop": true },
+    "pickUp": { "row": 10, "frameCount": 2, "fps": 8, "loop": false },
+    "cold": { "row": 11, "frameCount": 4, "fps": 3, "loop": true },
+    "hot": { "row": 12, "frameCount": 4, "fps": 3, "loop": true },
+    "sunny": { "row": 13, "frameCount": 4, "fps": 2, "loop": true },
+    "rainy": { "row": 14, "frameCount": 4, "fps": 3, "loop": true }
+  },
+  "behavior": {
+    "idleTimeoutSeconds": 90,
+    "walkSpeedPxPerSec": 45,
+    "walkIntervalMinSeconds": 10,
+    "walkIntervalMaxSeconds": 30,
+    "walkDurationMinSeconds": 2,
+    "walkDurationMaxSeconds": 5,
+    "speechIntervalMinSeconds": 40,
+    "speechIntervalMaxSeconds": 120,
+    "speechDurationSeconds": 4.5,
+    "coldThresholdCelsius": 5,
+    "hotThresholdCelsius": 25
+  },
+  "phrases": [
+    "Just foxing around!",
+    "Don't forget to stretch a little~",
+    "*happy tail wag*",
+    "You're doing great today.",
+    "Yip!",
+    "Comfy over here.",
+    "Take a sip of water, maybe?",
+    "I like it when you're around."
+  ]
+}
