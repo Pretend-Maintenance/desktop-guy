@@ -11,17 +11,36 @@ mainly in `sleep`, `cold`, `sunny`, and `rainy` - had a literal gray/white
 checkerboard pattern baked in as opaque pixels instead of real
 transparency (an AI-art export quirk, not real alpha). Those are now
 properly transparent, matching the rest of the sheet. Frame size also
-turned out to be ~109x109px natively; everything's been resampled onto a
-clean, uniform 96x96-per-frame grid, displayed at 2x scale (192x192px on
-screen - matches Blob's size).
+turned out to be ~109x109px natively, and not perfectly evenly spaced
+(rows range ~100-119px tall); everything's been resampled onto a clean,
+uniform 96x96-per-frame grid, displayed at 2x scale (192x192px on screen -
+matches Blob's size, and a whole-number scale, see below).
 
-That resolution/scale combo isn't arbitrary: an earlier version used
-128x128 frames at 1.5x scale, which caused a visible rendering glitch (a
-stray fragment of a neighboring frame floating above the character) -
-non-integer display scales are a known source of that kind of edge bleed
-with nearest-neighbor sprite cropping in WPF. 96px @ 2x avoids it by
-keeping the scale a whole number. If you regenerate any art for this
-character, keep `scale` in `character.json` an integer.
+Two follow-up bugs turned up after testing on an actual Windows machine,
+both from the cleanup script rather than the original art, now fixed:
+
+- **A stray fragment floated above the character.** The first cleanup
+  pass assumed the sheet's rows were evenly spaced and cropped each cell
+  with simple even division - since they're not evenly spaced, a sliver
+  of the row above got caught in some cells and baked permanently into
+  the cleaned file. Fixed by detecting each row's actual boundary from
+  the real low-content gaps between rows instead of assuming even spacing.
+  (A 128px-frame/1.5x-scale version was tried in between and also showed
+  this - that was a red herring: the real cause was the file itself, not
+  the display scale. Non-integer scale is still worth avoiding on general
+  principle - keep `scale` in `character.json` a whole number - but it
+  wasn't what caused this.)
+- **The headphones (in `dance`) went transparent.** The cleanup script's
+  background removal treated all near-black pixels as "probably
+  background", which turned out to be wrong - there's no real opaque
+  black background anywhere in this sheet (true background is either
+  already properly transparent, or the checkerboard artifact above,
+  which is light/mid gray, never black). The headphones are dark
+  charcoal and sit close to the frame's top edge, so they got swept away
+  by the same border-connected-region logic meant for the checkerboard.
+  Fixed by only ever treating near-neutral gray/white as background,
+  never near-black - real character details (headphones, pupils,
+  sunglasses, terminal bezels) stay untouched now.
 
 ## Rows worth double-checking against what you actually wanted
 
