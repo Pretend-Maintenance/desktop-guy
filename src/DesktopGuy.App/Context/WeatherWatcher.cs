@@ -8,13 +8,18 @@ namespace DesktopGuy.App.Context;
 
 /// <summary>
 /// Notices what the weather is like outside, so the character can dress
-/// for it. Uses two free, no-API-key services:
-///   - ipapi.co to guess a city-level location from your IP address (looked
-///     up once and cached for the life of the app - not polled repeatedly)
-///   - Open-Meteo for the actual forecast, polled periodically
+/// for it. Uses Open-Meteo (a free, no-API-key forecast service) for a
+/// fixed latitude/longitude, polled periodically.
 ///
-/// Both are plain HTTPS calls with no signup required. If either is
-/// unreachable (no internet, a firewall, the service being down), this
+/// This used to guess your location from your IP address (via ipapi.co)
+/// instead of taking a fixed one - dropped in favor of a plain constant,
+/// since a lookup that silently fails closed (no internet, a firewall, the
+/// service being down or rate-limiting you) just looks like "weather poses
+/// never happen," with nothing to tell you why. A fixed location has no
+/// such failure mode, at the cost of not auto-adjusting if you move -
+/// update DefaultLatitude/DefaultLongitude below if that ever matters.
+///
+/// A plain HTTPS call with no signup required; if it's unreachable, this
 /// quietly reports <see cref="WeatherCondition.None"/> instead of crashing
 /// or blocking the rest of the character.
 /// </summary>
@@ -23,19 +28,30 @@ public sealed class WeatherWatcher
     private static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(20);
     private static readonly HttpClient Http = new() { Timeout = TimeSpan.FromSeconds(8) };
 
+    // Bristol, UK, by default - swap for your own coordinates if you're
+    // running this somewhere else.
+    private const double DefaultLatitude = 51.487;
+    private const double DefaultLongitude = -2.475;
+
     private readonly double _coldThresholdCelsius;
     private readonly double _hotThresholdCelsius;
+    private readonly double _latitude;
+    private readonly double _longitude;
 
-    private double? _latitude;
-    private double? _longitude;
     private volatile WeatherCondition _current = WeatherCondition.None;
 
     public WeatherCondition Current => _current;
 
-    public WeatherWatcher(double coldThresholdCelsius, double hotThresholdCelsius)
+    public WeatherWatcher(
+        double coldThresholdCelsius,
+        double hotThresholdCelsius,
+        double latitude = DefaultLatitude,
+        double longitude = DefaultLongitude)
     {
         _coldThresholdCelsius = coldThresholdCelsius;
         _hotThresholdCelsius = hotThresholdCelsius;
+        _latitude = latitude;
+        _longitude = longitude;
     }
 
     public void Start(CancellationToken cancellationToken)
@@ -69,18 +85,6 @@ public sealed class WeatherWatcher
 
     private async Task RefreshOnceAsync(CancellationToken cancellationToken)
     {
-        if (_latitude is null || _longitude is null)
-        {
-            var located = await TryLocateAsync(cancellationToken);
-            if (located is null)
-            {
-                _current = WeatherCondition.None;
-                return;
-            }
-
-            (_latitude, _longitude) = located.Value;
-        }
-
         string url =
             $"https://api.open-meteo.com/v1/forecast?latitude={_latitude:F4}&longitude={_longitude:F4}" +
             "&current_weather=true&temperature_unit=celsius";
@@ -132,33 +136,4 @@ public sealed class WeatherWatcher
         61 or 63 or 65 or 66 or 67 or   // rain
         80 or 81 or 82 or               // rain showers
         95 or 96 or 99;                 // thunderstorms
-
-    private static async Task<(double Latitude, double Longitude)?> TryLocateAsync(
-        CancellationToken cancellationToken)
-    {
-        try
-        {
-            using var response = await Http.GetAsync("https://ipapi.co/json/", cancellationToken);
-            if (!response.IsSuccessStatusCode)
-            {
-                return null;
-            }
-
-            using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-            using var document = await JsonDocument.ParseAsync(stream, cancellationToken: cancellationToken);
-            var root = document.RootElement;
-
-            if (!root.TryGetProperty("latitude", out var latitudeElement) ||
-                !root.TryGetProperty("longitude", out var longitudeElement))
-            {
-                return null;
-            }
-
-            return (latitudeElement.GetDouble(), longitudeElement.GetDouble());
-        }
-        catch
-        {
-            return null;
-        }
-    }
 }
