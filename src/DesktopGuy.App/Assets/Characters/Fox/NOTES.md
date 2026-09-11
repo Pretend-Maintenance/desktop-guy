@@ -1,8 +1,45 @@
 # Fox character notes
 
 `spritesheet.png` is the uploaded AI-generated sheet, cleaned up (see
-below). `spritesheet_raw.png` is the original upload, kept as a backup -
-not used by the app, safe to delete if you don't want it around.
+below). `spritesheet_raw.png` and `spritesheet_raw_v2.png` are the two
+original uploads, kept as backups - not used by the app, safe to delete
+if you don't want them around.
+
+## Second pass: the v2 (green-screen) regeneration
+
+You regenerated the whole sheet on a solid green background instead of
+the checkerboard one, since that's a much more reliable target for
+chroma-keying out cleanly than trying to guess which gray pixels are
+"real" background. That's now the basis for `spritesheet.png` - same
+84x84 grid, but with genuinely clean edges (no green fringe) and, as a
+bonus, every row now has up to 6 usable frames instead of 4-5, so
+animations play noticeably smoother.
+
+A few things came up processing it:
+
+- **Row 10 (`pickUp`) had an unrelated bear in it** - an AI generation
+  slip, not fox content at all. That row was skipped entirely during
+  processing; `pickUp` still uses the earlier recomposed frames (see
+  below), untouched.
+- **A hole in the headphone band let the green background show through**
+  on the `dance` row - a gap in the raw art itself, not a cleanup bug.
+  Since green never appears anywhere in the fox's real color palette (a
+  key advantage of chroma-keying over the old checkerboard approach),
+  cleanup could safely remove it globally rather than only from the
+  cell's outer edge, which fixed this automatically.
+- **The weather rows came out correct, just shifted by one.** The actual
+  art order in the sheet is fan-cooling / sunglasses-in-the-sun /
+  umbrella-in-rain / coat-with-cold-breath, but the previous
+  `character.json` mapped those rows to `cold`/`hot`/`sunny`/`rainy` in
+  sheet order, which was wrong. Row numbers in `character.json` were
+  remapped to match what's actually drawn in each row instead of moving
+  the art around - `hot` -> row 11, `sunny` -> row 12, `rainy` -> row 13,
+  `cold` -> row 14. All four now visually match their state.
+- **The regenerated `wake` row wasn't usable** - frame 0 rendered in a
+  completely different muted brown/gray palette (another generation
+  slip), and the remaining frames weren't in a clean sleepy-to-alert
+  order. Left the earlier recomposed version in place for this row
+  instead (see below).
 
 ## What got fixed
 
@@ -57,32 +94,25 @@ both from the cleanup script rather than the original art, now fixed:
   is a safe, specific signature to target directly instead of guessing
   margins.
 
-## Rows worth double-checking against what you actually wanted
+## Rows worth knowing about
 
-The sheet mostly follows the intended 6-column x 15-row layout (see the
-main README's AI-art prompt), but a couple of rows drifted from their
-intended pose:
+All four weather rows now visually match their state (see the v2 section
+above for the row-remapping that fixed this) - no outstanding mismatches
+there.
 
-- **`cold`** (row 11): came out as the fox reading a book, not wearing a
-  jacket/breathing condensation - it still triggers correctly when it's
-  cold outside, it just doesn't visually read as "cold."
-- **`hot`** (row 12): came out as holding a lollipop/ice pop rather than a
-  fan - close enough thematically (cooling off) that this one's fine as is.
-
-If you want either regenerated, the AI-art prompt in the main README
-documents exactly what each row is supposed to show - re-run just those
-rows through your art tool and splice them back in.
-
-`wake` and `pickUp` originally had the same problem (an annoyed
-expression and a sneeze, respectively, instead of "waking up" / "just
-grabbed") - there's no AI image-generation tool available in this dev
-environment, so rather than leave them mismatched, they were rebuilt by
-recomposing the fox's own existing frames instead of new art: `wake` is a
-dimmed "groggy" idle pose brightening into the normal idle pose, and
-`pickUp` reuses `drag`'s already-good startled pose for frame 1 and a
-squashed + motion-lined version of it for frame 2. If you'd rather have
-real distinct art for these two, they're also in the AI-art prompt in the
-README.
+`wake` and `pickUp` are still hand-recomposed rather than real generated
+art - there's no AI image-generation tool available in this dev
+environment, and neither the original nor the v2 upload produced usable
+content for these two (an annoyed expression / a sneeze the first time,
+an off-palette frame and a jumbled frame order the second time). Rather
+than leave them mismatched, they're built by recomposing the fox's own
+existing frames: `wake` is a dimmed "groggy" idle pose brightening into
+the normal idle pose, and `pickUp` reuses `drag`'s already-good startled
+pose for frame 1 and a squashed + motion-lined version of it for frame 2.
+Both are only 2 frames (the rest of their rows are left transparent and
+unused) - if you'd rather have real distinct art for these two at the
+same 6-frame smoothness as everything else, the AI-art prompt in the
+README documents exactly what each should show.
 
 ## Smoother animation
 
