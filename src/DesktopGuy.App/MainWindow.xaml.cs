@@ -22,6 +22,7 @@ public partial class MainWindow : Window
     private readonly MediaContextWatcher _mediaContext = new();
     private readonly NotificationWatcher _notificationWatcher = new();
     private readonly TerminalWatcher _terminalWatcher = new();
+    private readonly TypingWatcher _typingWatcher = new();
     private readonly WeatherWatcher _weatherWatcher;
     private readonly CancellationTokenSource _lifetimeCts = new();
     private readonly Stopwatch _clock = new();
@@ -62,7 +63,7 @@ public partial class MainWindow : Window
             definition.Behavior.ColdThresholdCelsius, definition.Behavior.HotThresholdCelsius);
 
         _controller = new CharacterController(
-            definition, startX, startY, _mediaContext, _terminalWatcher, _weatherWatcher);
+            definition, startX, startY, _mediaContext, _terminalWatcher, _typingWatcher, _weatherWatcher);
         _controller.SetBounds(minX, maxX, groundY);
         _controller.StateChanged += OnControllerStateChanged;
         _controller.PositionChanged += OnControllerPositionChanged;
@@ -76,6 +77,7 @@ public partial class MainWindow : Window
         {
             PositionStore.Save(_definition.Id, Left, Top);
             _lifetimeCts.Cancel();
+            _typingWatcher.Dispose();
         };
 
         CompositionTarget.Rendering += OnRenderingFrame;
@@ -88,6 +90,7 @@ public partial class MainWindow : Window
         _ = _mediaContext.StartAsync(_lifetimeCts.Token);
         _ = _notificationWatcher.StartAsync(_lifetimeCts.Token);
         _terminalWatcher.Start(_lifetimeCts.Token);
+        _typingWatcher.Start();
         _weatherWatcher.Start(_lifetimeCts.Token);
     }
 

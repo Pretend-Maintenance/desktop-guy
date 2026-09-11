@@ -82,12 +82,15 @@ register that temporary path instead of your real install.
   Music, etc.) it puts on headphones and dances instead of wandering off.
 - **Video**: if something is playing that looks like a video (a YouTube tab,
   Netflix, ...) it puts on sunglasses, grabs popcorn, and settles in to watch.
-- **Terminal focused**: if a shell or terminal app (Command Prompt,
-  PowerShell, Windows Terminal, PuTTY, ...) is the window you're actually
-  using right now, it pulls up its own little terminal with scrolling
-  matrix-style code. Checked against whichever window is focused, not just
-  "is a terminal running somewhere" - otherwise launching the app from a
-  terminal would leave it stuck showing this forever.
+- **Terminal focused, or you're typing**: if a shell or terminal app
+  (Command Prompt, PowerShell, Windows Terminal, PuTTY, ...) is the window
+  you're actually using right now, or you're actively pressing keys
+  anywhere, it pulls up its own little terminal with scrolling matrix-style
+  code - both reuse the same animation, since there's no separate art for
+  "typing in a terminal" vs. "typing anywhere else". Terminal focus is
+  checked against whichever window is actually focused, not just "is a
+  terminal running somewhere" - otherwise launching the app from a terminal
+  would leave it stuck showing this forever.
 - **Weather**: dresses for the weather where you are, checked every 20
   minutes - a jacket and little breath clouds when it's cold, a hand fan
   when it's hot, sunglasses when it's clear and sunny, an umbrella when
@@ -114,11 +117,16 @@ browsers (Chromium-based ones especially) often don't tell Windows whether
 what's playing is music or video - when that happens, it falls back to
 checking the focused window's title for a video-site name (YouTube,
 Netflix, Twitch, ...) before defaulting to music. Terminal
-awareness checks which window currently has focus. Discord
-awareness reads Discord's own notifications via Windows' notification
-listener - see **Context awareness setup** below, since that one needs a
-one-time permission grant. Weather awareness makes plain HTTPS calls to two
-free services - see **Weather setup** below.
+awareness checks which window currently has focus. Typing awareness uses a
+low-level keyboard hook (`WH_KEYBOARD_LL`) to notice *that* a key was
+pressed and *when*, system-wide - it's the only way to see keystroke
+timing outside our own window. It never reads, stores, or logs which keys
+are pressed; the only thing it ever keeps is a single timestamp of the
+last key-down, overwritten every time. Discord awareness reads Discord's
+own notifications via Windows' notification listener - see **Context
+awareness setup** below, since that one needs a one-time permission grant.
+Weather awareness makes plain HTTPS calls to two free services - see
+**Weather setup** below.
 
 ## Context awareness setup
 
@@ -175,9 +183,9 @@ src/DesktopGuy.App/
                             idle detection, sprite animation, window plumbing)
   Characters/            <- CharacterDefinition model + loader for character.json
   Context/                <- context awareness: now-playing media (music/video),
-                            running terminal processes, weather (via
-                            IP geolocation + Open-Meteo), and Discord
-                            notifications (call/message) - all optional and
+                            the focused window/terminal, keyboard activity,
+                            weather (via IP geolocation + Open-Meteo), and
+                            Discord notifications (call/message) - all optional and
                             independent of the core engine
   Assets/Characters/
     Blob/                <- the default (placeholder) character

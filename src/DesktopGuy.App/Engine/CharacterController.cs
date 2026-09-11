@@ -16,9 +16,11 @@ namespace DesktopGuy.App.Engine;
 ///   1. A pending reaction (Discord call/message) - interrupts anything
 ///      except an active drag, plays once, then falls through to whatever
 ///      is appropriate next tick.
-///   2. A terminal being open (hacking) - checked before media, since "I'm
-///      clearly at the keyboard doing something" is a stronger signal than
-///      background music.
+///   2. A terminal being focused, or you actively typing anywhere (hacking)
+///      - checked before media, since "I'm clearly at the keyboard doing
+///      something" is a stronger signal than background music. Both reuse
+///      the same "hacking" animation - there's no separate art for
+///      "typing in a random app" vs. "typing in a terminal".
 ///   3. Media context (music -> dance, video -> watch) - while active this
 ///      also suppresses the idle/sleep timer, since playing something is a
 ///      perfectly good reason not to be "away".
@@ -32,6 +34,7 @@ public sealed class CharacterController
     private readonly CharacterDefinition _definition;
     private readonly MediaContextWatcher? _mediaContext;
     private readonly TerminalWatcher? _terminalContext;
+    private readonly TypingWatcher? _typingContext;
     private readonly WeatherWatcher? _weatherContext;
     private readonly Random _random = new();
 
@@ -62,11 +65,13 @@ public sealed class CharacterController
         double startY,
         MediaContextWatcher? mediaContext = null,
         TerminalWatcher? terminalContext = null,
+        TypingWatcher? typingContext = null,
         WeatherWatcher? weatherContext = null)
     {
         _definition = definition;
         _mediaContext = mediaContext;
         _terminalContext = terminalContext;
+        _typingContext = typingContext;
         _weatherContext = weatherContext;
         PositionX = startX;
         PositionY = startY;
@@ -235,12 +240,13 @@ public sealed class CharacterController
         return true;
     }
 
-    /// <summary>Returns true if a terminal being open took over this tick.</summary>
+    /// <summary>Returns true if a focused terminal or active typing took over this tick.</summary>
     private bool TickTerminalContext()
     {
-        bool terminalOpen = _terminalContext?.IsActive ?? false;
+        bool terminalFocused = _terminalContext?.IsActive ?? false;
+        bool typing = _typingContext?.IsTyping ?? false;
 
-        if (terminalOpen && HasAnimation(CharacterState.Hacking))
+        if ((terminalFocused || typing) && HasAnimation(CharacterState.Hacking))
         {
             if (State != CharacterState.Hacking)
             {
