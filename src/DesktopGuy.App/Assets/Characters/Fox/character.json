@@ -3,7 +3,7 @@
   "displayName": "Fox",
   "spriteSheet": "spritesheet.png",
   "frameSize": { "width": 84, "height": 84 },
-  "scale": 2,
+  "scale": 1.75,
   "smoothTransitions": false,
   "animations": {
     "idle": { "row": 0, "frameCount": 6, "fps": 2, "loop": true },
