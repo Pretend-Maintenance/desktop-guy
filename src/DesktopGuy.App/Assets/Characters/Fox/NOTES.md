@@ -116,13 +116,14 @@ README documents exactly what each should show.
 
 ## Smoother animation
 
-`character.json` has `"smoothTransitions": true` - the engine now
-cross-fades between frames instead of hard-cutting, which makes the
-existing 4-ish poses per animation read as noticeably smoother motion
-without needing more art. This is a general engine feature (see
-`smoothTransitions` in the main README), not something specific to this
-character - Blob leaves it off since a cross-fade looks wrong against
-blocky pixel art, but it suits Fox's smooth-shaded style well.
+`character.json` has `"smoothTransitions": false`. This was turned on
+briefly to compensate for having only 4-ish poses per animation, but now
+that most rows have a full 6 clean frames (see the v2 section above),
+cross-fading on top of that just reads as ghosting/motion-blur rather
+than smoothness. Leaving it off lets the extra frames do the work
+instead. It's a general engine feature (see `smoothTransitions` in the
+main README) worth revisiting if any individual animation ever goes back
+to fewer frames.
 
 ## Try it
 

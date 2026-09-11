@@ -4,7 +4,7 @@
   "spriteSheet": "spritesheet.png",
   "frameSize": { "width": 84, "height": 84 },
   "scale": 2,
-  "smoothTransitions": true,
+  "smoothTransitions": false,
   "animations": {
     "idle": { "row": 0, "frameCount": 6, "fps": 2, "loop": true },
     "walk": { "row": 1, "frameCount": 6, "fps": 6, "loop": true },
