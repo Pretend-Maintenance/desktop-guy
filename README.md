@@ -220,11 +220,73 @@ sprite sheet, which is how new characters get added.
 
 ## About the placeholder art
 
-`Blob`'s sprite sheet is simple generated pixel-art blocks, good enough to
-see the whole system working end-to-end (idle blink, walk bounce, sleep Zzz,
+`Blob`'s sprite sheet is simple generated pixel-art blocks (64x64px per
+frame, displayed at 3x scale - 192x192px on screen), good enough to see the
+whole system working end-to-end (idle blink, walk bounce, sleep Zzz,
 startled pickUp, drag wobble, wake-up blink, headphone dance,
 sunglasses-and-popcorn watch, matrix-code hacking, jacket-and-breath-clouds
 cold, fan-and-sweat hot, sunglasses-and-rays sunny, umbrella-and-raindrops
 rainy, phone-call pickup, envelope-opening) but it's meant to be swapped
-out - drop in real pixel-art sprite sheets for `Blob` or any new character
-and nothing else needs to change.
+out - drop in a real pixel-art sprite sheet for `Blob` (see the AI-art
+prompt below) or any new character and nothing else needs to change.
+
+### Generating real art for Blob
+
+If you want to hand the placeholder off to an AI image generator to make
+real pixel art, here's a ready-to-use prompt sized for the current 64x64,
+6-column x 15-row layout (adjust the column/row counts if you add/remove
+animations first, and check the frame boundaries after generating - AI
+image models are inconsistent about exact grid alignment, so you'll likely
+need to nudge frames into place, or generate row-by-row/frame-by-frame and
+assemble the sheet yourself for the cleanest alignment):
+
+> Pixel art sprite sheet, 6 columns x 15 rows, each cell exactly 64x64
+> pixels, transparent background, crisp hard-edged pixel art (no
+> anti-aliasing/blur), consistent character size and pixel scale in every
+> cell, character centered in each cell.
+>
+> Character: a small round teal/cyan blob creature, big white oval eyes
+> with black pupils, tiny simple mouth, soft pink blush marks on the
+> cheeks, no arms or visible limbs except small stubby feet - a cute,
+> minimal desktop-pet mascot style (think a cross between a Tamagotchi and
+> a slime).
+>
+> Each row is one animation (frames left to right, unused trailing cells
+> in a row left blank/transparent):
+> - Row 1 (4 frames): idle - gentle breathing bob, blinks on the last frame
+> - Row 2 (4 frames): walking - bounces with a squash-and-stretch step,
+>   little feet alternate
+> - Row 3 (4 frames): sleeping - eyes closed, breathing, small "Zzz" text
+>   appears and fades
+> - Row 4 (2 frames): being dragged by the cursor - wide surprised eyes,
+>   leans left then right
+> - Row 5 (2 frames): waking up - eyes half-open, then fully open
+> - Row 6 (4 frames): dancing - wearing headphones, bouncing side to side,
+>   a music note appears
+> - Row 7 (4 frames): watching a video - sunglasses on, holding a small
+>   popcorn box, chewing
+> - Row 8 (3 frames): answering a phone call - a phone rises to its ear,
+>   surprised then talking
+> - Row 9 (3 frames): opening an envelope - the flap opens across the
+>   frames, a letter peeks out on the last frame
+> - Row 10 (4 frames): "hacking" - sunglasses on, a small terminal/monitor
+>   prop with scrolling green code
+> - Row 11 (2 frames): just picked up - a quick startled squish, small
+>   motion lines above its head
+> - Row 12 (4 frames): cold weather - wearing a small jacket, shivering,
+>   visible breath/condensation puffs from its mouth
+> - Row 13 (4 frames): hot weather - waving a small hand fan, a sweat drop
+>   drips down
+> - Row 14 (4 frames): sunny weather - sunglasses on, small sun-ray marks
+>   in the corners, happy bounce
+> - Row 15 (4 frames): rainy weather - holding a small umbrella overhead,
+>   raindrops falling around it
+>
+> Style: flat colors, limited palette (teal blob body, a few accent
+> colors for props), clean 1-2px black or dark outlines, no gradients or
+> soft shadows, game-ready sprite sheet.
+
+Once you have art back, drop it in as
+`Assets/Characters/Blob/spritesheet.png` (or a new character's folder) -
+the row/frame layout in `character.json` just needs to match whatever grid
+the art actually ended up with.
