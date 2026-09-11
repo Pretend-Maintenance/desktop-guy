@@ -35,12 +35,18 @@ public sealed class MediaContextWatcher
     };
 
     private GlobalSystemMediaTransportControlsSessionManager? _manager;
+    private readonly AudioLevelWatcher _audioLevel = new();
     private volatile MediaPlaybackContext _current = MediaPlaybackContext.None;
 
     public MediaPlaybackContext Current => _current;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
+        // Starts regardless of whether the media-session manager below is
+        // available, since it's an independent signal (used to catch a
+        // muted tab or muted speakers still reporting PlaybackStatus.Playing).
+        _audioLevel.Start(cancellationToken);
+
         try
         {
             _manager = await GlobalSystemMediaTransportControlsSessionManager.RequestAsync();
@@ -82,6 +88,15 @@ public sealed class MediaContextWatcher
         {
             var playbackInfo = FindPlayingSession()?.GetPlaybackInfo();
             if (playbackInfo?.PlaybackStatus != GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing)
+            {
+                _current = MediaPlaybackContext.None;
+                return;
+            }
+
+            // A muted tab or muted speakers still reports PlaybackStatus.Playing
+            // - checking the actual output level catches both, so he doesn't
+            // keep dancing/watching along to something you can't hear.
+            if (!_audioLevel.IsAudible)
             {
                 _current = MediaPlaybackContext.None;
                 return;

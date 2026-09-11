@@ -345,7 +345,7 @@ public partial class MainWindow : Window
             baseScale = _definition.Scale;
         }
 
-        double[] percentages = { 0.75, 0.9, 1.0, 1.1, 1.25, 1.5 };
+        double[] percentages = { 0.5, 0.75, 0.9, 1.0, 1.1, 1.25, 1.5 };
         foreach (var percentage in percentages)
         {
             double candidateScale = Math.Round(baseScale * percentage, 3);
