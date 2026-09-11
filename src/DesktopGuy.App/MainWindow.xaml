@@ -27,7 +27,7 @@
         </ContextMenu>
     </Window.ContextMenu>
 
-    <Grid>
+    <Grid x:Name="RootGrid">
         <Image x:Name="CharacterImage"
                Stretch="Fill"
                RenderOptions.BitmapScalingMode="NearestNeighbor"
@@ -52,8 +52,15 @@
             </Image.RenderTransform>
         </Image>
 
+        <!-- Anchored to the root Grid rather than CharacterImage - the
+             image gets an animated flip (ScaleX -1/1) via RenderTransform
+             for facing direction, and WPF's popup-placement math doesn't
+             account for a transformed target correctly, which threw the
+             bubble off to the side/overlapping instead of sitting above
+             his head. The Grid is never transformed, and fills the same
+             bounds as the character, so "Top" still lands right above him. -->
         <Popup x:Name="SpeechPopup"
-               PlacementTarget="{Binding ElementName=CharacterImage}"
+               PlacementTarget="{Binding ElementName=RootGrid}"
                Placement="Top"
                AllowsTransparency="True"
                StaysOpen="True"
