@@ -17,6 +17,12 @@
             <Separator />
             <MenuItem x:Name="CharacterMenuItem" Header="Character" />
             <MenuItem x:Name="ScaleMenuItem" Header="Size" />
+            <MenuItem Header="Preview Weather">
+                <MenuItem Header="Sunny" Click="OnPreviewWeatherClicked" Tag="Sunny" />
+                <MenuItem Header="Rainy" Click="OnPreviewWeatherClicked" Tag="Rainy" />
+                <MenuItem Header="Hot" Click="OnPreviewWeatherClicked" Tag="Hot" />
+                <MenuItem Header="Cold" Click="OnPreviewWeatherClicked" Tag="Cold" />
+            </MenuItem>
             <Separator />
             <MenuItem x:Name="StartWithWindowsMenuItem"
                       Header="Start with Windows"

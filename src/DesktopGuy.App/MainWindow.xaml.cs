@@ -395,6 +395,12 @@ public partial class MainWindow : Window
         Application.Current.Shutdown();
     }
 
+    private void OnPreviewWeatherClicked(object sender, RoutedEventArgs e)
+    {
+        var condition = Enum.Parse<WeatherCondition>((string)((MenuItem)sender).Tag);
+        _controller.PreviewWeather(condition);
+    }
+
     private void OnStartWithWindowsToggled(object sender, RoutedEventArgs e)
     {
         try

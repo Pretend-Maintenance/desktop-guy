@@ -54,6 +54,8 @@ public sealed class CharacterController
     private double _secondsIdleForWeather;
     private bool _isFalling;
     private DiscordEvent? _pendingReaction;
+    private WeatherCondition? _previewWeatherCondition;
+    private double _previewWeatherSecondsRemaining;
 
     public CharacterState State { get; private set; } = CharacterState.Idle;
     public double PositionX { get; private set; }
@@ -139,6 +141,18 @@ public sealed class CharacterController
         _pendingReaction = discordEvent;
     }
 
+    /// <summary>
+    /// Forces a weather pose for a few seconds regardless of the actual
+    /// weather or how long he's been idle - so it can be previewed from the
+    /// context menu on demand, rather than waiting for it to genuinely be
+    /// sunny/rainy/hot/cold outside and staying idle long enough to see it.
+    /// </summary>
+    public void PreviewWeather(WeatherCondition condition)
+    {
+        _previewWeatherCondition = condition;
+        _previewWeatherSecondsRemaining = 5;
+    }
+
     /// <summary>Called by MainWindow once the (non-looping) wake animation finishes playing.</summary>
     public void OnWakeAnimationFinished()
     {
@@ -164,6 +178,11 @@ public sealed class CharacterController
         double dt = elapsed.TotalSeconds;
 
         if (State == CharacterState.Dragging)
+        {
+            return;
+        }
+
+        if (TickWeatherPreview(dt))
         {
             return;
         }
@@ -362,6 +381,45 @@ public sealed class CharacterController
         }
 
         return false;
+    }
+
+    /// <summary>Returns true if a manually-triggered weather preview (see PreviewWeather) took over this tick.</summary>
+    private bool TickWeatherPreview(double dt)
+    {
+        if (_previewWeatherCondition is not { } condition)
+        {
+            return false;
+        }
+
+        CharacterState? state = condition switch
+        {
+            WeatherCondition.Rainy => CharacterState.WeatherRainy,
+            WeatherCondition.Cold => CharacterState.WeatherCold,
+            WeatherCondition.Hot => CharacterState.WeatherHot,
+            WeatherCondition.Sunny => CharacterState.WeatherSunny,
+            _ => null,
+        };
+
+        if (state is null || !HasAnimation(state.Value))
+        {
+            _previewWeatherCondition = null;
+            return false;
+        }
+
+        if (State != state.Value)
+        {
+            TransitionTo(state.Value);
+        }
+
+        _previewWeatherSecondsRemaining -= dt;
+        if (_previewWeatherSecondsRemaining <= 0)
+        {
+            _previewWeatherCondition = null;
+            TransitionTo(CharacterState.Idle);
+            ScheduleNextWalk();
+        }
+
+        return true;
     }
 
     private static bool IsWeatherState(CharacterState state) => state is
