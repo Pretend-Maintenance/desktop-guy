@@ -2,8 +2,8 @@
   "id": "fox",
   "displayName": "Fox",
   "spriteSheet": "spritesheet.png",
-  "frameSize": { "width": 128, "height": 128 },
-  "scale": 1.5,
+  "frameSize": { "width": 96, "height": 96 },
+  "scale": 2,
   "animations": {
     "idle": { "row": 0, "frameCount": 4, "fps": 2, "loop": true },
     "walk": { "row": 1, "frameCount": 4, "fps": 6, "loop": true },

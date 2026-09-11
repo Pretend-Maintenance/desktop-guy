@@ -12,7 +12,16 @@ checkerboard pattern baked in as opaque pixels instead of real
 transparency (an AI-art export quirk, not real alpha). Those are now
 properly transparent, matching the rest of the sheet. Frame size also
 turned out to be ~109x109px natively; everything's been resampled onto a
-clean, uniform 128x128-per-frame grid.
+clean, uniform 96x96-per-frame grid, displayed at 2x scale (192x192px on
+screen - matches Blob's size).
+
+That resolution/scale combo isn't arbitrary: an earlier version used
+128x128 frames at 1.5x scale, which caused a visible rendering glitch (a
+stray fragment of a neighboring frame floating above the character) -
+non-integer display scales are a known source of that kind of edge bleed
+with nearest-neighbor sprite cropping in WPF. 96px @ 2x avoids it by
+keeping the scale a whole number. If you regenerate any art for this
+character, keep `scale` in `character.json` an integer.
 
 ## Rows worth double-checking against what you actually wanted
 

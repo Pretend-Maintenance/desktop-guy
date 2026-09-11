@@ -207,7 +207,13 @@ sprite sheet, which is how new characters get added.
    starting point) describing:
    - `frameSize`: pixel width/height of a single frame in the sheet
    - `scale`: how many times to scale the sprite up on screen (pixel art
-     usually wants 3-6x so it isn't tiny)
+     usually wants 3-6x so it isn't tiny) - **keep this a whole number.**
+     A fractional scale (like 1.5) can cause a visible rendering glitch -
+     a sliver of a neighboring frame bleeding in at the edge - due to how
+     WPF's nearest-neighbor scaling interacts with non-integer ratios. If
+     the character needs to be a specific on-screen size that isn't a
+     clean multiple of the art's native resolution, resize the sprite
+     sheet itself instead of reaching for a fractional scale.
    - `animations`: for each animation name, which sprite-sheet `row` it's
      on, how many frames (`frameCount`), how fast to play them (`fps`),
      and whether it `loop`s (`wake`, `answerCall`, `openMail` and `pickUp`
