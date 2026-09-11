@@ -26,8 +26,12 @@ namespace DesktopGuy.App.Engine;
 ///      perfectly good reason not to be "away".
 ///   4. The regular idle/sleep/wander/speech behavior, which is where
 ///      weather (cold/hot/sunny/rainy) fits in - it does NOT suppress
-///      sleep (being cold outside all day shouldn't keep him up forever),
-///      it just replaces what idling looks like while it applies.
+///      sleep (being cold outside all day shouldn't keep him up forever).
+///      It also isn't instant: he has to be idle for a stretch first (see
+///      BehaviorSettings.WeatherIdleDelaySeconds) before settling into the
+///      weather pose, and even then the normal wander schedule can still
+///      pull him out of it - it's "he'll chill in the sun for a while",
+///      not "he's frozen there until the weather changes".
 /// </summary>
 public sealed class CharacterController
 {
@@ -47,6 +51,7 @@ public sealed class CharacterController
     private double _walkRemainingSeconds;
     private double _secondsUntilNextWalk;
     private double _secondsUntilNextSpeech;
+    private double _secondsIdleForWeather;
     private bool _isFalling;
     private DiscordEvent? _pendingReaction;
 
@@ -214,7 +219,16 @@ public sealed class CharacterController
             return;
         }
 
-        if (TickWeatherContext())
+        if (State == CharacterState.Idle)
+        {
+            _secondsIdleForWeather += dt;
+        }
+        else if (State == CharacterState.Walking)
+        {
+            _secondsIdleForWeather = 0;
+        }
+
+        if (TickWeatherContext(dt))
         {
             return;
         }
@@ -299,7 +313,7 @@ public sealed class CharacterController
     }
 
     /// <summary>Returns true if the current weather took over this tick.</summary>
-    private bool TickWeatherContext()
+    private bool TickWeatherContext(double dt)
     {
         CharacterState? weatherState = (_weatherContext?.Current ?? WeatherCondition.None) switch
         {
@@ -312,10 +326,32 @@ public sealed class CharacterController
 
         if (weatherState is { } state && HasAnimation(state))
         {
-            if (State != state)
+            bool alreadyChilling = State == state;
+
+            if (!alreadyChilling)
             {
+                // Don't interrupt active wandering just because the weather
+                // matches - only settle into the pose once he's actually
+                // been standing around a while.
+                if (_secondsIdleForWeather < _definition.Behavior.WeatherIdleDelaySeconds)
+                {
+                    return false;
+                }
+
                 TransitionTo(state);
+                return true;
             }
+
+            // Still let the normal wander schedule pull him out of it every
+            // so often, rather than camping in the weather pose forever.
+            _secondsUntilNextWalk -= dt;
+            if (_secondsUntilNextWalk <= 0)
+            {
+                _secondsIdleForWeather = 0;
+                TransitionTo(CharacterState.Idle);
+                return false;
+            }
+
             return true;
         }
 

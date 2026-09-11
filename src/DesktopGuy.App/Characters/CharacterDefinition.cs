@@ -63,4 +63,7 @@ public sealed class BehaviorSettings
     public double SpeechDurationSeconds { get; set; } = 4;
     public double ColdThresholdCelsius { get; set; } = 5;
     public double HotThresholdCelsius { get; set; } = 25;
+
+    /// <summary>How long he has to be idle before settling into a weather pose (sunglasses in the sun, etc.) rather than just standing around.</summary>
+    public double WeatherIdleDelaySeconds { get; set; } = 20;
 }

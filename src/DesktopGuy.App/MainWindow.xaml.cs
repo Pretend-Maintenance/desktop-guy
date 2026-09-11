@@ -122,7 +122,9 @@ public partial class MainWindow : Window
 
         _controller.Tick(elapsed);
         _animator.Tick(elapsed);
-        FacingTransform.ScaleX = _controller.FacingRight ? 1 : -1;
+        double facingScaleX = _controller.FacingRight ? 1 : -1;
+        FacingTransform.ScaleX = facingScaleX;
+        NextFacingTransform.ScaleX = facingScaleX;
 
         CharacterImage.Source = _animator.CurrentFrame;
         NextCharacterImage.Source = _animator.NextFrame;
