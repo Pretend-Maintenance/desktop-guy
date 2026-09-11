@@ -34,6 +34,7 @@ public partial class MainWindow : Window
 
         _definition = definition;
         StartWithWindowsMenuItem.IsChecked = StartupRegistration.IsEnabled();
+        PopulateCharacterMenu();
 
         var sheet = LoadSpriteSheet(definition);
         double windowWidth = definition.FrameSize.Width * definition.Scale;
@@ -234,6 +235,91 @@ public partial class MainWindow : Window
         {
             ShowSpeech(_definition.Phrases[new Random().Next(_definition.Phrases.Count)]);
         }
+    }
+
+    /// <summary>
+    /// Fills the "Character" submenu with one checkable entry per character
+    /// folder under Assets/Characters, ticking whichever one is currently
+    /// running.
+    /// </summary>
+    private void PopulateCharacterMenu()
+    {
+        string currentFolderName = Path.GetFileName(_definition.SourceFolder);
+
+        foreach (var folderName in CharacterLoader.DiscoverCharacterIds())
+        {
+            string displayName;
+            try
+            {
+                displayName = CharacterLoader.Load(folderName).DisplayName;
+            }
+            catch
+            {
+                // A folder with a broken character.json shouldn't block the
+                // rest of the menu from being usable.
+                continue;
+            }
+
+            var item = new MenuItem
+            {
+                Header = displayName,
+                IsCheckable = true,
+                IsChecked = string.Equals(folderName, currentFolderName, StringComparison.OrdinalIgnoreCase),
+                Tag = folderName,
+            };
+            item.Click += OnCharacterSelected;
+            CharacterMenuItem.Items.Add(item);
+        }
+    }
+
+    /// <summary>
+    /// Switching characters mid-run would mean rebuilding the sprite sheet,
+    /// controller, and every context watcher for a different frame size and
+    /// animation set - simpler and more robust to just relaunch the whole
+    /// app pointed at the new character and let this instance exit.
+    /// </summary>
+    private void OnCharacterSelected(object sender, RoutedEventArgs e)
+    {
+        var item = (MenuItem)sender;
+        var folderName = (string)item.Tag;
+
+        if (string.Equals(folderName, Path.GetFileName(_definition.SourceFolder), StringComparison.OrdinalIgnoreCase))
+        {
+            item.IsChecked = true;
+            return;
+        }
+
+        CharacterPreferenceStore.Save(folderName);
+
+        // Keep the "Start with Windows" registration pointed at whatever's
+        // actually selected, if it's on - otherwise it'd keep launching the
+        // character you just switched away from.
+        if (StartupRegistration.IsEnabled())
+        {
+            try
+            {
+                StartupRegistration.SetEnabled(true, folderName);
+            }
+            catch
+            {
+                // Not worth blocking the switch over - it'll just launch
+                // the old character next boot, same as before this click.
+            }
+        }
+
+        string? exePath = Environment.ProcessPath;
+        if (!string.IsNullOrEmpty(exePath))
+        {
+            Process.Start(new ProcessStartInfo(exePath, $"--character \"{folderName}\"")
+            {
+                UseShellExecute = true,
+            });
+        }
+
+        // The window's Closed handler already saves position and tears
+        // down the watchers - Shutdown() triggers that the same as any
+        // other close.
+        Application.Current.Shutdown();
     }
 
     private void OnStartWithWindowsToggled(object sender, RoutedEventArgs e)

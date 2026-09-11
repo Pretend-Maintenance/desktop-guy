@@ -3,7 +3,7 @@
   "displayName": "Blob",
   "spriteSheet": "spritesheet.png",
   "frameSize": { "width": 64, "height": 64 },
-  "scale": 3,
+  "scale": 2.5,
   "animations": {
     "idle": { "row": 0, "frameCount": 4, "fps": 2, "loop": true },
     "walk": { "row": 1, "frameCount": 4, "fps": 6, "loop": true },
