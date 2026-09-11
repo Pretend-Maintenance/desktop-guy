@@ -111,12 +111,20 @@ while it applies. See the priority list at the top of
 `Engine/CharacterController.cs` if you want to change any of that ordering.
 
 The music/video awareness uses Windows' own "now playing" system (the same
-thing behind the media controls on your lock screen), so it works with
-whatever's actually playing without knowing about specific apps. That said,
-browsers (Chromium-based ones especially) often don't tell Windows whether
-what's playing is music or video - when that happens, it falls back to
-checking the focused window's title for a video-site name (YouTube,
-Netflix, Twitch, ...) before defaulting to music. Terminal
+thing behind the media controls on your lock screen), checking every app
+with a registered session (not just whichever one Windows considers
+"current") for one that's actually playing, so it works with whatever's
+actually playing without knowing about specific apps. That said, browsers
+often don't tell Windows whether what's playing is music or video - when
+that happens, it falls back to checking the focused window's title for a
+video-site name (YouTube, Netflix, Twitch, ...) before defaulting to
+music. This whole system depends on the browser choosing to integrate
+with Windows' media session API in the first place - Chromium-based
+browsers (Edge, Chrome, Brave, ...) do this consistently; Firefox's
+support is less consistent release to release, so it may not report
+anything at all for some content even though something's genuinely
+playing. That's a limitation of Firefox's own OS integration rather than
+something fixable from here. Terminal
 awareness checks which window currently has focus. Typing awareness uses a
 low-level keyboard hook (`WH_KEYBOARD_LL`) to notice *that* a key was
 pressed and *when*, system-wide - it's the only way to see keystroke

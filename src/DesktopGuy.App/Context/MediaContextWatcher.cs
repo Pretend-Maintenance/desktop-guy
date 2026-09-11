@@ -79,14 +79,7 @@ public sealed class MediaContextWatcher
 
         try
         {
-            var session = _manager.GetCurrentSession();
-            if (session is null)
-            {
-                _current = MediaPlaybackContext.None;
-                return;
-            }
-
-            var playbackInfo = session.GetPlaybackInfo();
+            var playbackInfo = FindPlayingSession()?.GetPlaybackInfo();
             if (playbackInfo?.PlaybackStatus != GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing)
             {
                 _current = MediaPlaybackContext.None;
@@ -102,10 +95,32 @@ public sealed class MediaContextWatcher
         }
         catch
         {
-            // A session can disappear between the null-check and reading it
+            // A session can disappear between finding it and reading it
             // (app closed mid-poll); just wait for the next tick.
             _current = MediaPlaybackContext.None;
         }
+    }
+
+    /// <summary>
+    /// GetCurrentSession() only returns Windows' notion of the single
+    /// "most relevant" session, which isn't always the one that's actually
+    /// playing (e.g. a paused/idle app can outrank a browser tab that's
+    /// genuinely playing). Checking every session and picking whichever one
+    /// is actually Playing is more reliable when more than one app has a
+    /// registered media session at once.
+    /// </summary>
+    private GlobalSystemMediaTransportControlsSession? FindPlayingSession()
+    {
+        foreach (var session in _manager!.GetSessions())
+        {
+            if (session.GetPlaybackInfo()?.PlaybackStatus ==
+                GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing)
+            {
+                return session;
+            }
+        }
+
+        return null;
     }
 
     /// <summary>
