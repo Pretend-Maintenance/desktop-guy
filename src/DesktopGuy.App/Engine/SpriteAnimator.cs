@@ -1,5 +1,4 @@
 using System;
-using System.ComponentModel;
 using System.Windows.Media.Imaging;
 using DesktopGuy.App.Characters;
 
@@ -9,8 +8,16 @@ namespace DesktopGuy.App.Engine;
 /// Plays one row of a sprite sheet at a time by cropping out the current
 /// frame's rectangle. Character-agnostic: it only knows about the
 /// CharacterDefinition's frame size and animation rows.
+///
+/// Also exposes the *next* frame and a 0-1 blend progress toward it every
+/// tick, so MainWindow can optionally cross-fade between frames instead of
+/// hard-cutting - a way to make a handful of sprite-sheet poses read as
+/// smoother motion without needing more art. Whether that's actually used
+/// is up to the character (see CharacterDefinition.SmoothTransitions) -
+/// blocky pixel art usually wants the hard cut, smoother-shaded art
+/// usually looks better cross-fading.
 /// </summary>
-public sealed class SpriteAnimator : INotifyPropertyChanged
+public sealed class SpriteAnimator
 {
     private readonly BitmapSource _sheet;
     private readonly CharacterDefinition _definition;
@@ -19,9 +26,6 @@ public sealed class SpriteAnimator : INotifyPropertyChanged
     private string _currentName;
     private int _frameIndex;
     private double _secondsAccumulated;
-    private BitmapSource _currentFrame;
-
-    public event PropertyChangedEventHandler? PropertyChanged;
 
     /// <summary>Raised once when a non-looping animation finishes its last frame.</summary>
     public event Action? AnimationCompleted;
@@ -32,18 +36,14 @@ public sealed class SpriteAnimator : INotifyPropertyChanged
         _definition = definition;
         _currentName = initialAnimation;
         _current = ResolveAnimation(initialAnimation);
-        _currentFrame = CropFrame(_current.Row, 0);
+        UpdateFrames();
     }
 
-    public BitmapSource CurrentFrame
-    {
-        get => _currentFrame;
-        private set
-        {
-            _currentFrame = value;
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(CurrentFrame)));
-        }
-    }
+    public BitmapSource CurrentFrame { get; private set; } = null!;
+    public BitmapSource NextFrame { get; private set; } = null!;
+
+    /// <summary>0 at the start of the current frame, approaching 1 just before it advances to NextFrame.</summary>
+    public double BlendProgress { get; private set; }
 
     public string CurrentAnimationName => _currentName;
 
@@ -60,25 +60,39 @@ public sealed class SpriteAnimator : INotifyPropertyChanged
         _current = ResolveAnimation(animationName);
         _frameIndex = 0;
         _secondsAccumulated = 0;
-        CurrentFrame = CropFrame(_current.Row, 0);
+        BlendProgress = 0;
+        UpdateFrames();
     }
 
     public void Tick(TimeSpan elapsed)
     {
         if (_current.FrameCount <= 1 || _current.Fps <= 0)
         {
+            BlendProgress = 0;
             return;
         }
 
-        _secondsAccumulated += elapsed.TotalSeconds;
         double secondsPerFrame = 1.0 / _current.Fps;
+        _secondsAccumulated += elapsed.TotalSeconds;
 
-        if (_secondsAccumulated < secondsPerFrame)
+        while (_secondsAccumulated >= secondsPerFrame)
         {
-            return;
+            _secondsAccumulated -= secondsPerFrame;
+            if (!AdvanceFrame())
+            {
+                // Held on the last frame of a non-looping animation - stop
+                // accumulating so this loop can't spin forever.
+                _secondsAccumulated = 0;
+                break;
+            }
         }
 
-        _secondsAccumulated -= secondsPerFrame;
+        BlendProgress = Math.Clamp(_secondsAccumulated / secondsPerFrame, 0, 1);
+    }
+
+    /// <summary>Advances to the next frame. Returns false if held on the final frame of a non-looping animation.</summary>
+    private bool AdvanceFrame()
+    {
         int nextIndex = _frameIndex + 1;
 
         if (nextIndex >= _current.FrameCount)
@@ -89,15 +103,32 @@ public sealed class SpriteAnimator : INotifyPropertyChanged
             }
             else
             {
-                _frameIndex = _current.FrameCount - 1;
-                CurrentFrame = CropFrame(_current.Row, _frameIndex);
+                UpdateFrames();
                 AnimationCompleted?.Invoke();
-                return;
+                return false;
             }
         }
 
         _frameIndex = nextIndex;
+        UpdateFrames();
+        return true;
+    }
+
+    private void UpdateFrames()
+    {
         CurrentFrame = CropFrame(_current.Row, _frameIndex);
+        NextFrame = CropFrame(_current.Row, PeekNextIndex());
+    }
+
+    private int PeekNextIndex()
+    {
+        int next = _frameIndex + 1;
+        if (next < _current.FrameCount)
+        {
+            return next;
+        }
+
+        return _current.Loop ? 0 : _frameIndex;
     }
 
     private AnimationDefinition ResolveAnimation(string name)

@@ -25,9 +25,10 @@ public sealed class MediaContextWatcher
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(1.5);
 
-    // Browsers frequently don't report a PlaybackType at all for HTML5
-    // video (Chromium-based ones especially), so when Windows doesn't tell
-    // us, we take a guess from the focused window's title as a tiebreaker.
+    // Browsers can't always be trusted to report the right PlaybackType for
+    // HTML5 video - some don't report one at all, others (Firefox) have
+    // been seen reporting the wrong one - so a focused window titled after
+    // a known video site is checked first, ahead of the self-reported type.
     private static readonly string[] VideoSiteTitleMarkers =
     {
         "YouTube", "Netflix", "Twitch", "Prime Video", "Disney+", "Hulu", "HBO Max",
@@ -86,12 +87,21 @@ public sealed class MediaContextWatcher
                 return;
             }
 
-            _current = playbackInfo.PlaybackType switch
+            // The focused window's title is checked first, ahead of
+            // whatever the app itself reports: some browsers (Firefox in
+            // particular) have been seen reporting an incorrect type
+            // (e.g. Music for an actual YouTube video), not just an absent
+            // one - so a clear video-site title in the title bar is trusted
+            // over a possibly-wrong self-reported type.
+            if (IsFocusedOnVideoSite())
             {
-                MediaPlaybackType.Video => MediaPlaybackContext.Video,
-                MediaPlaybackType.Music => MediaPlaybackContext.Music,
-                _ => GuessFromForegroundWindowTitle(),
-            };
+                _current = MediaPlaybackContext.Video;
+                return;
+            }
+
+            _current = playbackInfo.PlaybackType == MediaPlaybackType.Video
+                ? MediaPlaybackContext.Video
+                : MediaPlaybackContext.Music;
         }
         catch
         {
@@ -123,17 +133,9 @@ public sealed class MediaContextWatcher
         return null;
     }
 
-    /// <summary>
-    /// Windows didn't tell us whether this is music or video - take a guess
-    /// from the currently focused window's title (e.g. a browser tab titled
-    /// "... - YouTube"). Falls back to music, the more common case for an
-    /// untyped session (background audio players, Spotify's web player, etc.).
-    /// </summary>
-    private static MediaPlaybackContext GuessFromForegroundWindowTitle()
+    private static bool IsFocusedOnVideoSite()
     {
         string title = Win32Interop.GetForegroundWindowTitle();
-        bool looksLikeVideo = VideoSiteTitleMarkers.Any(
-            marker => title.Contains(marker, StringComparison.OrdinalIgnoreCase));
-        return looksLikeVideo ? MediaPlaybackContext.Video : MediaPlaybackContext.Music;
+        return VideoSiteTitleMarkers.Any(marker => title.Contains(marker, StringComparison.OrdinalIgnoreCase));
     }
 }

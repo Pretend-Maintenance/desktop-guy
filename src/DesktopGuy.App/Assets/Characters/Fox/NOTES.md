@@ -13,8 +13,9 @@ transparency (an AI-art export quirk, not real alpha). Those are now
 properly transparent, matching the rest of the sheet. Frame size also
 turned out to be ~109x109px natively, and not perfectly evenly spaced
 (rows range ~100-119px tall); everything's been resampled onto a clean,
-uniform 96x96-per-frame grid, displayed at 2x scale (192x192px on screen -
-matches Blob's size, and a whole-number scale, see below).
+uniform 84x84-per-frame grid, displayed at 2x scale (168x168px on screen -
+a bit smaller than the original 96px/192px version, and a whole-number
+scale, see below).
 
 Two follow-up bugs turned up after testing on an actual Windows machine,
 both from the cleanup script rather than the original art, now fixed:
@@ -41,14 +42,20 @@ both from the cleanup script rather than the original art, now fixed:
   Fixed by only ever treating near-neutral gray/white as background,
   never near-black - real character details (headphones, pupils,
   sunglasses, terminal bezels) stay untouched now.
-- **A thin dark line at some cell edges.** The original upload has faint
-  leftover grid-divider lines baked into the art at a few (not all) of
-  the actual column boundaries - matching the literal grid lines visible
-  in the very first version of this sheet you shared. A couple of the
-  detected crop boundaries landed exactly on top of one. Fixed by
-  trimming a small (3px) margin off every side of every cell before
-  cropping, rather than trying to detect and strip the line by color
-  (too easy to repeat the headphones mistake).
+- **Thin dark lines at some cell edges.** The original upload has faint
+  leftover grid-divider lines baked into the art - both vertical and
+  horizontal - at several of the actual cell boundaries, matching the
+  literal grid lines visible in the very first version of this sheet you
+  shared. They sit at inconsistent distances from the boundary from one
+  edge to the next, so a fixed trim margin wasn't reliable (a 3px margin
+  missed some, a 7px margin started cutting into character art
+  elsewhere). Fixed properly with a dedicated pass: any row or column
+  that's almost entirely dark is stripped as a line, regardless of where
+  it falls - a solid dark bar spanning nearly the full width/height of a
+  cell isn't something any real character pose produces (even dark props
+  like sunglasses or headphones only ever cover part of a row), so this
+  is a safe, specific signature to target directly instead of guessing
+  margins.
 
 ## Rows worth double-checking against what you actually wanted
 
@@ -76,6 +83,16 @@ dimmed "groggy" idle pose brightening into the normal idle pose, and
 squashed + motion-lined version of it for frame 2. If you'd rather have
 real distinct art for these two, they're also in the AI-art prompt in the
 README.
+
+## Smoother animation
+
+`character.json` has `"smoothTransitions": true` - the engine now
+cross-fades between frames instead of hard-cutting, which makes the
+existing 4-ish poses per animation read as noticeably smoother motion
+without needing more art. This is a general engine feature (see
+`smoothTransitions` in the main README), not something specific to this
+character - Blob leaves it off since a cross-fade looks wrong against
+blocky pixel art, but it suits Fox's smooth-shaded style well.
 
 ## Try it
 

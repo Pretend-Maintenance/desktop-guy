@@ -114,17 +114,20 @@ The music/video awareness uses Windows' own "now playing" system (the same
 thing behind the media controls on your lock screen), checking every app
 with a registered session (not just whichever one Windows considers
 "current") for one that's actually playing, so it works with whatever's
-actually playing without knowing about specific apps. That said, browsers
-often don't tell Windows whether what's playing is music or video - when
-that happens, it falls back to checking the focused window's title for a
-video-site name (YouTube, Netflix, Twitch, ...) before defaulting to
-music. This whole system depends on the browser choosing to integrate
-with Windows' media session API in the first place - Chromium-based
-browsers (Edge, Chrome, Brave, ...) do this consistently; Firefox's
-support is less consistent release to release, so it may not report
-anything at all for some content even though something's genuinely
-playing. That's a limitation of Firefox's own OS integration rather than
-something fixable from here. Terminal
+actually playing without knowing about specific apps. Browsers can't
+always be trusted to correctly report whether what's playing is music or
+video, though - some don't report a type at all, others have been seen
+reporting the wrong one - so before trusting that, it first checks whether
+the focused window's title names a known video site (YouTube, Netflix,
+Twitch, ...) and treats that as authoritative when it matches. This whole
+system still depends on the browser choosing to integrate with Windows'
+media session API in the first place - Chromium-based browsers (Edge,
+Chrome, Brave, ...) do this consistently; Firefox's support is less
+consistent release to release, so it may not report anything at all for
+some content even though something's genuinely playing (in which case the
+title check never gets a chance to run, since nothing looks like it's
+"playing" yet). That's a limitation of Firefox's own OS integration rather
+than something fixable from here. Terminal
 awareness checks which window currently has focus. Typing awareness uses a
 low-level keyboard hook (`WH_KEYBOARD_LL`) to notice *that* a key was
 pressed and *when*, system-wide - it's the only way to see keystroke
@@ -227,13 +230,20 @@ sprite sheet, which is how new characters get added.
    starting point) describing:
    - `frameSize`: pixel width/height of a single frame in the sheet
    - `scale`: how many times to scale the sprite up on screen (pixel art
-     usually wants 3-6x so it isn't tiny) - **keep this a whole number.**
-     A fractional scale (like 1.5) can cause a visible rendering glitch -
-     a sliver of a neighboring frame bleeding in at the edge - due to how
-     WPF's nearest-neighbor scaling interacts with non-integer ratios. If
-     the character needs to be a specific on-screen size that isn't a
-     clean multiple of the art's native resolution, resize the sprite
-     sheet itself instead of reaching for a fractional scale.
+     usually wants 3-6x so it isn't tiny) - a whole number is still
+     recommended on general principle (fractional scales are a plausible
+     source of edge-bleed with nearest-neighbor scaling), though in
+     practice the edge-bleed bugs found while building this template
+     traced back to artifacts baked into the source art, not the scale
+     itself - see `Assets/Characters/Fox/NOTES.md` for the full story if
+     you hit something similar. If a character needs a specific on-screen
+     size that isn't a clean multiple of its native resolution, resizing
+     the sprite sheet itself is the safer route either way.
+   - `smoothTransitions`: `true` to cross-fade between animation frames
+     instead of hard-cutting - makes a handful of poses read as smoother
+     motion without needing more art. Suits smooth-shaded/cartoon art
+     (like Fox); usually looks wrong for blocky pixel art (like Blob,
+     which leaves this `false`, the default).
    - `animations`: for each animation name, which sprite-sheet `row` it's
      on, how many frames (`frameCount`), how fast to play them (`fps`),
      and whether it `loop`s (`wake`, `answerCall`, `openMail` and `pickUp`

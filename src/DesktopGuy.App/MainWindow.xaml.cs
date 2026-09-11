@@ -55,9 +55,9 @@ public partial class MainWindow : Window
         Top = startY;
 
         _animator = new SpriteAnimator(sheet, definition, "idle");
-        _animator.PropertyChanged += (_, _) => CharacterImage.Source = _animator.CurrentFrame;
         _animator.AnimationCompleted += OnAnimatorAnimationCompleted;
         CharacterImage.Source = _animator.CurrentFrame;
+        NextCharacterImage.Source = _animator.NextFrame;
 
         _weatherWatcher = new WeatherWatcher(
             definition.Behavior.ColdThresholdCelsius, definition.Behavior.HotThresholdCelsius);
@@ -123,6 +123,10 @@ public partial class MainWindow : Window
         _controller.Tick(elapsed);
         _animator.Tick(elapsed);
         FacingTransform.ScaleX = _controller.FacingRight ? 1 : -1;
+
+        CharacterImage.Source = _animator.CurrentFrame;
+        NextCharacterImage.Source = _animator.NextFrame;
+        NextCharacterImage.Opacity = _definition.SmoothTransitions ? _animator.BlendProgress : 0;
     }
 
     private void OnAnimatorAnimationCompleted()

@@ -24,16 +24,28 @@
         </ContextMenu>
     </Window.ContextMenu>
 
+    <Window.Resources>
+        <ScaleTransform x:Key="FacingTransform" x:Name="FacingTransform" ScaleX="1" />
+    </Window.Resources>
+
     <Grid>
         <Image x:Name="CharacterImage"
                Stretch="Fill"
                RenderOptions.BitmapScalingMode="NearestNeighbor"
-               MouseLeftButtonDown="OnCharacterMouseDown">
-            <Image.RenderTransform>
-                <ScaleTransform x:Name="FacingTransform" ScaleX="1" />
-            </Image.RenderTransform>
-            <Image.RenderTransformOrigin>0.5,0.5</Image.RenderTransformOrigin>
-        </Image>
+               RenderTransform="{StaticResource FacingTransform}"
+               RenderTransformOrigin="0.5,0.5"
+               MouseLeftButtonDown="OnCharacterMouseDown" />
+
+        <!-- Layered on top for an optional cross-fade into the next frame
+             (see CharacterDefinition.SmoothTransitions) - never intercepts
+             clicks itself, so dragging still works via CharacterImage below. -->
+        <Image x:Name="NextCharacterImage"
+               Stretch="Fill"
+               RenderOptions.BitmapScalingMode="NearestNeighbor"
+               RenderTransform="{StaticResource FacingTransform}"
+               RenderTransformOrigin="0.5,0.5"
+               IsHitTestVisible="False"
+               Opacity="0" />
 
         <Popup x:Name="SpeechPopup"
                PlacementTarget="{Binding ElementName=CharacterImage}"

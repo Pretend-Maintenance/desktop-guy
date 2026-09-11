@@ -15,6 +15,15 @@ public sealed class CharacterDefinition
     public string SpriteSheet { get; set; } = "spritesheet.png";
     public FrameSize FrameSize { get; set; } = new();
     public double Scale { get; set; } = 4.0;
+
+    /// <summary>
+    /// Cross-fades between animation frames instead of hard-cutting, so a
+    /// handful of sprite-sheet poses read as smoother motion. Good for
+    /// smooth-shaded/cartoon art; usually looks wrong for blocky pixel art
+    /// (defaults to false, the hard-cut look).
+    /// </summary>
+    public bool SmoothTransitions { get; set; } = false;
+
     public Dictionary<string, AnimationDefinition> Animations { get; set; } = new();
     public BehaviorSettings Behavior { get; set; } = new();
     public List<string> Phrases { get; set; } = new();
