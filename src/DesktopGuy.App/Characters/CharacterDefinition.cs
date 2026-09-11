@@ -53,5 +53,5 @@ public sealed class BehaviorSettings
     public double SpeechIntervalMaxSeconds { get; set; } = 90;
     public double SpeechDurationSeconds { get; set; } = 4;
     public double ColdThresholdCelsius { get; set; } = 5;
-    public double HotThresholdCelsius { get; set; } = 28;
+    public double HotThresholdCelsius { get; set; } = 25;
 }

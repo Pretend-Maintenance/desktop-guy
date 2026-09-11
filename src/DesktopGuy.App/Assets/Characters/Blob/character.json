@@ -32,7 +32,7 @@
     "speechIntervalMaxSeconds": 120,
     "speechDurationSeconds": 4.5,
     "coldThresholdCelsius": 5,
-    "hotThresholdCelsius": 28
+    "hotThresholdCelsius": 25
   },
   "phrases": [
     "Just hanging out with you!",

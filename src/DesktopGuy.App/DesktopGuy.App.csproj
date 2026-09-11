@@ -8,7 +8,7 @@
          listening) without any extra NuGet packages. TargetPlatformMinVersion
          is kept lower so the app still runs on older Windows 10 - those APIs
          are guarded with try/catch and degrade gracefully if unavailable. -->
-    <TargetFramework>net8.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <UseWPF>true</UseWPF>
     <Nullable>enable</Nullable>

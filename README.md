@@ -7,8 +7,10 @@ dropped in without touching any code.
 
 ## Running it
 
-1. Install the [.NET 8 SDK](https://dotnet.microsoft.com/download) (get the
-   SDK, not just the runtime).
+1. Install the [.NET 10 SDK](https://dotnet.microsoft.com/download) (get the
+   SDK, not just the runtime) - any recent .NET SDK works fine here, since
+   .NET SDKs build older-targeted projects too, but the project itself
+   targets .NET 10 so that's the simplest match.
 2. During install (or after, via **Visual Studio Installer**), make sure the
    **".NET desktop development"** workload is checked - that's what gives you
    WPF. If you already have Visual Studio, you can add it there instead:
@@ -41,7 +43,7 @@ dotnet publish src/DesktopGuy.App -c Release -r win-x64 --self-contained -p:Publ
 ```
 
 The exe lands in
-`src/DesktopGuy.App/bin/Release/net8.0-windows10.0.19041.0/win-x64/publish/`.
+`src/DesktopGuy.App/bin/Release/net10.0-windows10.0.19041.0/win-x64/publish/`.
 Copy that whole `publish` folder wherever you like (it needs the
 `Assets` folder alongside the exe) - or just the exe if you don't mind it
 fetching the character files from the original location. Drop a shortcut
@@ -143,7 +145,7 @@ read from character.json or a settings file).
 
 "Cold"/"hot" are temperature thresholds you can tune per character in
 `character.json` under `behavior.coldThresholdCelsius` /
-`behavior.hotThresholdCelsius` (Blob defaults to 5°C / 28°C). "Rainy" is
+`behavior.hotThresholdCelsius` (Blob defaults to 5°C / 25°C). "Rainy" is
 based on the forecast's weather code (drizzle, rain, showers, or storms all
 count). "Sunny" is clear skies during daytime that isn't already cold or hot.
 
