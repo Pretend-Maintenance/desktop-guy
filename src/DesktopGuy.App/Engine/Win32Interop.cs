@@ -18,6 +18,12 @@ internal static class Win32Interop
     [DllImport("user32.dll", SetLastError = true)]
     private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
 
+    [DllImport("user32.dll")]
+    private static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
     /// <summary>
     /// Marks the window as a "tool window" (WS_EX_TOOLWINDOW) so it never
     /// shows up in Alt+Tab or the taskbar - just the little companion, no
@@ -27,5 +33,18 @@ internal static class Win32Interop
     {
         int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
         SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_TOOLWINDOW);
+    }
+
+    /// <summary>The process ID owning whichever window currently has focus, or null if that can't be determined.</summary>
+    public static int? GetForegroundProcessId()
+    {
+        IntPtr hwnd = GetForegroundWindow();
+        if (hwnd == IntPtr.Zero)
+        {
+            return null;
+        }
+
+        GetWindowThreadProcessId(hwnd, out uint processId);
+        return processId == 0 ? null : (int)processId;
     }
 }

@@ -82,9 +82,12 @@ register that temporary path instead of your real install.
   Music, etc.) it puts on headphones and dances instead of wandering off.
 - **Video**: if something is playing that looks like a video (a YouTube tab,
   Netflix, ...) it puts on sunglasses, grabs popcorn, and settles in to watch.
-- **Terminal open**: if a shell or terminal app is running (Command Prompt,
-  PowerShell, Windows Terminal, PuTTY, ...) it pulls up its own little
-  terminal with scrolling matrix-style code.
+- **Terminal focused**: if a shell or terminal app (Command Prompt,
+  PowerShell, Windows Terminal, PuTTY, ...) is the window you're actually
+  using right now, it pulls up its own little terminal with scrolling
+  matrix-style code. Checked against whichever window is focused, not just
+  "is a terminal running somewhere" - otherwise launching the app from a
+  terminal would leave it stuck showing this forever.
 - **Weather**: dresses for the weather where you are, checked every 20
   minutes - a jacket and little breath clouds when it's cold, a hand fan
   when it's hot, sunglasses when it's clear and sunny, an umbrella when
@@ -107,7 +110,7 @@ while it applies. See the priority list at the top of
 The music/video awareness uses Windows' own "now playing" system (the same
 thing behind the media controls on your lock screen), so it works with
 whatever's actually playing without knowing about specific apps. Terminal
-awareness just checks whether a known terminal process is running. Discord
+awareness checks which window currently has focus. Discord
 awareness reads Discord's own notifications via Windows' notification
 listener - see **Context awareness setup** below, since that one needs a
 one-time permission grant. Weather awareness makes plain HTTPS calls to two

@@ -1,16 +1,20 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using DesktopGuy.App.Engine;
 
 namespace DesktopGuy.App.Context;
 
 /// <summary>
 /// Notices when a terminal-ish app (a shell, Windows Terminal, PuTTY, ...)
-/// is running anywhere on the system, so the character can pull up its own
-/// little matrix-code terminal. This is a simple process-name heuristic
-/// rather than "is a terminal window focused" - good enough to react to
-/// "I opened a terminal" without needing window-focus tracking.
+/// is the window you're actually focused on right now, so the character
+/// can pull up its own little matrix-code terminal. Checked against the
+/// foreground window rather than "is such a process running anywhere" -
+/// otherwise launching the app from a terminal (like `dotnet run`) would
+/// leave it stuck showing "hacking" forever, since that terminal stays
+/// open in the background for the whole session.
 /// </summary>
 public sealed class TerminalWatcher
 {
@@ -20,7 +24,7 @@ public sealed class TerminalWatcher
         "putty", "kitty", "ConEmu64", "ConEmu", "mintty", "Hyper", "alacritty",
     };
 
-    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(2);
+    private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(1.5);
 
     private volatile bool _isActive;
 
@@ -51,35 +55,20 @@ public sealed class TerminalWatcher
     {
         try
         {
-            bool found = false;
-            foreach (var name in ProcessNames)
+            int? processId = Win32Interop.GetForegroundProcessId();
+            if (processId is null)
             {
-                var matches = Process.GetProcessesByName(name);
-                try
-                {
-                    if (matches.Length > 0)
-                    {
-                        found = true;
-                    }
-                }
-                finally
-                {
-                    foreach (var process in matches)
-                    {
-                        process.Dispose();
-                    }
-                }
-
-                if (found)
-                {
-                    break;
-                }
+                _isActive = false;
+                return;
             }
 
-            _isActive = found;
+            using var process = Process.GetProcessById(processId.Value);
+            _isActive = ProcessNames.Any(name => string.Equals(name, process.ProcessName, StringComparison.OrdinalIgnoreCase));
         }
         catch
         {
+            // The foreground process can disappear between the lookup and
+            // reading it (window closed mid-poll); just wait for the next tick.
             _isActive = false;
         }
     }
