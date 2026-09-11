@@ -90,12 +90,11 @@ public sealed class CharacterController
         TransitionTo(CharacterState.Dragging);
     }
 
-    /// <summary>Called on every mouse-move while dragging, in screen coordinates.</summary>
-    public void UpdateDrag(double newX, double newY)
+    /// <summary>Lets MainWindow tell the controller where the OS-level DragMove() actually left the window.</summary>
+    public void SyncPosition(double x, double y)
     {
-        PositionX = Clamp(newX, _minX, _maxX);
-        PositionY = newY;
-        PositionChanged?.Invoke();
+        PositionX = x;
+        PositionY = y;
     }
 
     public void EndDrag()

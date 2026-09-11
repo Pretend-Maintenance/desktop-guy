@@ -28,9 +28,7 @@
         <Image x:Name="CharacterImage"
                Stretch="Fill"
                RenderOptions.BitmapScalingMode="NearestNeighbor"
-               MouseLeftButtonDown="OnCharacterMouseDown"
-               MouseMove="OnCharacterMouseMove"
-               MouseLeftButtonUp="OnCharacterMouseUp">
+               MouseLeftButtonDown="OnCharacterMouseDown">
             <Image.RenderTransform>
                 <ScaleTransform x:Name="FacingTransform" ScaleX="1" />
             </Image.RenderTransform>

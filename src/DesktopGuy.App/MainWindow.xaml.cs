@@ -26,7 +26,6 @@ public partial class MainWindow : Window
     private readonly CancellationTokenSource _lifetimeCts = new();
     private readonly Stopwatch _clock = new();
     private DispatcherTimer? _speechHideTimer;
-    private Point _dragGrabOffset;
 
     public MainWindow(CharacterDefinition definition)
     {
@@ -179,37 +178,25 @@ public partial class MainWindow : Window
             return;
         }
 
-        // Manual capture-and-follow rather than the simpler Window.DragMove()
-        // - DragMove() blocks the UI thread in a native modal loop for the
-        // whole drag, which would freeze the pickUp/drag animations. This
-        // way CompositionTarget.Rendering keeps ticking the whole time.
-        _dragGrabOffset = e.GetPosition(this);
-        CharacterImage.CaptureMouse();
         _controller.BeginDrag();
-        e.Handled = true;
-    }
 
-    private void OnCharacterMouseMove(object sender, MouseEventArgs e)
-    {
-        if (e.LeftButton != MouseButtonState.Pressed || !CharacterImage.IsMouseCaptured)
+        try
         {
-            return;
+            // Window.DragMove() hands the drag off to Windows itself, so
+            // there's no cursor-to-window coordinate math for us to get
+            // wrong (a manual mouse-capture version of this previously
+            // sent the window to an invalid position on some displays).
+            // The tradeoff: it blocks this thread for the whole drag, so
+            // the pickUp/drag animation won't visibly play through its
+            // frames while held - the first frame still shows correctly.
+            DragMove();
+        }
+        catch (InvalidOperationException)
+        {
+            // Mouse was released before the OS-level drag actually started.
         }
 
-        var cursorScreenPos = PointToScreen(e.GetPosition(this));
-        _controller.UpdateDrag(
-            cursorScreenPos.X - _dragGrabOffset.X,
-            cursorScreenPos.Y - _dragGrabOffset.Y);
-    }
-
-    private void OnCharacterMouseUp(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ChangedButton != MouseButton.Left || !CharacterImage.IsMouseCaptured)
-        {
-            return;
-        }
-
-        CharacterImage.ReleaseMouseCapture();
+        _controller.SyncPosition(Left, Top);
         _controller.EndDrag();
         e.Handled = true;
     }
