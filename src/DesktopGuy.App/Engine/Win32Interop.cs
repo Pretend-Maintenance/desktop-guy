@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace DesktopGuy.App.Engine;
 
@@ -24,6 +25,9 @@ internal static class Win32Interop
     [DllImport("user32.dll")]
     private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
 
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    private static extern int GetWindowText(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
+
     /// <summary>
     /// Marks the window as a "tool window" (WS_EX_TOOLWINDOW) so it never
     /// shows up in Alt+Tab or the taskbar - just the little companion, no
@@ -46,5 +50,19 @@ internal static class Win32Interop
 
         GetWindowThreadProcessId(hwnd, out uint processId);
         return processId == 0 ? null : (int)processId;
+    }
+
+    /// <summary>The title bar text of whichever window currently has focus, or "" if that can't be determined.</summary>
+    public static string GetForegroundWindowTitle()
+    {
+        IntPtr hwnd = GetForegroundWindow();
+        if (hwnd == IntPtr.Zero)
+        {
+            return "";
+        }
+
+        var buffer = new StringBuilder(256);
+        GetWindowText(hwnd, buffer, buffer.Capacity);
+        return buffer.ToString();
     }
 }

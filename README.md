@@ -109,7 +109,11 @@ while it applies. See the priority list at the top of
 
 The music/video awareness uses Windows' own "now playing" system (the same
 thing behind the media controls on your lock screen), so it works with
-whatever's actually playing without knowing about specific apps. Terminal
+whatever's actually playing without knowing about specific apps. That said,
+browsers (Chromium-based ones especially) often don't tell Windows whether
+what's playing is music or video - when that happens, it falls back to
+checking the focused window's title for a video-site name (YouTube,
+Netflix, Twitch, ...) before defaulting to music. Terminal
 awareness checks which window currently has focus. Discord
 awareness reads Discord's own notifications via Windows' notification
 listener - see **Context awareness setup** below, since that one needs a

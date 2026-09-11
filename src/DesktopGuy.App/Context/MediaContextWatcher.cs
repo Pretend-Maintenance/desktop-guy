@@ -1,6 +1,8 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using DesktopGuy.App.Engine;
 using Windows.Media;
 using Windows.Media.Control;
 
@@ -22,6 +24,14 @@ namespace DesktopGuy.App.Context;
 public sealed class MediaContextWatcher
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(1.5);
+
+    // Browsers frequently don't report a PlaybackType at all for HTML5
+    // video (Chromium-based ones especially), so when Windows doesn't tell
+    // us, we take a guess from the focused window's title as a tiebreaker.
+    private static readonly string[] VideoSiteTitleMarkers =
+    {
+        "YouTube", "Netflix", "Twitch", "Prime Video", "Disney+", "Hulu", "HBO Max",
+    };
 
     private GlobalSystemMediaTransportControlsSessionManager? _manager;
     private volatile MediaPlaybackContext _current = MediaPlaybackContext.None;
@@ -87,9 +97,7 @@ public sealed class MediaContextWatcher
             {
                 MediaPlaybackType.Video => MediaPlaybackContext.Video,
                 MediaPlaybackType.Music => MediaPlaybackContext.Music,
-                // Some apps (browsers especially) don't always set a type even
-                // though something is clearly playing - default those to music.
-                _ => MediaPlaybackContext.Music,
+                _ => GuessFromForegroundWindowTitle(),
             };
         }
         catch
@@ -98,5 +106,19 @@ public sealed class MediaContextWatcher
             // (app closed mid-poll); just wait for the next tick.
             _current = MediaPlaybackContext.None;
         }
+    }
+
+    /// <summary>
+    /// Windows didn't tell us whether this is music or video - take a guess
+    /// from the currently focused window's title (e.g. a browser tab titled
+    /// "... - YouTube"). Falls back to music, the more common case for an
+    /// untyped session (background audio players, Spotify's web player, etc.).
+    /// </summary>
+    private static MediaPlaybackContext GuessFromForegroundWindowTitle()
+    {
+        string title = Win32Interop.GetForegroundWindowTitle();
+        bool looksLikeVideo = VideoSiteTitleMarkers.Any(
+            marker => title.Contains(marker, StringComparison.OrdinalIgnoreCase));
+        return looksLikeVideo ? MediaPlaybackContext.Video : MediaPlaybackContext.Music;
     }
 }
