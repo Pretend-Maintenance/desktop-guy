@@ -15,6 +15,11 @@
         <ContextMenu>
             <MenuItem Header="Say hi" Click="OnSayHiClicked" />
             <Separator />
+            <MenuItem x:Name="StartWithWindowsMenuItem"
+                      Header="Start with Windows"
+                      IsCheckable="True"
+                      Click="OnStartWithWindowsToggled" />
+            <Separator />
             <MenuItem Header="Exit" Click="OnExitClicked" />
         </ContextMenu>
     </Window.ContextMenu>

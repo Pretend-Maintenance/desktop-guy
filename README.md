@@ -29,8 +29,9 @@ By default it loads the first character it finds under
 dotnet run --project src/DesktopGuy.App -- --character Blob
 ```
 
-Right-click the character for a small menu (say hi / exit) - there's no
-taskbar icon or window border, so that's also how you close it.
+Right-click the character for a small menu (say hi / start with Windows /
+exit) - there's no taskbar icon or window border, so that's also how you
+close it.
 
 ### Building a standalone .exe
 
@@ -46,9 +47,19 @@ The exe lands in
 `src/DesktopGuy.App/bin/Release/net10.0-windows10.0.19041.0/win-x64/publish/`.
 Copy that whole `publish` folder wherever you like (it needs the
 `Assets` folder alongside the exe) - or just the exe if you don't mind it
-fetching the character files from the original location. Drop a shortcut
-to it in your Startup folder (`Win+R` \> `shell:startup`) if you want him to
-launch automatically when you log in.
+fetching the character files from the original location.
+
+### Starting automatically at login
+
+Right-click the character and toggle **"Start with Windows"**. This writes a
+normal per-user startup entry (`HKEY_CURRENT_USER\...\Run` - the same
+mechanism most tray apps use), pointing at whichever exe you toggled it
+from. No admin rights needed, and unchecking it removes the entry cleanly.
+
+Toggle it from wherever you actually plan to run it long-term (the
+published `.exe`, not a `dotnet run` build) - it registers the exact path
+that's currently running, so a debug build in `bin\Debug\...` would
+register that temporary path instead of your real install.
 
 ## How it behaves
 

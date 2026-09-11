@@ -33,6 +33,7 @@ public partial class MainWindow : Window
         InitializeComponent();
 
         _definition = definition;
+        StartWithWindowsMenuItem.IsChecked = StartupRegistration.IsEnabled();
 
         var sheet = LoadSpriteSheet(definition);
         double windowWidth = definition.FrameSize.Width * definition.Scale;
@@ -236,6 +237,23 @@ public partial class MainWindow : Window
         if (_definition.Phrases.Count > 0)
         {
             ShowSpeech(_definition.Phrases[new Random().Next(_definition.Phrases.Count)]);
+        }
+    }
+
+    private void OnStartWithWindowsToggled(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            StartupRegistration.SetEnabled(StartWithWindowsMenuItem.IsChecked, _definition.Id);
+        }
+        catch (Exception ex)
+        {
+            StartWithWindowsMenuItem.IsChecked = !StartWithWindowsMenuItem.IsChecked;
+            MessageBox.Show(
+                $"Couldn't update the startup setting:\n{ex.Message}",
+                "Desktop Guy",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
         }
     }
 
