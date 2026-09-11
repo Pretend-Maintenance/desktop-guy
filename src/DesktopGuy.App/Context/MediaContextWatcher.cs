@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Windows.Media;
 using Windows.Media.Control;
 
 namespace DesktopGuy.App.Context;
@@ -82,7 +83,7 @@ public sealed class MediaContextWatcher
                 return;
             }
 
-            _current = playbackInfo.PlaybackType?.Value switch
+            _current = playbackInfo.PlaybackType switch
             {
                 MediaPlaybackType.Video => MediaPlaybackContext.Video,
                 MediaPlaybackType.Music => MediaPlaybackContext.Music,
