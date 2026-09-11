@@ -16,6 +16,7 @@
             <MenuItem Header="Say hi" Click="OnSayHiClicked" />
             <Separator />
             <MenuItem x:Name="CharacterMenuItem" Header="Character" />
+            <MenuItem x:Name="ScaleMenuItem" Header="Size" />
             <Separator />
             <MenuItem x:Name="StartWithWindowsMenuItem"
                       Header="Start with Windows"

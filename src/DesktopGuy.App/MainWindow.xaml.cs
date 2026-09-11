@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Windows;
@@ -35,6 +36,7 @@ public partial class MainWindow : Window
         _definition = definition;
         StartWithWindowsMenuItem.IsChecked = StartupRegistration.IsEnabled();
         PopulateCharacterMenu();
+        PopulateScaleMenu();
 
         var sheet = LoadSpriteSheet(definition);
         double windowWidth = definition.FrameSize.Width * definition.Scale;
@@ -319,6 +321,76 @@ public partial class MainWindow : Window
         // The window's Closed handler already saves position and tears
         // down the watchers - Shutdown() triggers that the same as any
         // other close.
+        Application.Current.Shutdown();
+    }
+
+    /// <summary>
+    /// Fills the "Size" submenu with a handful of percentages of this
+    /// character's own authored default scale (character.json's "scale" -
+    /// re-loaded fresh here so the percentages stay anchored to that
+    /// original value even after a previous resize), ticking whichever one
+    /// is currently active.
+    /// </summary>
+    private void PopulateScaleMenu()
+    {
+        string folderName = Path.GetFileName(_definition.SourceFolder);
+        double baseScale;
+        try
+        {
+            baseScale = CharacterLoader.Load(folderName).Scale;
+        }
+        catch
+        {
+            baseScale = _definition.Scale;
+        }
+
+        double[] percentages = { 0.75, 0.9, 1.0, 1.1, 1.25, 1.5 };
+        foreach (var percentage in percentages)
+        {
+            double candidateScale = Math.Round(baseScale * percentage, 3);
+            var item = new MenuItem
+            {
+                Header = percentage == 1.0 ? "100% (default)" : $"{percentage * 100:0}%",
+                IsCheckable = true,
+                IsChecked = Math.Abs(_definition.Scale - candidateScale) < 0.01,
+                Tag = candidateScale,
+            };
+            item.Click += OnScaleSelected;
+            ScaleMenuItem.Items.Add(item);
+        }
+    }
+
+    /// <summary>
+    /// Like OnCharacterSelected, resizing live would mean recomputing the
+    /// controller's movement bounds and repositioning the window to keep
+    /// him glued to the ground rather than just growing/shrinking from a
+    /// corner - relaunching at the new scale sidesteps all of that.
+    /// </summary>
+    private void OnScaleSelected(object sender, RoutedEventArgs e)
+    {
+        var item = (MenuItem)sender;
+        var newScale = (double)item.Tag;
+
+        if (Math.Abs(newScale - _definition.Scale) < 0.01)
+        {
+            item.IsChecked = true;
+            return;
+        }
+
+        string folderName = Path.GetFileName(_definition.SourceFolder);
+        ScalePreferenceStore.Save(folderName, newScale);
+
+        string? exePath = Environment.ProcessPath;
+        if (!string.IsNullOrEmpty(exePath))
+        {
+            Process.Start(new ProcessStartInfo(
+                exePath,
+                $"--character \"{folderName}\" --scale {newScale.ToString(CultureInfo.InvariantCulture)}")
+            {
+                UseShellExecute = true,
+            });
+        }
+
         Application.Current.Shutdown();
     }
 

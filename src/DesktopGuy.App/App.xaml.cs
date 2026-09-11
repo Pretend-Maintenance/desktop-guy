@@ -1,4 +1,6 @@
 using System;
+using System.Globalization;
+using System.IO;
 using System.Windows;
 using DesktopGuy.App.Characters;
 using DesktopGuy.App.Engine;
@@ -12,9 +14,35 @@ public partial class App : Application
         base.OnStartup(e);
 
         var definition = LoadRequestedCharacter(e.Args);
+        ApplyScaleOverride(definition, e.Args);
 
         var window = new MainWindow(definition);
         window.Show();
+    }
+
+    /// <summary>
+    /// Supports `DesktopGuy.exe --scale 1.5` to pick a display scale.
+    /// Without that flag, falls back to whatever was last picked from the
+    /// context menu's size submenu for this specific character (see
+    /// ScalePreferenceStore), then to the character's own authored default
+    /// (character.json's "scale") if nothing's been picked yet.
+    /// </summary>
+    private static void ApplyScaleOverride(CharacterDefinition definition, string[] args)
+    {
+        int flagIndex = Array.IndexOf(args, "--scale");
+        if (flagIndex >= 0 && flagIndex + 1 < args.Length
+            && double.TryParse(args[flagIndex + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out var explicitScale))
+        {
+            definition.Scale = explicitScale;
+            return;
+        }
+
+        var folderName = Path.GetFileName(definition.SourceFolder);
+        var remembered = ScalePreferenceStore.TryLoad(folderName);
+        if (remembered is { } scale)
+        {
+            definition.Scale = scale;
+        }
     }
 
     /// <summary>
