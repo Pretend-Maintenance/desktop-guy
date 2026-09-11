@@ -41,6 +41,14 @@ both from the cleanup script rather than the original art, now fixed:
   Fixed by only ever treating near-neutral gray/white as background,
   never near-black - real character details (headphones, pupils,
   sunglasses, terminal bezels) stay untouched now.
+- **A thin dark line at some cell edges.** The original upload has faint
+  leftover grid-divider lines baked into the art at a few (not all) of
+  the actual column boundaries - matching the literal grid lines visible
+  in the very first version of this sheet you shared. A couple of the
+  detected crop boundaries landed exactly on top of one. Fixed by
+  trimming a small (3px) margin off every side of every cell before
+  cropping, rather than trying to detect and strip the line by color
+  (too easy to repeat the headphones mistake).
 
 ## Rows worth double-checking against what you actually wanted
 
