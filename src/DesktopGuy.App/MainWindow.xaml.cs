@@ -22,6 +22,7 @@ public partial class MainWindow : Window
     private readonly MediaContextWatcher _mediaContext = new();
     private readonly NotificationWatcher _notificationWatcher = new();
     private readonly TerminalWatcher _terminalWatcher = new();
+    private readonly WeatherWatcher _weatherWatcher;
     private readonly CancellationTokenSource _lifetimeCts = new();
     private readonly Stopwatch _clock = new();
     private DispatcherTimer? _speechHideTimer;
@@ -57,7 +58,11 @@ public partial class MainWindow : Window
         _animator.AnimationCompleted += OnAnimatorAnimationCompleted;
         CharacterImage.Source = _animator.CurrentFrame;
 
-        _controller = new CharacterController(definition, startX, startY, _mediaContext, _terminalWatcher);
+        _weatherWatcher = new WeatherWatcher(
+            definition.Behavior.ColdThresholdCelsius, definition.Behavior.HotThresholdCelsius);
+
+        _controller = new CharacterController(
+            definition, startX, startY, _mediaContext, _terminalWatcher, _weatherWatcher);
         _controller.SetBounds(minX, maxX, groundY);
         _controller.StateChanged += OnControllerStateChanged;
         _controller.PositionChanged += OnControllerPositionChanged;
@@ -83,6 +88,7 @@ public partial class MainWindow : Window
         _ = _mediaContext.StartAsync(_lifetimeCts.Token);
         _ = _notificationWatcher.StartAsync(_lifetimeCts.Token);
         _terminalWatcher.Start(_lifetimeCts.Token);
+        _weatherWatcher.Start(_lifetimeCts.Token);
     }
 
     private static BitmapImage LoadSpriteSheet(CharacterDefinition definition)

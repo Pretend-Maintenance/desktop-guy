@@ -15,7 +15,11 @@
     "answerCall": { "row": 7, "frameCount": 3, "fps": 4, "loop": false },
     "openMail": { "row": 8, "frameCount": 3, "fps": 4, "loop": false },
     "hacking": { "row": 9, "frameCount": 4, "fps": 3, "loop": true },
-    "pickUp": { "row": 10, "frameCount": 2, "fps": 8, "loop": false }
+    "pickUp": { "row": 10, "frameCount": 2, "fps": 8, "loop": false },
+    "cold": { "row": 11, "frameCount": 4, "fps": 3, "loop": true },
+    "hot": { "row": 12, "frameCount": 4, "fps": 3, "loop": true },
+    "sunny": { "row": 13, "frameCount": 4, "fps": 2, "loop": true },
+    "rainy": { "row": 14, "frameCount": 4, "fps": 3, "loop": true }
   },
   "behavior": {
     "idleTimeoutSeconds": 90,
@@ -26,7 +30,9 @@
     "walkDurationMaxSeconds": 5,
     "speechIntervalMinSeconds": 40,
     "speechIntervalMaxSeconds": 120,
-    "speechDurationSeconds": 4.5
+    "speechDurationSeconds": 4.5,
+    "coldThresholdCelsius": 5,
+    "hotThresholdCelsius": 28
   },
   "phrases": [
     "Just hanging out with you!",

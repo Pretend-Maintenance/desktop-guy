@@ -72,6 +72,11 @@ launch automatically when you log in.
 - **Terminal open**: if a shell or terminal app is running (Command Prompt,
   PowerShell, Windows Terminal, PuTTY, ...) it pulls up its own little
   terminal with scrolling matrix-style code.
+- **Weather**: dresses for the weather where you are, checked every 20
+  minutes - a jacket and little breath clouds when it's cold, a hand fan
+  when it's hot, sunglasses when it's clear and sunny, an umbrella when
+  it's raining. See **Weather setup** below for how it figures out where
+  "where you are" is.
 - **Discord call**: an incoming Discord call makes it pick up a phone for a
   moment, then goes back to whatever it was doing.
 - **Discord message**: a new Discord message makes it open an envelope for a
@@ -79,10 +84,12 @@ launch automatically when you log in.
 
 If more than one of these applies at once, momentary things (a Discord call
 or message) always interrupt and play out fully before it resumes whatever
-it was doing. Among the ongoing ones, a terminal being open wins over
-video, which wins over music, which wins over just wandering/idling -
-see the priority list at the top of `Engine/CharacterController.cs` if you
-want to change that ordering.
+it was doing. Among the ongoing ones: a terminal being open wins over
+video, which wins over music, which wins over weather, which wins over
+just wandering/idling. Weather is the one exception to "suppresses sleep" -
+it doesn't keep the character up, it just changes what idling looks like
+while it applies. See the priority list at the top of
+`Engine/CharacterController.cs` if you want to change any of that ordering.
 
 The music/video awareness uses Windows' own "now playing" system (the same
 thing behind the media controls on your lock screen), so it works with
@@ -90,7 +97,8 @@ whatever's actually playing without knowing about specific apps. Terminal
 awareness just checks whether a known terminal process is running. Discord
 awareness reads Discord's own notifications via Windows' notification
 listener - see **Context awareness setup** below, since that one needs a
-one-time permission grant.
+one-time permission grant. Weather awareness makes plain HTTPS calls to two
+free services - see **Weather setup** below.
 
 ## Context awareness setup
 
@@ -113,6 +121,32 @@ Privacy \> Notifications**) and allow it there.
 > test it on - if Discord reactions don't show up for you, that's the most
 > likely culprit, and the rest of the character is unaffected.
 
+## Weather setup
+
+Nothing to configure - it works out of the box, no API keys or accounts.
+Under the hood it makes two plain HTTPS calls, no signup for either:
+
+1. **[ipapi.co](https://ipapi.co)** - once, at startup, to turn your public
+   IP address into a city-level location (latitude/longitude). This is
+   *city-level*, not your exact address - the same accuracy any website
+   gets just from you visiting it, nothing more precise.
+2. **[Open-Meteo](https://open-meteo.com)** - every 20 minutes after that,
+   to get the actual forecast for that location.
+
+If you'd rather it not do the IP lookup at all (e.g. no internet access, a
+firewall, or you just don't want it), it fails silently - weather reactions
+just never trigger and everything else about the character is unaffected.
+There's currently no config file to hand-enter a location instead; if you'd
+rather have that than the automatic IP lookup, that's a small follow-up
+change (swap `WeatherWatcher`'s IP-lookup step for a fixed latitude/longitude
+read from character.json or a settings file).
+
+"Cold"/"hot" are temperature thresholds you can tune per character in
+`character.json` under `behavior.coldThresholdCelsius` /
+`behavior.hotThresholdCelsius` (Blob defaults to 5°C / 28°C). "Rainy" is
+based on the forecast's weather code (drizzle, rain, showers, or storms all
+count). "Sunny" is clear skies during daytime that isn't already cold or hot.
+
 ## Project layout
 
 ```
@@ -121,7 +155,8 @@ src/DesktopGuy.App/
                             idle detection, sprite animation, window plumbing)
   Characters/            <- CharacterDefinition model + loader for character.json
   Context/                <- context awareness: now-playing media (music/video),
-                            running terminal processes, and Discord
+                            running terminal processes, weather (via
+                            IP geolocation + Open-Meteo), and Discord
                             notifications (call/message) - all optional and
                             independent of the core engine
   Assets/Characters/
@@ -148,6 +183,7 @@ sprite sheet, which is how new characters get added.
    - `dance` - music is playing
    - `watch` - a video is playing
    - `hacking` - a terminal/shell is open
+   - `cold` / `hot` / `sunny` / `rainy` - current weather
    - `answerCall` - an incoming Discord call
    - `openMail` - a new Discord message
    - `pickUp` - the moment you grab it (falls back straight to `drag` if omitted)
@@ -160,7 +196,8 @@ sprite sheet, which is how new characters get added.
      on, how many frames (`frameCount`), how fast to play them (`fps`),
      and whether it `loop`s (`wake`, `answerCall`, `openMail` and `pickUp`
      are non-looping - they play once and then move on; everything else loops)
-   - `behavior`: idle timeout, wander timing, speech timing
+   - `behavior`: idle timeout, wander timing, speech timing, and the
+     `coldThresholdCelsius` / `hotThresholdCelsius` weather cutoffs
    - `phrases`: the lines it can say
 4. In the `.csproj`, files under `Assets/Characters/**` are already
    configured to copy to the output folder automatically - no project file
@@ -173,7 +210,8 @@ sprite sheet, which is how new characters get added.
 `Blob`'s sprite sheet is simple generated pixel-art blocks, good enough to
 see the whole system working end-to-end (idle blink, walk bounce, sleep Zzz,
 startled pickUp, drag wobble, wake-up blink, headphone dance,
-sunglasses-and-popcorn watch, matrix-code hacking, phone-call pickup,
-envelope-opening) but it's meant to be swapped out - drop in real pixel-art
-sprite sheets for `Blob` or any new character and nothing else needs to
-change.
+sunglasses-and-popcorn watch, matrix-code hacking, jacket-and-breath-clouds
+cold, fan-and-sweat hot, sunglasses-and-rays sunny, umbrella-and-raindrops
+rainy, phone-call pickup, envelope-opening) but it's meant to be swapped
+out - drop in real pixel-art sprite sheets for `Blob` or any new character
+and nothing else needs to change.

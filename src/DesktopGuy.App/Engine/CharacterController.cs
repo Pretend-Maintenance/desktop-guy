@@ -22,13 +22,17 @@ namespace DesktopGuy.App.Engine;
 ///   3. Media context (music -> dance, video -> watch) - while active this
 ///      also suppresses the idle/sleep timer, since playing something is a
 ///      perfectly good reason not to be "away".
-///   4. The regular idle/sleep/wander/speech behavior.
+///   4. The regular idle/sleep/wander/speech behavior, which is where
+///      weather (cold/hot/sunny/rainy) fits in - it does NOT suppress
+///      sleep (being cold outside all day shouldn't keep him up forever),
+///      it just replaces what idling looks like while it applies.
 /// </summary>
 public sealed class CharacterController
 {
     private readonly CharacterDefinition _definition;
     private readonly MediaContextWatcher? _mediaContext;
     private readonly TerminalWatcher? _terminalContext;
+    private readonly WeatherWatcher? _weatherContext;
     private readonly Random _random = new();
 
     private double _minX;
@@ -57,11 +61,13 @@ public sealed class CharacterController
         double startX,
         double startY,
         MediaContextWatcher? mediaContext = null,
-        TerminalWatcher? terminalContext = null)
+        TerminalWatcher? terminalContext = null,
+        WeatherWatcher? weatherContext = null)
     {
         _definition = definition;
         _mediaContext = mediaContext;
         _terminalContext = terminalContext;
+        _weatherContext = weatherContext;
         PositionX = startX;
         PositionY = startY;
         _secondsUntilNextWalk = RandomBetween(
@@ -204,6 +210,11 @@ public sealed class CharacterController
             return;
         }
 
+        if (TickWeatherContext())
+        {
+            return;
+        }
+
         TickWalking(dt);
         TickSpeech(dt);
     }
@@ -281,6 +292,40 @@ public sealed class CharacterController
 
         return false;
     }
+
+    /// <summary>Returns true if the current weather took over this tick.</summary>
+    private bool TickWeatherContext()
+    {
+        CharacterState? weatherState = (_weatherContext?.Current ?? WeatherCondition.None) switch
+        {
+            WeatherCondition.Rainy => CharacterState.WeatherRainy,
+            WeatherCondition.Cold => CharacterState.WeatherCold,
+            WeatherCondition.Hot => CharacterState.WeatherHot,
+            WeatherCondition.Sunny => CharacterState.WeatherSunny,
+            _ => null,
+        };
+
+        if (weatherState is { } state && HasAnimation(state))
+        {
+            if (State != state)
+            {
+                TransitionTo(state);
+            }
+            return true;
+        }
+
+        if (IsWeatherState(State))
+        {
+            TransitionTo(CharacterState.Idle);
+            ScheduleNextWalk();
+        }
+
+        return false;
+    }
+
+    private static bool IsWeatherState(CharacterState state) => state is
+        CharacterState.WeatherCold or CharacterState.WeatherHot or
+        CharacterState.WeatherSunny or CharacterState.WeatherRainy;
 
     private void TickFalling(double dt)
     {

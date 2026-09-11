@@ -10,6 +10,10 @@ public enum CharacterState
     Dancing,
     Watching,
     Hacking,
+    WeatherCold,
+    WeatherHot,
+    WeatherSunny,
+    WeatherRainy,
     AnsweringCall,
     ReadingMessage,
 }
