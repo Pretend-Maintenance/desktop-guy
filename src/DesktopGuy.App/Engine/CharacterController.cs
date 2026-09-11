@@ -58,7 +58,7 @@ public sealed class CharacterController
     public CharacterState State { get; private set; } = CharacterState.Idle;
     public double PositionX { get; private set; }
     public double PositionY { get; private set; }
-    public bool FacingRight { get; private set; } = true;
+    public bool FacingRight { get; private set; } = false;
 
     public event Action<CharacterState>? StateChanged;
     public event Action? PositionChanged;
