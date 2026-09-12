@@ -1,6 +1,6 @@
 {
   "id": "cat",
-  "displayName": "Cat",
+  "displayName": "Princess Donut",
   "spriteSheet": "spritesheet.png",
   "frameSize": { "width": 84, "height": 84 },
   "scale": 1.75,
