@@ -248,7 +248,7 @@ prompt below) or any new character and nothing else needs to change.
 Here's a reusable template for handing a new character off to an AI image
 generator, refined from actually doing this for Fox (see
 `Assets/Characters/Fox/NOTES.md` for the specific problems this template's
-wording is designed to head off). Two big lessons baked in:
+wording is designed to head off). Three big lessons baked in:
 
 - **Ask for a solid green background, not transparency.** Most image
   generators (this was tested with Gemini) don't produce real alpha - they
@@ -259,6 +259,14 @@ wording is designed to head off). Two big lessons baked in:
   can do this; ask an AI coding assistant for a script if you don't want to
   write one), and it's the one color guaranteed to never appear in the
   character's own design, so removal is unambiguous.
+- **Ask for solid black outlines specifically, not just "an outline."**
+  Without that, the character's edge often comes back anti-aliased into
+  the green background - a thin ring of green-tinted pixels rather than a
+  clean line - which then needs a spill-suppression pass (clamp the green
+  channel down wherever it's the dominant one on a kept pixel) to fix up
+  afterward. Asking for the outline color explicitly reduces how much of
+  that shows up in the first place, though the cleanup script should still
+  expect and handle some.
 - **Spell out every row's content explicitly and repeat the "only this
   creature" instruction.** Without that, generators can and do drift -
   wrong colors on one frame, or entirely unrelated content on a row (an
@@ -289,9 +297,10 @@ more/fewer frames per animation or to skip some optional animations:
 >
 > Character: [DESCRIBE THE CHARACTER - species/shape, color palette,
 > face/eyes, distinguishing features, size proportions, no more than a
-> couple of sentences]. Style: [e.g. "flat cartoon shading, clean dark
-> outlines" or "crisp hard-edged pixel art, no anti-aliasing"] - pick one
-> style and keep it identical across every cell.
+> couple of sentences]. Style: [e.g. "flat cartoon shading" or "crisp
+> hard-edged pixel art, no anti-aliasing"] with solid black outlines
+> around the character - never colored or blended into the green
+> background - pick one style and keep it identical across every cell.
 >
 > Each row is one animation, frames left to right (leave any unused
 > trailing cells in a row blank, still green background):
