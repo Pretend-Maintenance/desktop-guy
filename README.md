@@ -91,23 +91,26 @@ register that temporary path instead of your real install.
   checked against whichever window is actually focused, not just "is a
   terminal running somewhere" - otherwise launching the app from a terminal
   would leave it stuck showing this forever.
-- **Weather**: dresses for the weather where you are, checked every 20
-  minutes - a jacket and little breath clouds when it's cold, a hand fan
-  when it's hot, sunglasses when it's clear and sunny, an umbrella when
-  it's raining. See **Weather setup** below for how it figures out where
-  "where you are" is.
 - **Discord call**: an incoming Discord call makes it pick up a phone for a
   moment, then goes back to whatever it was doing.
 - **Discord message**: a new Discord message makes it open an envelope for a
   moment, then resumes.
 
-If more than one of these applies at once, momentary things (a Discord call
-or message) always interrupt and play out fully before it resumes whatever
-it was doing. Among the ongoing ones: a terminal being open wins over
-video, which wins over music, which wins over weather, which wins over
-just wandering/idling. Weather is the one exception to "suppresses sleep" -
-it doesn't keep the character up, it just changes what idling looks like
-while it applies. See the priority list at the top of
+There are also four weather poses - `cold`, `hot`, `sunny`, `rainy` - but
+they're preview-only, triggered from the right-click menu's **Preview
+Weather** submenu rather than automatically. An earlier version tried to
+detect the real weather and settle into one of these after being idle for a
+while, but in practice that meant it only ever showed up if the actual
+forecast happened to match one of the four categories *and* you'd stayed
+idle long enough at the same time - rare enough that it read as "broken"
+rather than "occasional." Picking one from the menu forces that pose for a
+few seconds so you can actually see it.
+
+If more than one of the automatic behaviors applies at once, momentary
+things (a Discord call or message) always interrupt and play out fully
+before it resumes whatever it was doing. Among the ongoing ones: a terminal
+being open wins over video, which wins over music, which wins over just
+wandering/idling. See the priority list at the top of
 `Engine/CharacterController.cs` if you want to change any of that ordering.
 
 The music/video awareness uses Windows' own "now playing" system (the same
@@ -136,8 +139,6 @@ are pressed; the only thing it ever keeps is a single timestamp of the
 last key-down, overwritten every time. Discord awareness reads Discord's
 own notifications via Windows' notification listener - see **Context
 awareness setup** below, since that one needs a one-time permission grant.
-Weather awareness makes plain HTTPS calls to two free services - see
-**Weather setup** below.
 
 ## Context awareness setup
 
@@ -160,32 +161,6 @@ Privacy \> Notifications**) and allow it there.
 > test it on - if Discord reactions don't show up for you, that's the most
 > likely culprit, and the rest of the character is unaffected.
 
-## Weather setup
-
-Nothing to configure - it works out of the box, no API keys or accounts.
-Under the hood it makes two plain HTTPS calls, no signup for either:
-
-1. **[ipapi.co](https://ipapi.co)** - once, at startup, to turn your public
-   IP address into a city-level location (latitude/longitude). This is
-   *city-level*, not your exact address - the same accuracy any website
-   gets just from you visiting it, nothing more precise.
-2. **[Open-Meteo](https://open-meteo.com)** - every 20 minutes after that,
-   to get the actual forecast for that location.
-
-If you'd rather it not do the IP lookup at all (e.g. no internet access, a
-firewall, or you just don't want it), it fails silently - weather reactions
-just never trigger and everything else about the character is unaffected.
-There's currently no config file to hand-enter a location instead; if you'd
-rather have that than the automatic IP lookup, that's a small follow-up
-change (swap `WeatherWatcher`'s IP-lookup step for a fixed latitude/longitude
-read from character.json or a settings file).
-
-"Cold"/"hot" are temperature thresholds you can tune per character in
-`character.json` under `behavior.coldThresholdCelsius` /
-`behavior.hotThresholdCelsius` (Blob defaults to 5°C / 25°C). "Rainy" is
-based on the forecast's weather code (drizzle, rain, showers, or storms all
-count). "Sunny" is clear skies during daytime that isn't already cold or hot.
-
 ## Project layout
 
 ```
@@ -194,8 +169,7 @@ src/DesktopGuy.App/
                             idle detection, sprite animation, window plumbing)
   Characters/            <- CharacterDefinition model + loader for character.json
   Context/                <- context awareness: now-playing media (music/video),
-                            the focused window/terminal, keyboard activity,
-                            weather (via IP geolocation + Open-Meteo), and
+                            the focused window/terminal, keyboard activity, and
                             Discord notifications (call/message) - all optional and
                             independent of the core engine
   Assets/Characters/
@@ -222,7 +196,8 @@ sprite sheet, which is how new characters get added.
    - `dance` - music is playing
    - `watch` - a video is playing
    - `hacking` - a terminal/shell is open
-   - `cold` / `hot` / `sunny` / `rainy` - current weather
+   - `cold` / `hot` / `sunny` / `rainy` - weather poses, shown only via the
+     right-click menu's Preview Weather submenu (not triggered automatically)
    - `answerCall` - an incoming Discord call
    - `openMail` - a new Discord message
    - `pickUp` - the moment you grab it (falls back straight to `drag` if omitted)
@@ -248,8 +223,7 @@ sprite sheet, which is how new characters get added.
      on, how many frames (`frameCount`), how fast to play them (`fps`),
      and whether it `loop`s (`wake`, `answerCall`, `openMail` and `pickUp`
      are non-looping - they play once and then move on; everything else loops)
-   - `behavior`: idle timeout, wander timing, speech timing, and the
-     `coldThresholdCelsius` / `hotThresholdCelsius` weather cutoffs
+   - `behavior`: idle timeout, wander timing, speech timing
    - `phrases`: the lines it can say
 4. In the `.csproj`, files under `Assets/Characters/**` are already
    configured to copy to the output folder automatically - no project file

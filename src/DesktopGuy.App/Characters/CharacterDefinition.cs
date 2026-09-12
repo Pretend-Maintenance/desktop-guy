@@ -26,7 +26,18 @@ public sealed class CharacterDefinition
 
     public Dictionary<string, AnimationDefinition> Animations { get; set; } = new();
     public BehaviorSettings Behavior { get; set; } = new();
+
+    /// <summary>Shown at any time of day.</summary>
     public List<string> Phrases { get; set; } = new();
+
+    /// <summary>Extra phrases mixed in alongside Phrases during roughly 5am-noon. Optional - leave empty for no morning-specific flavor.</summary>
+    public List<string> MorningPhrases { get; set; } = new();
+
+    /// <summary>Extra phrases mixed in alongside Phrases during roughly 6pm-11pm. Optional.</summary>
+    public List<string> EveningPhrases { get; set; } = new();
+
+    /// <summary>Extra phrases mixed in alongside Phrases during roughly 11pm-5am. Optional.</summary>
+    public List<string> LateNightPhrases { get; set; } = new();
 
     /// <summary>Absolute path to the folder this definition was loaded from.</summary>
     public string SourceFolder { get; set; } = "";
@@ -61,9 +72,4 @@ public sealed class BehaviorSettings
     public double SpeechIntervalMinSeconds { get; set; } = 30;
     public double SpeechIntervalMaxSeconds { get; set; } = 90;
     public double SpeechDurationSeconds { get; set; } = 4;
-    public double ColdThresholdCelsius { get; set; } = 5;
-    public double HotThresholdCelsius { get; set; } = 25;
-
-    /// <summary>How long he has to be idle before settling into a weather pose (sunglasses in the sun, etc.) rather than just standing around.</summary>
-    public double WeatherIdleDelaySeconds { get; set; } = 20;
 }

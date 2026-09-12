@@ -30,9 +30,7 @@
     "walkDurationMaxSeconds": 5,
     "speechIntervalMinSeconds": 40,
     "speechIntervalMaxSeconds": 120,
-    "speechDurationSeconds": 4.5,
-    "coldThresholdCelsius": 5,
-    "hotThresholdCelsius": 25
+    "speechDurationSeconds": 4.5
   },
   "phrases": [
     "Just hanging out with you!",
@@ -57,5 +55,23 @@
     "I'm rootin' for ya.",
     "Round is a shape and I'm proud of it.",
     "Tell me a secret. I won't tell anyone. Probably."
+  ],
+  "morningPhrases": [
+    "Morning! Did you sleep okay?",
+    "Fresh day, fresh wobble.",
+    "Coffee first, then world domination.",
+    "Rise and shine!"
+  ],
+  "eveningPhrases": [
+    "Winding down for the day?",
+    "Evenings are for comfy blankets.",
+    "You did a lot today, you know.",
+    "Almost dinner time~"
+  ],
+  "lateNightPhrases": [
+    "It's pretty late... just saying.",
+    "Blobs don't really sleep, but you should.",
+    "One more thing and then bed, promise?",
+    "*sleepy wobble* Still up, huh?"
   ]
 }

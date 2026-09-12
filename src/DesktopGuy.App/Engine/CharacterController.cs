@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using DesktopGuy.App.Characters;
 using DesktopGuy.App.Context;
 
@@ -24,14 +25,14 @@ namespace DesktopGuy.App.Engine;
 ///   3. Media context (music -> dance, video -> watch) - while active this
 ///      also suppresses the idle/sleep timer, since playing something is a
 ///      perfectly good reason not to be "away".
-///   4. The regular idle/sleep/wander/speech behavior, which is where
-///      weather (cold/hot/sunny/rainy) fits in - it does NOT suppress
-///      sleep (being cold outside all day shouldn't keep him up forever).
-///      It also isn't instant: he has to be idle for a stretch first (see
-///      BehaviorSettings.WeatherIdleDelaySeconds) before settling into the
-///      weather pose, and even then the normal wander schedule can still
-///      pull him out of it - it's "he'll chill in the sun for a while",
-///      not "he's frozen there until the weather changes".
+///   4. The regular idle/sleep/wander/speech behavior.
+///
+/// Weather poses (cold/hot/sunny/rainy) exist as animations but aren't
+/// triggered automatically - that used to depend on the real forecast
+/// matching one of the four AND him being idle for a while at the same
+/// time, which in practice meant they'd rarely show up. They're only ever
+/// shown via PreviewWeather now, e.g. from the context menu's "Preview
+/// Weather" submenu.
 /// </summary>
 public sealed class CharacterController
 {
@@ -39,7 +40,7 @@ public sealed class CharacterController
     private readonly MediaContextWatcher? _mediaContext;
     private readonly TerminalWatcher? _terminalContext;
     private readonly TypingWatcher? _typingContext;
-    private readonly WeatherWatcher? _weatherContext;
+    private readonly BatteryWatcher? _batteryContext;
     private readonly Random _random = new();
 
     private double _minX;
@@ -51,11 +52,11 @@ public sealed class CharacterController
     private double _walkRemainingSeconds;
     private double _secondsUntilNextWalk;
     private double _secondsUntilNextSpeech;
-    private double _secondsIdleForWeather;
     private bool _isFalling;
     private DiscordEvent? _pendingReaction;
     private WeatherCondition? _previewWeatherCondition;
     private double _previewWeatherSecondsRemaining;
+    private bool _wasBatteryLow;
 
     public CharacterState State { get; private set; } = CharacterState.Idle;
     public double PositionX { get; private set; }
@@ -73,13 +74,13 @@ public sealed class CharacterController
         MediaContextWatcher? mediaContext = null,
         TerminalWatcher? terminalContext = null,
         TypingWatcher? typingContext = null,
-        WeatherWatcher? weatherContext = null)
+        BatteryWatcher? batteryContext = null)
     {
         _definition = definition;
         _mediaContext = mediaContext;
         _terminalContext = terminalContext;
         _typingContext = typingContext;
-        _weatherContext = weatherContext;
+        _batteryContext = batteryContext;
         PositionX = startX;
         PositionY = startY;
         _secondsUntilNextWalk = RandomBetween(
@@ -122,6 +123,27 @@ public sealed class CharacterController
             TransitionTo(CharacterState.Idle);
             ScheduleNextWalk();
         }
+    }
+
+    /// <summary>
+    /// Called by MainWindow when a click on the character turned out not to
+    /// be a drag (see OnCharacterMouseDown) - there's no dedicated "petted"
+    /// animation/art, so this just pops up a phrase immediately, as an
+    /// acknowledgment that the click landed on him rather than doing
+    /// nothing. Also pushes back the next ambient speech so they don't
+    /// double up right after.
+    /// </summary>
+    public void OnPetted()
+    {
+        var pool = GetCurrentPhrasePool();
+        if (pool.Count == 0)
+        {
+            return;
+        }
+
+        SpeechRequested?.Invoke(pool[_random.Next(pool.Count)]);
+        _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
+            _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
     }
 
     /// <summary>
@@ -176,6 +198,8 @@ public sealed class CharacterController
     public void Tick(TimeSpan elapsed)
     {
         double dt = elapsed.TotalSeconds;
+
+        TickBattery();
 
         if (State == CharacterState.Dragging)
         {
@@ -238,20 +262,6 @@ public sealed class CharacterController
             return;
         }
 
-        if (State == CharacterState.Idle)
-        {
-            _secondsIdleForWeather += dt;
-        }
-        else if (State == CharacterState.Walking)
-        {
-            _secondsIdleForWeather = 0;
-        }
-
-        if (TickWeatherContext(dt))
-        {
-            return;
-        }
-
         TickWalking(dt);
         TickSpeech(dt);
     }
@@ -271,6 +281,24 @@ public sealed class CharacterController
             ? CharacterState.AnsweringCall
             : CharacterState.ReadingMessage);
         return true;
+    }
+
+    /// <summary>
+    /// Fires a one-off speech bubble the moment the battery drops to/below
+    /// BatteryWatcher's low-battery threshold (edge-triggered on the
+    /// transition, not every tick while it stays low, so it doesn't nag).
+    /// No dedicated art for this - it's just a phrase, layered on top of
+    /// whatever else is going on rather than changing state/animation.
+    /// </summary>
+    private void TickBattery()
+    {
+        bool isLow = _batteryContext?.IsLow ?? false;
+        if (isLow && !_wasBatteryLow)
+        {
+            SpeechRequested?.Invoke("Battery's getting low - might want to plug in!");
+        }
+
+        _wasBatteryLow = isLow;
     }
 
     /// <summary>Returns true if a focused terminal or active typing took over this tick.</summary>
@@ -331,58 +359,6 @@ public sealed class CharacterController
         return false;
     }
 
-    /// <summary>Returns true if the current weather took over this tick.</summary>
-    private bool TickWeatherContext(double dt)
-    {
-        CharacterState? weatherState = (_weatherContext?.Current ?? WeatherCondition.None) switch
-        {
-            WeatherCondition.Rainy => CharacterState.WeatherRainy,
-            WeatherCondition.Cold => CharacterState.WeatherCold,
-            WeatherCondition.Hot => CharacterState.WeatherHot,
-            WeatherCondition.Sunny => CharacterState.WeatherSunny,
-            _ => null,
-        };
-
-        if (weatherState is { } state && HasAnimation(state))
-        {
-            bool alreadyChilling = State == state;
-
-            if (!alreadyChilling)
-            {
-                // Don't interrupt active wandering just because the weather
-                // matches - only settle into the pose once he's actually
-                // been standing around a while.
-                if (_secondsIdleForWeather < _definition.Behavior.WeatherIdleDelaySeconds)
-                {
-                    return false;
-                }
-
-                TransitionTo(state);
-                return true;
-            }
-
-            // Still let the normal wander schedule pull him out of it every
-            // so often, rather than camping in the weather pose forever.
-            _secondsUntilNextWalk -= dt;
-            if (_secondsUntilNextWalk <= 0)
-            {
-                _secondsIdleForWeather = 0;
-                TransitionTo(CharacterState.Idle);
-                return false;
-            }
-
-            return true;
-        }
-
-        if (IsWeatherState(State))
-        {
-            TransitionTo(CharacterState.Idle);
-            ScheduleNextWalk();
-        }
-
-        return false;
-    }
-
     /// <summary>Returns true if a manually-triggered weather preview (see PreviewWeather) took over this tick.</summary>
     private bool TickWeatherPreview(double dt)
     {
@@ -421,10 +397,6 @@ public sealed class CharacterController
 
         return true;
     }
-
-    private static bool IsWeatherState(CharacterState state) => state is
-        CharacterState.WeatherCold or CharacterState.WeatherHot or
-        CharacterState.WeatherSunny or CharacterState.WeatherRainy;
 
     private void TickFalling(double dt)
     {
@@ -499,7 +471,8 @@ public sealed class CharacterController
 
     private void TickSpeech(double dt)
     {
-        if (_definition.Phrases.Count == 0)
+        var pool = GetCurrentPhrasePool();
+        if (pool.Count == 0)
         {
             return;
         }
@@ -507,13 +480,44 @@ public sealed class CharacterController
         _secondsUntilNextSpeech -= dt;
         if (_secondsUntilNextSpeech <= 0)
         {
-            string phrase = _definition.Phrases[_random.Next(_definition.Phrases.Count)];
+            string phrase = pool[_random.Next(pool.Count)];
             SpeechRequested?.Invoke(phrase);
 
             _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
                 _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
         }
     }
+
+    /// <summary>
+    /// The general phrase pool, plus whichever time-of-day pool (morning/
+    /// evening/late-night) matches the clock right now, if that character
+    /// defines any for this time - so "he mentions coffee in the morning"
+    /// is just extra lines layered on top of the always-available ones,
+    /// not a separate thing that replaces them.
+    /// </summary>
+    private IReadOnlyList<string> GetCurrentPhrasePool()
+    {
+        int hour = DateTime.Now.Hour;
+        List<string> timeSpecific = hour switch
+        {
+            >= 5 and < 12 => _definition.MorningPhrases,
+            >= 18 and < 23 => _definition.EveningPhrases,
+            >= 23 or < 5 => _definition.LateNightPhrases,
+            _ => EmptyPhrases,
+        };
+
+        if (timeSpecific.Count == 0)
+        {
+            return _definition.Phrases;
+        }
+
+        var combined = new List<string>(_definition.Phrases.Count + timeSpecific.Count);
+        combined.AddRange(_definition.Phrases);
+        combined.AddRange(timeSpecific);
+        return combined;
+    }
+
+    private static readonly List<string> EmptyPhrases = new();
 
     private bool HasAnimation(CharacterState state) =>
         _definition.Animations.ContainsKey(CharacterAnimationMap.GetAnimationName(state));

@@ -25,7 +25,7 @@ public partial class MainWindow : Window
     private readonly NotificationWatcher _notificationWatcher = new();
     private readonly TerminalWatcher _terminalWatcher = new();
     private readonly TypingWatcher _typingWatcher = new();
-    private readonly WeatherWatcher _weatherWatcher;
+    private readonly BatteryWatcher _batteryWatcher = new();
     private readonly CancellationTokenSource _lifetimeCts = new();
     private readonly Stopwatch _clock = new();
     private DispatcherTimer? _speechHideTimer;
@@ -63,11 +63,8 @@ public partial class MainWindow : Window
         CharacterImage.Source = _animator.CurrentFrame;
         NextCharacterImage.Source = _animator.NextFrame;
 
-        _weatherWatcher = new WeatherWatcher(
-            definition.Behavior.ColdThresholdCelsius, definition.Behavior.HotThresholdCelsius);
-
         _controller = new CharacterController(
-            definition, startX, startY, _mediaContext, _terminalWatcher, _typingWatcher, _weatherWatcher);
+            definition, startX, startY, _mediaContext, _terminalWatcher, _typingWatcher, _batteryWatcher);
         _controller.SetBounds(minX, maxX, groundY);
         _controller.StateChanged += OnControllerStateChanged;
         _controller.PositionChanged += OnControllerPositionChanged;
@@ -95,7 +92,7 @@ public partial class MainWindow : Window
         _ = _notificationWatcher.StartAsync(_lifetimeCts.Token);
         _terminalWatcher.Start(_lifetimeCts.Token);
         _typingWatcher.Start();
-        _weatherWatcher.Start(_lifetimeCts.Token);
+        _batteryWatcher.Start(_lifetimeCts.Token);
     }
 
     private static BitmapImage LoadSpriteSheet(CharacterDefinition definition)
@@ -191,6 +188,9 @@ public partial class MainWindow : Window
             return;
         }
 
+        double startLeft = Left;
+        double startTop = Top;
+
         _controller.BeginDrag();
 
         try
@@ -211,6 +211,17 @@ public partial class MainWindow : Window
 
         _controller.SyncPosition(Left, Top);
         _controller.EndDrag();
+
+        // DragMove() is also what fires for a plain click (it just never
+        // actually moves anything in that case) - if the window ended up
+        // within a couple pixels of where it started, treat it as a pet
+        // rather than a drag.
+        bool actuallyDragged = Math.Abs(Left - startLeft) > 2 || Math.Abs(Top - startTop) > 2;
+        if (!actuallyDragged)
+        {
+            _controller.OnPetted();
+        }
+
         e.Handled = true;
     }
 

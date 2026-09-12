@@ -31,9 +31,7 @@
     "walkDurationMaxSeconds": 5,
     "speechIntervalMinSeconds": 40,
     "speechIntervalMaxSeconds": 120,
-    "speechDurationSeconds": 4.5,
-    "coldThresholdCelsius": 5,
-    "hotThresholdCelsius": 25
+    "speechDurationSeconds": 4.5
   },
   "phrases": [
     "Just foxing around!",
@@ -60,5 +58,23 @@
     "Pspspsps... oh wait, wrong animal.",
     "Vulpine and proud.",
     "Tell me a secret. I won't tell anyone. Probably."
+  ],
+  "morningPhrases": [
+    "Morning! Did you sleep okay?",
+    "Fresh day, fresh tail fluff.",
+    "Coffee first, then world domination.",
+    "Rise and shine!"
+  ],
+  "eveningPhrases": [
+    "Winding down for the day?",
+    "Evenings are for comfy blankets.",
+    "You did a lot today, you know.",
+    "Almost dinner time~"
+  ],
+  "lateNightPhrases": [
+    "It's pretty late... just saying.",
+    "Foxes are nocturnal, but are you?",
+    "One more thing and then bed, promise?",
+    "*sleepy yawn* Still up, huh?"
   ]
 }
