@@ -1,8 +1,18 @@
 # Dave character notes
 
 `spritesheet.png` is the cleaned-up sheet actually used by the app.
-`spritesheet_raw.png` is the original upload, kept as a backup - not used
-by the app, safe to delete if you don't want it around.
+`spritesheet_raw.png` and `spritesheet_expansion_raw.png` are the
+original uploads, kept as backups - not used by the app, safe to delete
+if you don't want them around.
+
+## Expansion sheet (rows 15-18)
+
+Added `eating`, `playing`, `lowBattery`, and `snapshot` as a separate
+6x4 sheet, appended onto the bottom of the existing 15-row sheet. No
+grid lines this time (content-gap detection instead), and no cleanup
+issues at all - came out clean on the first pass, no patches needed
+(unlike Fox/Cat's versions of this same expansion, which both needed a
+battery-icon fix in `lowBattery`).
 
 A black pug with a cute underbite, generated from the AI-art prompt
 template in the main README, same green-background/grid-line approach as

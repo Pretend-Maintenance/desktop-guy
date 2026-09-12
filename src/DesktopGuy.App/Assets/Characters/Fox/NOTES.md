@@ -1,9 +1,30 @@
 # Fox character notes
 
 `spritesheet.png` is the uploaded AI-generated sheet, cleaned up (see
-below). `spritesheet_raw.png` and `spritesheet_raw_v2.png` are the two
-original uploads, kept as backups - not used by the app, safe to delete
-if you don't want them around.
+below). `spritesheet_raw.png`, `spritesheet_raw_v2.png`, and
+`spritesheet_expansion_raw.png` are the original uploads, kept as
+backups - not used by the app, safe to delete if you don't want them
+around.
+
+## Third pass: expansion sheet (rows 15-18)
+
+Added `eating`, `playing`, `lowBattery`, and `snapshot` as a small
+separate 6x4 sheet (see the "Adding new rows" section of the main
+README), then appended onto the bottom of the existing 15-row sheet -
+no need to regenerate everything. This one had its own grid lines too,
+but white instead of the black ones Cat/Dinosaur/Dave used - detected
+the same way (find the opaque divider line positions directly, match
+them against an evenly-spaced theoretical grid to drop false positives),
+just checking for any fully-opaque line rather than specifically black.
+
+The `lowBattery` row's battery icon was drawn with a **green** outline,
+which is invisible to a chroma key on a green background - same mistake
+as the dinosaur's "leaf" prop from the main sheet, and the same fix:
+the README template now says never use a green prop, but this row was
+already generated before that got caught. Rather than regenerate,
+patched it directly - cleared the broken remnant (just a floating red
+bar with no outline) and drew a small clean battery icon in its place
+with PIL, same position, across all 6 frames.
 
 ## Second pass: the v2 (green-screen) regeneration
 

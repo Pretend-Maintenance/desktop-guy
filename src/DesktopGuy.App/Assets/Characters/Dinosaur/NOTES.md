@@ -1,8 +1,27 @@
 # Dinosaur character notes
 
 `spritesheet.png` is the cleaned-up sheet actually used by the app.
-`spritesheet_raw.png` is the original upload, kept as a backup - not used
-by the app, safe to delete if you don't want it around.
+`spritesheet_raw.png` and `spritesheet_expansion_raw.png` are the
+original uploads, kept as backups - not used by the app, safe to delete
+if you don't want them around.
+
+## Expansion sheet (rows 15-18)
+
+Added `eating`, `playing`, `lowBattery`, and `snapshot` as a separate
+6x4 sheet, appended onto the bottom of the existing 15-row sheet. Hit
+the same "turquoise skin is close to green" problem as the main sheet,
+but a different variant of it this time: large, genuinely contiguous
+patches of the pale belly (not isolated noise pixels) satisfied the
+background test outright, which the noise-focused `binary_opening` fix
+from the main sheet can't help with (opening only removes small isolated
+regions, not big contiguous ones). Measured the actual color gap on this
+image - true background pixels had a green-vs-blue channel gap of
+~107-111, belly pixels that were tripping the background test topped
+out around 13 - a huge, reliable margin - so tightening that specific
+threshold (the green-must-exceed-blue-by requirement, from 30 to 60)
+excluded the belly while still catching every real background pixel.
+Combined with the existing `binary_opening` pass for the leftover noise
+specks, this came out clean.
 
 Generated from the AI-art prompt template in the main README, same as
 Cat - green background, drawn-in grid lines (used directly for boundary

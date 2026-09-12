@@ -1,8 +1,21 @@
 # Cat character notes
 
 `spritesheet.png` is the cleaned-up sheet actually used by the app.
-`spritesheet_raw.png` is the original upload, kept as a backup - not used
-by the app, safe to delete if you don't want it around.
+`spritesheet_raw.png` and `spritesheet_expansion_raw.png` are the
+original uploads, kept as backups - not used by the app, safe to delete
+if you don't want them around.
+
+## Expansion sheet (rows 15-18)
+
+Added `eating`, `playing`, `lowBattery`, and `snapshot` as a separate
+6x4 sheet (no grid lines this time - content-gap boundary detection
+instead, same as the original approach), appended onto the bottom of
+the existing 15-row sheet. The `lowBattery` row's battery icon (5th
+frame) landed right at the boundary between rows, so the automatic crop
+sliced through it and only a small fragment survived - unlike Fox's
+version of this same row, this icon's outline was black (safe color),
+just unlucky positioning. Patched by clearing the fragment and drawing a
+small clean replacement icon with PIL in the same spot.
 
 The character is an original mascot built from tortoiseshell-Persian
 breed traits (fluffy flat face, large yellow eyes, black/beige/cream

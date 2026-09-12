@@ -20,7 +20,11 @@
     "hot": { "row": 11, "frameCount": 6, "fps": 3, "loop": true },
     "sunny": { "row": 12, "frameCount": 6, "fps": 2, "loop": true },
     "rainy": { "row": 13, "frameCount": 6, "fps": 3, "loop": true },
-    "cold": { "row": 14, "frameCount": 6, "fps": 3, "loop": true }
+    "cold": { "row": 14, "frameCount": 6, "fps": 3, "loop": true },
+    "eating": { "row": 15, "frameCount": 6, "fps": 3, "loop": false },
+    "playing": { "row": 16, "frameCount": 6, "fps": 4, "loop": false },
+    "lowBattery": { "row": 17, "frameCount": 6, "fps": 2, "loop": false },
+    "snapshot": { "row": 18, "frameCount": 2, "fps": 8, "loop": false }
   },
   "behavior": {
     "idleTimeoutSeconds": 90,
