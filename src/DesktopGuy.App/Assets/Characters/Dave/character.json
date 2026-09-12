@@ -1,0 +1,80 @@
+{
+  "id": "dave",
+  "displayName": "Dave",
+  "spriteSheet": "spritesheet.png",
+  "frameSize": { "width": 84, "height": 84 },
+  "scale": 1.75,
+  "smoothTransitions": false,
+  "animations": {
+    "idle": { "row": 0, "frameCount": 6, "fps": 2, "loop": true },
+    "walk": { "row": 1, "frameCount": 6, "fps": 6, "loop": true },
+    "sleep": { "row": 2, "frameCount": 6, "fps": 1.5, "loop": true },
+    "drag": { "row": 3, "frameCount": 6, "fps": 4, "loop": true },
+    "wake": { "row": 4, "frameCount": 2, "fps": 2, "loop": false },
+    "dance": { "row": 5, "frameCount": 6, "fps": 5, "loop": true },
+    "watch": { "row": 6, "frameCount": 6, "fps": 2, "loop": true },
+    "answerCall": { "row": 7, "frameCount": 6, "fps": 4, "loop": false },
+    "openMail": { "row": 8, "frameCount": 6, "fps": 4, "loop": false },
+    "hacking": { "row": 9, "frameCount": 6, "fps": 3, "loop": true },
+    "pickUp": { "row": 10, "frameCount": 2, "fps": 8, "loop": false },
+    "hot": { "row": 11, "frameCount": 6, "fps": 3, "loop": true },
+    "sunny": { "row": 12, "frameCount": 6, "fps": 2, "loop": true },
+    "rainy": { "row": 13, "frameCount": 6, "fps": 3, "loop": true },
+    "cold": { "row": 14, "frameCount": 6, "fps": 3, "loop": true }
+  },
+  "behavior": {
+    "idleTimeoutSeconds": 90,
+    "walkSpeedPxPerSec": 45,
+    "walkIntervalMinSeconds": 10,
+    "walkIntervalMaxSeconds": 30,
+    "walkDurationMinSeconds": 2,
+    "walkDurationMaxSeconds": 5,
+    "speechIntervalMinSeconds": 40,
+    "speechIntervalMaxSeconds": 120,
+    "speechDurationSeconds": 4.5
+  },
+  "phrases": [
+    "Woof!",
+    "*bark bark*",
+    "WOOF WOOF WOOF",
+    "*snort*",
+    "Bark!",
+    "*huffy little bark*",
+    "*suspicious growl*",
+    "*barks at nothing*",
+    "Woof? Woof!",
+    "*snorts indignantly*",
+    "*tiny fierce bark*",
+    "*bark* (at a leaf)",
+    "*bark* (at the vacuum)",
+    "*bark* (at his own reflection)",
+    "*grumbly snort*",
+    "Woof woof!",
+    "*aggressive tail wag*",
+    "*bark* (at absolutely nothing)",
+    "*happy snort*",
+    "WOOF!",
+    "*bork*",
+    "*sneezes then barks about it*",
+    "*determined little growl*",
+    "*bark* (the doorbell wasn't even real)"
+  ],
+  "morningPhrases": [
+    "*excited morning bark*",
+    "*stretches, snorts*",
+    "WOOF! (good morning)",
+    "*zoomies*"
+  ],
+  "eveningPhrases": [
+    "*sleepy snort*",
+    "*settles down with a huff*",
+    "*quiet bork*",
+    "*yawn-bark*"
+  ],
+  "lateNightPhrases": [
+    "*low warning growl* (it's late)",
+    "*drowsy snort*",
+    "Woof... woof.",
+    "*sleepy bark*"
+  ]
+}
