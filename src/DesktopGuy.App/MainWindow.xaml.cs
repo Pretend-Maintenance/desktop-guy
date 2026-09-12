@@ -27,6 +27,7 @@ public partial class MainWindow : Window
     private readonly TypingWatcher _typingWatcher = new();
     private readonly BatteryWatcher _batteryWatcher = new();
     private readonly MeetingWatcher _meetingWatcher = new();
+    private readonly ScreenshotWatcher _screenshotWatcher = new();
     private readonly CancellationTokenSource _lifetimeCts = new();
     private readonly Stopwatch _clock = new();
     private DispatcherTimer? _speechHideTimer;
@@ -65,13 +66,15 @@ public partial class MainWindow : Window
         NextCharacterImage.Source = _animator.NextFrame;
 
         _controller = new CharacterController(
-            definition, startX, startY, _mediaContext, _terminalWatcher, _typingWatcher, _batteryWatcher, _meetingWatcher);
+            definition, startX, startY, _mediaContext, _terminalWatcher, _typingWatcher, _batteryWatcher,
+            _meetingWatcher, _screenshotWatcher);
         _controller.SetBounds(minX, maxX, groundY);
         _controller.StateChanged += OnControllerStateChanged;
         _controller.PositionChanged += OnControllerPositionChanged;
         _controller.SpeechRequested += ShowSpeech;
 
         _notificationWatcher.DiscordEventDetected += OnDiscordEventDetected;
+        _screenshotWatcher.ScreenshotTaken += () => _controller.RequestSnapshotReaction();
 
         SourceInitialized += (_, _) =>
             Win32Interop.HideFromAltTabAndTaskbar(new WindowInteropHelper(this).Handle);
@@ -80,6 +83,7 @@ public partial class MainWindow : Window
             PositionStore.Save(_definition.Id, Left, Top);
             _lifetimeCts.Cancel();
             _typingWatcher.Dispose();
+            _screenshotWatcher.Dispose();
         };
 
         CompositionTarget.Rendering += OnRenderingFrame;
@@ -95,6 +99,7 @@ public partial class MainWindow : Window
         _typingWatcher.Start();
         _batteryWatcher.Start(_lifetimeCts.Token);
         _meetingWatcher.Start(_lifetimeCts.Token);
+        _screenshotWatcher.Start();
     }
 
     private static BitmapImage LoadSpriteSheet(CharacterDefinition definition)
@@ -143,6 +148,10 @@ public partial class MainWindow : Window
                 break;
             case "answerCall":
             case "openMail":
+            case "snapshot":
+            case "eating":
+            case "playing":
+            case "lowBattery":
                 _controller.OnReactionAnimationFinished();
                 break;
             case "pickUp":

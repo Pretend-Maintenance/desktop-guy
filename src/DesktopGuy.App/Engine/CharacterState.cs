@@ -16,4 +16,8 @@ public enum CharacterState
     WeatherRainy,
     AnsweringCall,
     ReadingMessage,
+    Eating,
+    Playing,
+    Snapshot,
+    LowBattery,
 }

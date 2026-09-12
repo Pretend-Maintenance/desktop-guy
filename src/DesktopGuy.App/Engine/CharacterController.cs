@@ -28,7 +28,11 @@ namespace DesktopGuy.App.Engine;
 ///   4. Media context (music -> dance, video -> watch) - while active this
 ///      also suppresses the idle/sleep timer, since playing something is a
 ///      perfectly good reason not to be "away".
-///   5. The regular idle/sleep/wander/speech behavior.
+///   5. The regular idle/sleep/wander/speech behavior - which is also
+///      where occasional idle-surprise animations (eating, playing, and
+///      a low-battery mood if the character defines one) fit in: a random
+///      one-off flourish while otherwise just standing around, the same
+///      "plays once then falls through" shape as a Discord reaction.
 ///
 /// Weather poses (cold/hot/sunny/rainy) exist as animations but aren't
 /// triggered automatically - that used to depend on the real forecast
@@ -45,6 +49,7 @@ public sealed class CharacterController
     private readonly TypingWatcher? _typingContext;
     private readonly BatteryWatcher? _batteryContext;
     private readonly MeetingWatcher? _meetingContext;
+    private readonly ScreenshotWatcher? _screenshotContext;
     private readonly Random _random = new();
 
     private double _minX;
@@ -56,8 +61,10 @@ public sealed class CharacterController
     private double _walkRemainingSeconds;
     private double _secondsUntilNextWalk;
     private double _secondsUntilNextSpeech;
+    private double _secondsUntilNextIdleSurprise;
     private bool _isFalling;
     private DiscordEvent? _pendingReaction;
+    private bool _pendingSnapshot;
     private WeatherCondition? _previewWeatherCondition;
     private double _previewWeatherSecondsRemaining;
     private bool _wasBatteryLow;
@@ -79,7 +86,8 @@ public sealed class CharacterController
         TerminalWatcher? terminalContext = null,
         TypingWatcher? typingContext = null,
         BatteryWatcher? batteryContext = null,
-        MeetingWatcher? meetingContext = null)
+        MeetingWatcher? meetingContext = null,
+        ScreenshotWatcher? screenshotContext = null)
     {
         _definition = definition;
         _mediaContext = mediaContext;
@@ -87,12 +95,15 @@ public sealed class CharacterController
         _typingContext = typingContext;
         _batteryContext = batteryContext;
         _meetingContext = meetingContext;
+        _screenshotContext = screenshotContext;
         PositionX = startX;
         PositionY = startY;
         _secondsUntilNextWalk = RandomBetween(
             definition.Behavior.WalkIntervalMinSeconds, definition.Behavior.WalkIntervalMaxSeconds);
         _secondsUntilNextSpeech = RandomBetween(
             definition.Behavior.SpeechIntervalMinSeconds, definition.Behavior.SpeechIntervalMaxSeconds);
+        _secondsUntilNextIdleSurprise = RandomBetween(
+            definition.Behavior.IdleSurpriseIntervalMinSeconds, definition.Behavior.IdleSurpriseIntervalMaxSeconds);
     }
 
     /// <summary>Confines wandering/dragging to the visible work area, and sets the "floor" the character rests on.</summary>
@@ -170,6 +181,21 @@ public sealed class CharacterController
     }
 
     /// <summary>
+    /// Queues a one-shot startled reaction to the PrintScreen key being
+    /// pressed. Same shape as RequestReaction above - picked up next Tick
+    /// unless mid-drag.
+    /// </summary>
+    public void RequestSnapshotReaction()
+    {
+        if (!HasAnimation(CharacterState.Snapshot))
+        {
+            return;
+        }
+
+        _pendingSnapshot = true;
+    }
+
+    /// <summary>
     /// Forces a weather pose for a few seconds regardless of the actual
     /// weather or how long he's been idle - so it can be previewed from the
     /// context menu on demand, rather than waiting for it to genuinely be
@@ -191,15 +217,25 @@ public sealed class CharacterController
         }
     }
 
-    /// <summary>Called by MainWindow once a one-shot reaction animation (answerCall/openMail) finishes.</summary>
+    /// <summary>
+    /// Called by MainWindow once a one-shot reaction animation finishes
+    /// (answerCall/openMail/snapshot, or an idle surprise - eating/
+    /// playing/lowBattery).
+    /// </summary>
     public void OnReactionAnimationFinished()
     {
-        if (State == CharacterState.AnsweringCall || State == CharacterState.ReadingMessage)
+        if (IsOneShotReactionState(State))
         {
             TransitionTo(CharacterState.Idle);
             ScheduleNextWalk();
+            ScheduleNextIdleSurprise();
         }
     }
+
+    private static bool IsOneShotReactionState(CharacterState state) => state is
+        CharacterState.AnsweringCall or CharacterState.ReadingMessage or
+        CharacterState.Snapshot or CharacterState.Eating or
+        CharacterState.Playing or CharacterState.LowBattery;
 
     public void Tick(TimeSpan elapsed)
     {
@@ -222,7 +258,12 @@ public sealed class CharacterController
             return;
         }
 
-        if (State == CharacterState.AnsweringCall || State == CharacterState.ReadingMessage)
+        if (TryStartPendingSnapshot())
+        {
+            return;
+        }
+
+        if (IsOneShotReactionState(State))
         {
             // Waiting on OnReactionAnimationFinished to move on.
             return;
@@ -273,6 +314,11 @@ public sealed class CharacterController
             return;
         }
 
+        if (TickIdleSurprise(dt))
+        {
+            return;
+        }
+
         TickWalking(dt);
         TickSpeech(dt);
     }
@@ -292,6 +338,64 @@ public sealed class CharacterController
             ? CharacterState.AnsweringCall
             : CharacterState.ReadingMessage);
         return true;
+    }
+
+    private bool TryStartPendingSnapshot()
+    {
+        if (!_pendingSnapshot)
+        {
+            return false;
+        }
+
+        _pendingSnapshot = false;
+        _isFalling = false;
+
+        TransitionTo(CharacterState.Snapshot);
+        return true;
+    }
+
+    /// <summary>
+    /// Occasionally plays a spontaneous "eating" or "playing" animation -
+    /// or "lowBattery" too, while the battery's actually low - instead of
+    /// just standing there idle. Only ever fires while genuinely idle
+    /// (not mid-walk), and only considers animations the character
+    /// actually defines, so it's a complete no-op for any character
+    /// (or state) that doesn't have this art.
+    /// </summary>
+    private bool TickIdleSurprise(double dt)
+    {
+        if (State != CharacterState.Idle)
+        {
+            return false;
+        }
+
+        var candidates = new List<CharacterState>(3);
+        if (HasAnimation(CharacterState.Eating)) candidates.Add(CharacterState.Eating);
+        if (HasAnimation(CharacterState.Playing)) candidates.Add(CharacterState.Playing);
+        if ((_batteryContext?.IsLow ?? false) && HasAnimation(CharacterState.LowBattery))
+        {
+            candidates.Add(CharacterState.LowBattery);
+        }
+
+        if (candidates.Count == 0)
+        {
+            return false;
+        }
+
+        _secondsUntilNextIdleSurprise -= dt;
+        if (_secondsUntilNextIdleSurprise > 0)
+        {
+            return false;
+        }
+
+        TransitionTo(candidates[_random.Next(candidates.Count)]);
+        return true;
+    }
+
+    private void ScheduleNextIdleSurprise()
+    {
+        _secondsUntilNextIdleSurprise = RandomBetween(
+            _definition.Behavior.IdleSurpriseIntervalMinSeconds, _definition.Behavior.IdleSurpriseIntervalMaxSeconds);
     }
 
     /// <summary>

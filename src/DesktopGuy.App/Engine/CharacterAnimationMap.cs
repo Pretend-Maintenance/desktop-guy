@@ -25,6 +25,10 @@ public static class CharacterAnimationMap
         CharacterState.WeatherRainy => "rainy",
         CharacterState.AnsweringCall => "answerCall",
         CharacterState.ReadingMessage => "openMail",
+        CharacterState.Eating => "eating",
+        CharacterState.Playing => "playing",
+        CharacterState.Snapshot => "snapshot",
+        CharacterState.LowBattery => "lowBattery",
         _ => "idle",
     };
 }

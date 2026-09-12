@@ -72,4 +72,14 @@ public sealed class BehaviorSettings
     public double SpeechIntervalMinSeconds { get; set; } = 30;
     public double SpeechIntervalMaxSeconds { get; set; } = 90;
     public double SpeechDurationSeconds { get; set; } = 4;
+
+    /// <summary>
+    /// How often, while sitting idle, he might spontaneously play a
+    /// one-off "eating" or "playing" animation instead of just standing
+    /// there - a random interval is picked between these two bounds after
+    /// each one (and at startup). Only ever fires if the character
+    /// actually defines an "eating" and/or "playing" animation.
+    /// </summary>
+    public double IdleSurpriseIntervalMinSeconds { get; set; } = 90;
+    public double IdleSurpriseIntervalMaxSeconds { get; set; } = 240;
 }

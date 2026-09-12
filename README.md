@@ -202,13 +202,22 @@ sprite sheet, which is how new characters get added.
    simply never enters that state (e.g. skips dancing but still handles
    video, or vice versa):
    - `dance` - music is playing
-   - `watch` - a video is playing
-   - `hacking` - a terminal/shell is open
+   - `watch` - a video is playing, or a video-call app (Zoom, Teams, Google
+     Meet, ...) is focused
+   - `hacking` - a terminal/shell or code editor/IDE is focused, or you're
+     typing anywhere
    - `cold` / `hot` / `sunny` / `rainy` - weather poses, shown only via the
      right-click menu's Preview Weather submenu (not triggered automatically)
    - `answerCall` - an incoming Discord call
    - `openMail` - a new Discord message
    - `pickUp` - the moment you grab it (falls back straight to `drag` if omitted)
+   - `snapshot` - a startled reaction to the PrintScreen key being pressed
+   - `eating` / `playing` - spontaneous one-off animations while otherwise
+     just standing around idle (see `idleSurpriseIntervalMinSeconds` /
+     `idleSurpriseIntervalMaxSeconds` in `behavior` to tune how often)
+   - `lowBattery` - mixed into the same idle-surprise rotation as `eating`/
+     `playing`, but only while a laptop's battery is actually low and
+     unplugged
 3. Add a `character.json` next to it (copy `Blob/character.json` as a
    starting point) describing:
    - `frameSize`: pixel width/height of a single frame in the sheet
