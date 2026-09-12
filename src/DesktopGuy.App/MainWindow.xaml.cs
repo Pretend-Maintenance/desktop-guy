@@ -26,6 +26,7 @@ public partial class MainWindow : Window
     private readonly TerminalWatcher _terminalWatcher = new();
     private readonly TypingWatcher _typingWatcher = new();
     private readonly BatteryWatcher _batteryWatcher = new();
+    private readonly MeetingWatcher _meetingWatcher = new();
     private readonly CancellationTokenSource _lifetimeCts = new();
     private readonly Stopwatch _clock = new();
     private DispatcherTimer? _speechHideTimer;
@@ -64,7 +65,7 @@ public partial class MainWindow : Window
         NextCharacterImage.Source = _animator.NextFrame;
 
         _controller = new CharacterController(
-            definition, startX, startY, _mediaContext, _terminalWatcher, _typingWatcher, _batteryWatcher);
+            definition, startX, startY, _mediaContext, _terminalWatcher, _typingWatcher, _batteryWatcher, _meetingWatcher);
         _controller.SetBounds(minX, maxX, groundY);
         _controller.StateChanged += OnControllerStateChanged;
         _controller.PositionChanged += OnControllerPositionChanged;
@@ -93,6 +94,7 @@ public partial class MainWindow : Window
         _terminalWatcher.Start(_lifetimeCts.Token);
         _typingWatcher.Start();
         _batteryWatcher.Start(_lifetimeCts.Token);
+        _meetingWatcher.Start(_lifetimeCts.Token);
     }
 
     private static BitmapImage LoadSpriteSheet(CharacterDefinition definition)

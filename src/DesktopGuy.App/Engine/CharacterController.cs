@@ -17,15 +17,18 @@ namespace DesktopGuy.App.Engine;
 ///   1. A pending reaction (Discord call/message) - interrupts anything
 ///      except an active drag, plays once, then falls through to whatever
 ///      is appropriate next tick.
-///   2. A terminal being focused, or you actively typing anywhere (hacking)
-///      - checked before media, since "I'm clearly at the keyboard doing
-///      something" is a stronger signal than background music. Both reuse
-///      the same "hacking" animation - there's no separate art for
-///      "typing in a random app" vs. "typing in a terminal".
-///   3. Media context (music -> dance, video -> watch) - while active this
+///   2. A terminal or code editor being focused, or you actively typing
+///      anywhere (hacking) - checked before media, since "I'm clearly at
+///      the keyboard doing something" is a stronger signal than
+///      background music. All of these reuse the same "hacking"
+///      animation - there's no separate art for "typing in a random app"
+///      vs. "typing in a terminal" vs. "in an IDE".
+///   3. A video-call app being focused (Zoom, Teams, Google Meet, ...) -
+///      reuses the "watching" animation, same reasoning as above.
+///   4. Media context (music -> dance, video -> watch) - while active this
 ///      also suppresses the idle/sleep timer, since playing something is a
 ///      perfectly good reason not to be "away".
-///   4. The regular idle/sleep/wander/speech behavior.
+///   5. The regular idle/sleep/wander/speech behavior.
 ///
 /// Weather poses (cold/hot/sunny/rainy) exist as animations but aren't
 /// triggered automatically - that used to depend on the real forecast
@@ -41,6 +44,7 @@ public sealed class CharacterController
     private readonly TerminalWatcher? _terminalContext;
     private readonly TypingWatcher? _typingContext;
     private readonly BatteryWatcher? _batteryContext;
+    private readonly MeetingWatcher? _meetingContext;
     private readonly Random _random = new();
 
     private double _minX;
@@ -74,13 +78,15 @@ public sealed class CharacterController
         MediaContextWatcher? mediaContext = null,
         TerminalWatcher? terminalContext = null,
         TypingWatcher? typingContext = null,
-        BatteryWatcher? batteryContext = null)
+        BatteryWatcher? batteryContext = null,
+        MeetingWatcher? meetingContext = null)
     {
         _definition = definition;
         _mediaContext = mediaContext;
         _terminalContext = terminalContext;
         _typingContext = typingContext;
         _batteryContext = batteryContext;
+        _meetingContext = meetingContext;
         PositionX = startX;
         PositionY = startY;
         _secondsUntilNextWalk = RandomBetween(
@@ -233,6 +239,11 @@ public sealed class CharacterController
             return;
         }
 
+        if (TickMeetingContext())
+        {
+            return;
+        }
+
         if (TickMediaContext())
         {
             return;
@@ -320,6 +331,30 @@ public sealed class CharacterController
         {
             TransitionTo(CharacterState.Idle);
             ScheduleNextWalk();
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Returns true if a focused video-call app (Zoom, Teams, Google Meet,
+    /// ...) took over this tick. No dedicated cleanup-to-Idle branch here
+    /// on purpose - TickMediaContext's own fallback (a few lines down)
+    /// already resets out of Watching whenever neither it nor this one
+    /// still wants it, since that check doesn't care which watcher set
+    /// the state in the first place.
+    /// </summary>
+    private bool TickMeetingContext()
+    {
+        bool inMeeting = _meetingContext?.IsActive ?? false;
+
+        if (inMeeting && HasAnimation(CharacterState.Watching))
+        {
+            if (State != CharacterState.Watching)
+            {
+                TransitionTo(CharacterState.Watching);
+            }
+            return true;
         }
 
         return false;

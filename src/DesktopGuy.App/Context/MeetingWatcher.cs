@@ -8,29 +8,26 @@ using DesktopGuy.App.Engine;
 namespace DesktopGuy.App.Context;
 
 /// <summary>
-/// Notices when a terminal or code editor (a shell, Windows Terminal,
-/// PuTTY, VS Code, Visual Studio, a JetBrains IDE, ...) is the window
-/// you're actually focused on right now, so the character can pull up its
-/// own little matrix-code terminal - there's no separate art for "in a
-/// terminal" vs. "in an IDE", and both are the same "clearly doing
-/// programming-adjacent work" signal. Checked against the foreground
-/// window rather than "is such a process running anywhere" - otherwise
-/// launching the app from a terminal (like `dotnet run`) would leave it
-/// stuck showing "hacking" forever, since that terminal stays open in the
-/// background for the whole session.
+/// Notices when a video-call app (Zoom, Microsoft Teams, Google Meet, ...)
+/// is the window you're actually focused on right now. Reuses the
+/// "watching" animation (see CharacterController) rather than needing its
+/// own dedicated art - "staring at a video call" and "watching a video"
+/// read as the same pose. Native apps are matched by process name; Google
+/// Meet (and Zoom/Teams when used in-browser instead of the native app)
+/// only shows up as a browser tab, so the focused window's title is also
+/// checked for a marker, the same approach MediaContextWatcher uses for
+/// video sites.
 /// </summary>
-public sealed class TerminalWatcher
+public sealed class MeetingWatcher
 {
     private static readonly string[] ProcessNames =
     {
-        // Terminals/shells
-        "cmd", "powershell", "pwsh", "WindowsTerminal", "wt",
-        "putty", "kitty", "ConEmu64", "ConEmu", "mintty", "Hyper", "alacritty", "wezterm-gui",
+        "Zoom", "Teams", "ms-teams", "Skype", "SkypeApp", "webexmta", "GoToMeeting",
+    };
 
-        // Code editors/IDEs
-        "Code", "Code - Insiders", "Cursor", "devenv", "rider64", "idea64",
-        "pycharm64", "webstorm64", "clion64", "phpstorm64", "goland64", "datagrip64",
-        "sublime_text", "notepad++", "atom", "gvim", "emacs", "androidstudio64",
+    private static readonly string[] TitleMarkers =
+    {
+        "Meet - ", "Google Meet", "Zoom Meeting", "Microsoft Teams",
     };
 
     private static readonly TimeSpan PollInterval = TimeSpan.FromSeconds(1.5);
@@ -72,7 +69,17 @@ public sealed class TerminalWatcher
             }
 
             using var process = Process.GetProcessById(processId.Value);
-            _isActive = ProcessNames.Any(name => string.Equals(name, process.ProcessName, StringComparison.OrdinalIgnoreCase));
+            bool isKnownApp = ProcessNames.Any(
+                name => string.Equals(name, process.ProcessName, StringComparison.OrdinalIgnoreCase));
+
+            if (isKnownApp)
+            {
+                _isActive = true;
+                return;
+            }
+
+            string title = Win32Interop.GetForegroundWindowTitle();
+            _isActive = TitleMarkers.Any(marker => title.Contains(marker, StringComparison.OrdinalIgnoreCase));
         }
         catch
         {

@@ -82,15 +82,22 @@ register that temporary path instead of your real install.
   Music, etc.) it puts on headphones and dances instead of wandering off.
 - **Video**: if something is playing that looks like a video (a YouTube tab,
   Netflix, ...) it puts on sunglasses, grabs popcorn, and settles in to watch.
-- **Terminal focused, or you're typing**: if a shell or terminal app
-  (Command Prompt, PowerShell, Windows Terminal, PuTTY, ...) is the window
-  you're actually using right now, or you're actively pressing keys
-  anywhere, it pulls up its own little terminal with scrolling matrix-style
-  code - both reuse the same animation, since there's no separate art for
-  "typing in a terminal" vs. "typing anywhere else". Terminal focus is
-  checked against whichever window is actually focused, not just "is a
-  terminal running somewhere" - otherwise launching the app from a terminal
-  would leave it stuck showing this forever.
+- **Terminal or code editor focused, or you're typing**: if a shell or
+  terminal app (Command Prompt, PowerShell, Windows Terminal, PuTTY, ...),
+  or a code editor/IDE (VS Code, Visual Studio, a JetBrains IDE, Sublime
+  Text, ...) is the window you're actually using right now, or you're
+  actively pressing keys anywhere, it pulls up its own little terminal
+  with scrolling matrix-style code - all of these reuse the same
+  animation, since there's no separate art for "typing in a terminal" vs.
+  "in an IDE" vs. "typing anywhere else". Focus is checked against
+  whichever window is actually focused, not just "is one of these running
+  somewhere" - otherwise launching the app from a terminal would leave it
+  stuck showing this forever.
+- **Video call**: if a video-call app (Zoom, Microsoft Teams, Google Meet,
+  Skype, ...) is the window you're actually using right now, it puts on
+  sunglasses and settles in to watch, the same pose as a video - reused
+  rather than needing its own art, since "staring at a call" and "staring
+  at a video" look the same.
 - **Discord call**: an incoming Discord call makes it pick up a phone for a
   moment, then goes back to whatever it was doing.
 - **Discord message**: a new Discord message makes it open an envelope for a
@@ -109,8 +116,9 @@ few seconds so you can actually see it.
 If more than one of the automatic behaviors applies at once, momentary
 things (a Discord call or message) always interrupt and play out fully
 before it resumes whatever it was doing. Among the ongoing ones: a terminal
-being open wins over video, which wins over music, which wins over just
-wandering/idling. See the priority list at the top of
+or code editor being focused wins over a video call, which wins over
+video/music, which wins over just wandering/idling. See the priority list
+at the top of
 `Engine/CharacterController.cs` if you want to change any of that ordering.
 
 The music/video awareness uses Windows' own "now playing" system (the same
