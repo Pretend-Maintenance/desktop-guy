@@ -365,3 +365,15 @@ in `character.json` just need to match whatever grid the art actually
 ended up with (see the row-remapping note in Fox's `NOTES.md` for a real
 example of this not matching the brief on the first try, and how it was
 fixed without regenerating).
+
+### Adding new rows to an existing character (an "expansion sheet")
+
+To add a new optional animation to a character that already has art
+(`eating`, `playing`, `snapshot`, `lowBattery`, or any future one), there's
+no need to regenerate the whole sheet - generate a small standalone sheet
+with just the new poses (same character description and style as before,
+for consistency), then paste its rows onto the bottom of the existing
+`spritesheet.png` and point `character.json` at the new row numbers
+(15 onward, continuing past the existing rows). Same green-background/
+solid-black-outline/one-creature-only rules apply, just a shorter grid -
+e.g. 6 columns x however many new rows you're adding this round.
