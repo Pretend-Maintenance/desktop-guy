@@ -248,7 +248,7 @@ prompt below) or any new character and nothing else needs to change.
 Here's a reusable template for handing a new character off to an AI image
 generator, refined from actually doing this for Fox (see
 `Assets/Characters/Fox/NOTES.md` for the specific problems this template's
-wording is designed to head off). Three big lessons baked in:
+wording is designed to head off). Four big lessons baked in:
 
 - **Ask for a solid green background, not transparency.** Most image
   generators (this was tested with Gemini) don't produce real alpha - they
@@ -275,6 +275,20 @@ wording is designed to head off). Three big lessons baked in:
   no apparent reason). Explicit per-row descriptions and a repeated
   constraint make this less likely, but always look over what comes back
   row by row rather than assuming it matched the brief.
+- **Never ask for a green prop.** A real mistake made writing an earlier
+  version of this template: it suggested a dinosaur character fan itself
+  with "a small leaf" for the hot-weather row. A green leaf on a green
+  background gets chroma-keyed out along with the background, since
+  there's nothing to tell them apart - the prop was just gone in the
+  result, leaving faint artifact patches where it used to be. Keep any
+  held/worn prop a color clearly different from the background green
+  (the umbrella, phone, and laptop in this template's own row list are
+  all fine - none of them are green). Also worth knowing: a character
+  whose own skin/fur color is itself green-adjacent (teal, lime, olive)
+  needs a more careful cleanup pass than one whose colors sit far from
+  green (like Fox's orange or Cat's beige/black) - see the "turquoise
+  skin" section of `Assets/Characters/Dinosaur/NOTES.md` for what that
+  actually took to get right.
 
 Also expect imperfect grid alignment (uneven row/column spacing, a few
 stray pixels of a neighboring cell bleeding into another) - a boundary
@@ -315,7 +329,8 @@ more/fewer frames per animation or to skip some optional animations:
 > - Row 9 (X frames): opening an envelope/message - [the envelope opening across frames]
 > - Row 10 (X frames): typing/at a computer - [a small screen/keyboard prop]
 > - Row 11 (X frames): just picked up - [a quick startled squish/flinch]
-> - Row 12 (X frames): it's hot outside - [fanning itself, a sweat drop]
+> - Row 12 (X frames): it's hot outside - [fanning itself with a
+>   non-green prop, a sweat drop]
 > - Row 13 (X frames): it's sunny outside - [sunglasses, relaxed/happy]
 > - Row 14 (X frames): it's raining - [holding/using an umbrella]
 > - Row 15 (X frames): it's cold outside - [bundled up, visible breath]

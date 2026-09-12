@@ -1,0 +1,80 @@
+{
+  "id": "dinosaur",
+  "displayName": "Dinosaur",
+  "spriteSheet": "spritesheet.png",
+  "frameSize": { "width": 84, "height": 84 },
+  "scale": 1.75,
+  "smoothTransitions": false,
+  "animations": {
+    "idle": { "row": 0, "frameCount": 5, "fps": 2, "loop": true },
+    "walk": { "row": 1, "frameCount": 6, "fps": 6, "loop": true },
+    "sleep": { "row": 2, "frameCount": 6, "fps": 1.5, "loop": true },
+    "drag": { "row": 3, "frameCount": 6, "fps": 4, "loop": true },
+    "wake": { "row": 4, "frameCount": 2, "fps": 2, "loop": false },
+    "dance": { "row": 5, "frameCount": 6, "fps": 5, "loop": true },
+    "watch": { "row": 6, "frameCount": 6, "fps": 2, "loop": true },
+    "answerCall": { "row": 7, "frameCount": 6, "fps": 4, "loop": false },
+    "openMail": { "row": 8, "frameCount": 6, "fps": 4, "loop": false },
+    "hacking": { "row": 9, "frameCount": 6, "fps": 3, "loop": true },
+    "pickUp": { "row": 10, "frameCount": 2, "fps": 8, "loop": false },
+    "hot": { "row": 11, "frameCount": 6, "fps": 3, "loop": true },
+    "sunny": { "row": 12, "frameCount": 6, "fps": 2, "loop": true },
+    "rainy": { "row": 13, "frameCount": 6, "fps": 3, "loop": true },
+    "cold": { "row": 14, "frameCount": 6, "fps": 3, "loop": true }
+  },
+  "behavior": {
+    "idleTimeoutSeconds": 90,
+    "walkSpeedPxPerSec": 45,
+    "walkIntervalMinSeconds": 10,
+    "walkIntervalMaxSeconds": 30,
+    "walkDurationMinSeconds": 2,
+    "walkDurationMaxSeconds": 5,
+    "speechIntervalMinSeconds": 40,
+    "speechIntervalMaxSeconds": 120,
+    "speechDurationSeconds": 4.5
+  },
+  "phrases": [
+    "Rawr. That's dinosaur for hello.",
+    "Don't forget to stretch a little~",
+    "*happy little stomp*",
+    "You're doing great today.",
+    "Grr!",
+    "Comfy over here.",
+    "Take a sip of water, maybe?",
+    "I like it when you're around.",
+    "Technically I've been extinct for millions of years. Doing great though.",
+    "*crest feathers ruffle*",
+    "Have you blinked recently? Do that.",
+    "Stomp stomp~",
+    "Keep going, you've got this.",
+    "*tail sways*",
+    "I could watch the screen with you all day.",
+    "Save your work, just in case!",
+    "Nothing wrong with a little break.",
+    "You smell like coffee. I approve.",
+    "*yawns*",
+    "Onwards!",
+    "This spot right here is prime real estate.",
+    "Small arms, big heart.",
+    "Prehistoric and proud.",
+    "Tell me a secret. I won't tell anyone. Probably."
+  ],
+  "morningPhrases": [
+    "Morning! Did you sleep okay?",
+    "Fresh day, fresh feathers.",
+    "Coffee first, then world domination.",
+    "Rise and shine!"
+  ],
+  "eveningPhrases": [
+    "Winding down for the day?",
+    "Evenings are for comfy blankets.",
+    "You did a lot today, you know.",
+    "Almost dinner time~"
+  ],
+  "lateNightPhrases": [
+    "It's pretty late... just saying.",
+    "Dinosaurs didn't have bedtimes, but you should.",
+    "One more thing and then bed, promise?",
+    "*sleepy stomp* Still up, huh?"
+  ]
+}
