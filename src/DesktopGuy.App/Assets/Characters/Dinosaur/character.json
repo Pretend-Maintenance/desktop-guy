@@ -34,47 +34,47 @@
     "speechDurationSeconds": 4.5
   },
   "phrases": [
-    "Rawr. That's dinosaur for hello.",
-    "Don't forget to stretch a little~",
+    "Rawr!",
+    "*squawk*",
+    "Grrrr~",
     "*happy little stomp*",
-    "You're doing great today.",
-    "Grr!",
-    "Comfy over here.",
-    "Take a sip of water, maybe?",
-    "I like it when you're around.",
-    "Technically I've been extinct for millions of years. Doing great though.",
+    "SQUAWK!",
+    "*low growl*",
+    "Rawr rawr!",
+    "*chirp*",
     "*crest feathers ruffle*",
-    "Have you blinked recently? Do that.",
-    "Stomp stomp~",
-    "Keep going, you've got this.",
+    "Grrr?",
     "*tail sways*",
-    "I could watch the screen with you all day.",
-    "Save your work, just in case!",
-    "Nothing wrong with a little break.",
-    "You smell like coffee. I approve.",
-    "*yawns*",
-    "Onwards!",
-    "This spot right here is prime real estate.",
-    "Small arms, big heart.",
-    "Prehistoric and proud.",
-    "Tell me a secret. I won't tell anyone. Probably."
+    "Rrrrawr.",
+    "*curious squawk*",
+    "*stomp stomp*",
+    "Grrrrrr!",
+    "*happy chirp*",
+    "Raaawr~",
+    "*sniffs at the screen*",
+    "*small growl*",
+    "SQUAWK SQUAWK",
+    "*preens feathers*",
+    "Grr. Grr!",
+    "*sleepy chirp*",
+    "Rawr?"
   ],
   "morningPhrases": [
-    "Morning! Did you sleep okay?",
-    "Fresh day, fresh feathers.",
-    "Coffee first, then world domination.",
-    "Rise and shine!"
+    "*big stretchy roar*",
+    "*chirp chirp*",
+    "Rawr! (good morning)",
+    "*fluffs up crest feathers*"
   ],
   "eveningPhrases": [
-    "Winding down for the day?",
-    "Evenings are for comfy blankets.",
-    "You did a lot today, you know.",
-    "Almost dinner time~"
+    "*soft grumble*",
+    "*settles down*",
+    "Grrrr~ (contentedly)",
+    "*sleepy chirp*"
   ],
   "lateNightPhrases": [
-    "It's pretty late... just saying.",
-    "Dinosaurs didn't have bedtimes, but you should.",
-    "One more thing and then bed, promise?",
-    "*sleepy stomp* Still up, huh?"
+    "*low warning growl* (it's late)",
+    "*yawn-squawk*",
+    "Rawr... rawr.",
+    "*drowsy chirp*"
   ]
 }
