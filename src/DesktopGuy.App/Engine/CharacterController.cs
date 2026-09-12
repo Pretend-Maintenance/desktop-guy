@@ -68,6 +68,7 @@ public sealed class CharacterController
     private WeatherCondition? _previewWeatherCondition;
     private double _previewWeatherSecondsRemaining;
     private bool _wasBatteryLow;
+    private bool _wasBatteryFull;
 
     public CharacterState State { get; private set; } = CharacterState.Idle;
     public double PositionX { get; private set; }
@@ -400,9 +401,10 @@ public sealed class CharacterController
 
     /// <summary>
     /// Fires a one-off speech bubble the moment the battery drops to/below
-    /// BatteryWatcher's low-battery threshold (edge-triggered on the
-    /// transition, not every tick while it stays low, so it doesn't nag).
-    /// No dedicated art for this - it's just a phrase, layered on top of
+    /// BatteryWatcher's low-battery threshold, or the moment it reaches a
+    /// full charge while plugged in - both edge-triggered on the
+    /// transition, not every tick while they hold, so it doesn't nag.
+    /// No dedicated art for either - just a phrase, layered on top of
     /// whatever else is going on rather than changing state/animation.
     /// </summary>
     private void TickBattery()
@@ -414,6 +416,14 @@ public sealed class CharacterController
         }
 
         _wasBatteryLow = isLow;
+
+        bool isFull = _batteryContext?.IsFull ?? false;
+        if (isFull && !_wasBatteryFull)
+        {
+            SpeechRequested?.Invoke("Battery's fully charged!");
+        }
+
+        _wasBatteryFull = isFull;
     }
 
     /// <summary>Returns true if a focused terminal or active typing took over this tick.</summary>

@@ -102,6 +102,14 @@ register that temporary path instead of your real install.
   moment, then goes back to whatever it was doing.
 - **Discord message**: a new Discord message makes it open an envelope for a
   moment, then resumes.
+- **Battery**: on a laptop, a speech bubble the moment charge drops to 20%
+  while unplugged ("Battery's getting low..."), and another the moment it
+  reaches 100% while plugged in ("Battery's fully charged!") - each only
+  fires once per transition, not repeatedly while it stays low/full. If a
+  character also defines a `lowBattery` animation, that pose is mixed into
+  the same idle-surprise rotation as `eating`/`playing` while the battery's
+  actually low (see "Adding a new character" below) - desktops with no
+  battery just never trigger any of this.
 
 There are also four weather poses - `cold`, `hot`, `sunny`, `rainy` - but
 they're preview-only, triggered from the right-click menu's **Preview
