@@ -243,63 +243,84 @@ rainy, phone-call pickup, envelope-opening) but it's meant to be swapped
 out - drop in a real pixel-art sprite sheet for `Blob` (see the AI-art
 prompt below) or any new character and nothing else needs to change.
 
-### Generating real art for Blob
+### Generating real art for a new character
 
-If you want to hand the placeholder off to an AI image generator to make
-real pixel art, here's a ready-to-use prompt sized for the current 64x64,
-6-column x 15-row layout (adjust the column/row counts if you add/remove
-animations first, and check the frame boundaries after generating - AI
-image models are inconsistent about exact grid alignment, so you'll likely
-need to nudge frames into place, or generate row-by-row/frame-by-frame and
-assemble the sheet yourself for the cleanest alignment):
+Here's a reusable template for handing a new character off to an AI image
+generator, refined from actually doing this for Fox (see
+`Assets/Characters/Fox/NOTES.md` for the specific problems this template's
+wording is designed to head off). Two big lessons baked in:
 
-> Pixel art sprite sheet, 6 columns x 15 rows, each cell exactly 64x64
-> pixels, transparent background, crisp hard-edged pixel art (no
-> anti-aliasing/blur), consistent character size and pixel scale in every
-> cell, character centered in each cell.
->
-> Character: a small round teal/cyan blob creature, big white oval eyes
-> with black pupils, tiny simple mouth, soft pink blush marks on the
-> cheeks, no arms or visible limbs except small stubby feet - a cute,
-> minimal desktop-pet mascot style (think a cross between a Tamagotchi and
-> a slime).
->
-> Each row is one animation (frames left to right, unused trailing cells
-> in a row left blank/transparent):
-> - Row 1 (4 frames): idle - gentle breathing bob, blinks on the last frame
-> - Row 2 (4 frames): walking - bounces with a squash-and-stretch step,
->   little feet alternate
-> - Row 3 (4 frames): sleeping - eyes closed, breathing, small "Zzz" text
->   appears and fades
-> - Row 4 (2 frames): being dragged by the cursor - wide surprised eyes,
->   leans left then right
-> - Row 5 (2 frames): waking up - eyes half-open, then fully open
-> - Row 6 (4 frames): dancing - wearing headphones, bouncing side to side,
->   a music note appears
-> - Row 7 (4 frames): watching a video - sunglasses on, holding a small
->   popcorn box, chewing
-> - Row 8 (3 frames): answering a phone call - a phone rises to its ear,
->   surprised then talking
-> - Row 9 (3 frames): opening an envelope - the flap opens across the
->   frames, a letter peeks out on the last frame
-> - Row 10 (4 frames): "hacking" - sunglasses on, a small terminal/monitor
->   prop with scrolling green code
-> - Row 11 (2 frames): just picked up - a quick startled squish, small
->   motion lines above its head
-> - Row 12 (4 frames): cold weather - wearing a small jacket, shivering,
->   visible breath/condensation puffs from its mouth
-> - Row 13 (4 frames): hot weather - waving a small hand fan, a sweat drop
->   drips down
-> - Row 14 (4 frames): sunny weather - sunglasses on, small sun-ray marks
->   in the corners, happy bounce
-> - Row 15 (4 frames): rainy weather - holding a small umbrella overhead,
->   raindrops falling around it
->
-> Style: flat colors, limited palette (teal blob body, a few accent
-> colors for props), clean 1-2px black or dark outlines, no gradients or
-> soft shadows, game-ready sprite sheet.
+- **Ask for a solid green background, not transparency.** Most image
+  generators (this was tested with Gemini) don't produce real alpha - they
+  either bake in a fake checkerboard "this is transparent" pattern as
+  actual opaque pixels, or leave faint colored fringing at edges. A solid,
+  unambiguous green background is trivial to chroma-key out reliably in a
+  cleanup pass afterward (any decent image library - Pillow, ImageMagick -
+  can do this; ask an AI coding assistant for a script if you don't want to
+  write one), and it's the one color guaranteed to never appear in the
+  character's own design, so removal is unambiguous.
+- **Spell out every row's content explicitly and repeat the "only this
+  creature" instruction.** Without that, generators can and do drift -
+  wrong colors on one frame, or entirely unrelated content on a row (an
+  actual result on this project's second Fox sheet: a row that was
+  supposed to be a startled reaction came back as an unrelated bear, for
+  no apparent reason). Explicit per-row descriptions and a repeated
+  constraint make this less likely, but always look over what comes back
+  row by row rather than assuming it matched the brief.
 
-Once you have art back, drop it in as
-`Assets/Characters/Blob/spritesheet.png` (or a new character's folder) -
-the row/frame layout in `character.json` just needs to match whatever grid
-the art actually ended up with.
+Also expect imperfect grid alignment (uneven row/column spacing, a few
+stray pixels of a neighboring cell bleeding into another) - a boundary
+detection pass based on where the actual content is (rather than assuming
+even spacing) handles this more reliably than trusting the nominal grid;
+ask an AI coding assistant to write that if you're not comfortable with
+image processing directly. This template describes a 6-column x 15-row
+layout, one animation per row - adjust the column/row counts if you want
+more/fewer frames per animation or to skip some optional animations:
+
+> Sprite sheet, 6 columns x 15 rows, one grid cell per pose, each cell
+> approximately [FRAME SIZE]x[FRAME SIZE] pixels with consistent, even
+> spacing between all rows and columns. Solid flat green background
+> (like a green-screen), the same exact green in every cell - no gradients,
+> shadows, or texture in the background. Character centered in each cell,
+> consistent size, proportions, color palette, and art style in every
+> single cell across the whole sheet - the character must look like the
+> same individual throughout, never a different creature, animal, or
+> object in any cell.
+>
+> Character: [DESCRIBE THE CHARACTER - species/shape, color palette,
+> face/eyes, distinguishing features, size proportions, no more than a
+> couple of sentences]. Style: [e.g. "flat cartoon shading, clean dark
+> outlines" or "crisp hard-edged pixel art, no anti-aliasing"] - pick one
+> style and keep it identical across every cell.
+>
+> Each row is one animation, frames left to right (leave any unused
+> trailing cells in a row blank, still green background):
+> - Row 1 (X frames): idle - [describe a subtle idle loop, e.g. breathing/blinking]
+> - Row 2 (X frames): walking - [a walk cycle, legs/body alternating]
+> - Row 3 (X frames): sleeping - [eyes closed, a "Zzz" or similar sleep cue]
+> - Row 4 (X frames): being dragged by the cursor - [startled/wide-eyed, swaying]
+> - Row 5 (X frames): waking up - [eyes opening, groggy to alert]
+> - Row 6 (X frames): dancing to music - [headphones or a musical cue, bouncing]
+> - Row 7 (X frames): watching a video - [sunglasses/popcorn or similar, facing forward]
+> - Row 8 (X frames): answering a phone call - [a phone prop rising to an ear]
+> - Row 9 (X frames): opening an envelope/message - [the envelope opening across frames]
+> - Row 10 (X frames): typing/at a computer - [a small screen/keyboard prop]
+> - Row 11 (X frames): just picked up - [a quick startled squish/flinch]
+> - Row 12 (X frames): it's hot outside - [fanning itself, a sweat drop]
+> - Row 13 (X frames): it's sunny outside - [sunglasses, relaxed/happy]
+> - Row 14 (X frames): it's raining - [holding/using an umbrella]
+> - Row 15 (X frames): it's cold outside - [bundled up, visible breath]
+>
+> Remember: every cell shows the exact same character described above,
+> just in a different pose - no unrelated creatures, objects, or scenery.
+
+Fill in `[FRAME SIZE]`, the character description, style, and per-row
+frame counts (`X`) before using it, and drop any rows you don't want (an
+animation left out of `character.json` is simply never used). Once you
+have art back: check it row by row against the brief, chroma-key out the
+green, verify/fix row and column boundaries, then drop the result in as
+`Assets/Characters/<Name>/spritesheet.png` - the `row`/`frameCount` values
+in `character.json` just need to match whatever grid the art actually
+ended up with (see the row-remapping note in Fox's `NOTES.md` for a real
+example of this not matching the brief on the first try, and how it was
+fixed without regenerating).
