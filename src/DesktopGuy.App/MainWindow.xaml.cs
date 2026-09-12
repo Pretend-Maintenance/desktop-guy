@@ -417,6 +417,45 @@ public partial class MainWindow : Window
         Application.Current.Shutdown();
     }
 
+    /// <summary>
+    /// Opens the "New Character" dialog. A successful import doesn't touch
+    /// this running instance at all (new folder on disk only) - offering to
+    /// relaunch into it reuses the same switch-character mechanism as the
+    /// Character submenu.
+    /// </summary>
+    private void OnNewCharacterClicked(object sender, RoutedEventArgs e)
+    {
+        var dialog = new NewCharacterWindow { Owner = this };
+        if (dialog.ShowDialog() != true || dialog.ImportedFolderName is not { } folderName)
+        {
+            return;
+        }
+
+        var result = MessageBox.Show(
+            $"\"{folderName}\" was created. Switch to it now?",
+            "Desktop Guy",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Question);
+
+        if (result != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        CharacterPreferenceStore.Save(folderName);
+
+        string? exePath = Environment.ProcessPath;
+        if (!string.IsNullOrEmpty(exePath))
+        {
+            Process.Start(new ProcessStartInfo(exePath, $"--character \"{folderName}\"")
+            {
+                UseShellExecute = true,
+            });
+        }
+
+        Application.Current.Shutdown();
+    }
+
     private void OnPreviewWeatherClicked(object sender, RoutedEventArgs e)
     {
         var condition = Enum.Parse<WeatherCondition>((string)((MenuItem)sender).Tag);

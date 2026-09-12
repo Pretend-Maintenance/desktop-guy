@@ -16,6 +16,7 @@
             <MenuItem Header="Say hi" Click="OnSayHiClicked" />
             <Separator />
             <MenuItem x:Name="CharacterMenuItem" Header="Character" />
+            <MenuItem Header="New Character..." Click="OnNewCharacterClicked" />
             <MenuItem x:Name="ScaleMenuItem" Header="Size" />
             <MenuItem Header="Preview Weather">
                 <MenuItem Header="Sunny" Click="OnPreviewWeatherClicked" Tag="Sunny" />

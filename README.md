@@ -256,6 +256,41 @@ sprite sheet, which is how new characters get added.
 5. Run it with `dotnet run --project src/DesktopGuy.App -- --character
    YourCharacterName`.
 
+### Importing a character in-app, without editing any files
+
+For the common case - a clean green-screen grid sheet, like the ones the
+AI-art prompt template above produces - you don't need to do any of the
+above by hand. Right-click the character and choose **New Character...**:
+
+1. Give it a name (this becomes both the display name and the folder name
+   under `Assets/Characters/`).
+2. Browse to the sprite sheet PNG.
+3. Enter how many columns (frames per row) and rows the sheet has - the
+   grid is assumed evenly spaced, e.g. 6 columns x 19 rows for a sheet with
+   every optional animation.
+4. Click Import.
+
+The app chroma-keys the green background out itself, despills any faint
+green edge-tint the same way the hand-processed characters get cleaned up,
+re-grids everything onto the standard 84x84 frame size, and writes out a
+ready-to-use `character.json` (rows are assigned to animation names in the
+same fixed order used throughout this doc - `idle`, `walk`, `sleep`,
+`drag`, `wake`, `dance`, `watch`, `answerCall`, `openMail`, `hacking`,
+`pickUp`, `hot`, `sunny`, `rainy`, `cold`, `eating`, `playing`,
+`lowBattery`, `snapshot` - so a sheet with fewer rows just gets fewer
+animations, same as leaving them out of a hand-written `character.json`).
+It starts with a small set of generic phrases and no time-of-day-specific
+ones; edit `character.json` afterwards to personalize those; there's no
+in-app editor for phrases.
+
+This only handles the common case cheaply - it expects an evenly-spaced
+grid and a plain, roughly-flat green background. A messier upload (a
+non-green-adjacent background color, hand-drawn grid lines, a background
+with a strong vignette or gradient, a palette that's itself green-adjacent
+like Mongo's turquoise skin) will come out with visible cleanup artifacts
+or outright fail the size check, and needs the manual, AI-assisted process
+described above instead.
+
 ## About the placeholder art
 
 `Blob`'s sprite sheet is simple generated pixel-art blocks (64x64px per
