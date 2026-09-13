@@ -9,6 +9,8 @@ namespace DesktopGuy.App;
 
 public partial class App : Application
 {
+    private SingleInstanceGuard? _instanceGuard;
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -23,7 +25,22 @@ public partial class App : Application
         var definition = LoadRequestedCharacter(e.Args);
         ApplyScaleOverride(definition, e.Args);
 
-        var window = new MainWindow(definition);
+        // Guards against the same character being launched twice at once
+        // (double-clicking the exe while a "Start with Windows" copy is
+        // already running, say) - a second instance of the same folder
+        // just exits quietly here rather than showing two overlapping
+        // windows and two tray icons. Different characters are unaffected
+        // and can still run side by side. Kept alive for the app's whole
+        // lifetime (MainWindow releases/disposes it) rather than a local,
+        // since disposing early would drop the lock immediately.
+        _instanceGuard = new SingleInstanceGuard(Path.GetFileName(definition.SourceFolder));
+        if (!_instanceGuard.IsPrimaryInstance)
+        {
+            Shutdown();
+            return;
+        }
+
+        var window = new MainWindow(definition, _instanceGuard);
         window.Show();
     }
 

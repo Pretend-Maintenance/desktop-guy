@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
@@ -32,15 +33,17 @@ public partial class MainWindow : Window
     private readonly FullscreenWatcher _fullscreenWatcher = new();
     private readonly CancellationTokenSource _lifetimeCts = new();
     private readonly Stopwatch _clock = new();
+    private readonly SingleInstanceGuard _instanceGuard;
     private DispatcherTimer? _speechHideTimer;
     private TrayIconController? _trayIcon;
     private bool _manuallyHidden;
 
-    public MainWindow(CharacterDefinition definition)
+    public MainWindow(CharacterDefinition definition, SingleInstanceGuard instanceGuard)
     {
         InitializeComponent();
 
         _definition = definition;
+        _instanceGuard = instanceGuard;
         StartWithWindowsMenuItem.IsChecked = StartupRegistration.IsEnabled();
         PopulateCharacterMenu();
         PopulateScaleMenu();
@@ -101,6 +104,7 @@ public partial class MainWindow : Window
             _typingWatcher.Dispose();
             _screenshotWatcher.Dispose();
             _trayIcon?.Dispose();
+            _instanceGuard.Dispose();
         };
 
         CompositionTarget.Rendering += OnRenderingFrame;
@@ -111,7 +115,7 @@ public partial class MainWindow : Window
         // denied) - none of this blocks startup or the rest of the
         // character if it doesn't pan out.
         _ = _mediaContext.StartAsync(_lifetimeCts.Token);
-        _ = _notificationWatcher.StartAsync(_lifetimeCts.Token);
+        _ = StartNotificationWatcherAsync();
         _terminalWatcher.Start(_lifetimeCts.Token);
         _typingWatcher.Start();
         _batteryWatcher.Start(_lifetimeCts.Token);
@@ -225,6 +229,25 @@ public partial class MainWindow : Window
                     _animator.Play(CharacterAnimationMap.GetAnimationName(CharacterState.Dragging));
                 }
                 break;
+        }
+    }
+
+    /// <summary>
+    /// Starts Discord awareness, then - only the very first time this ever
+    /// happens across the app's whole lifetime, not per character or per
+    /// restart - nudges about it with a speech bubble if it *didn't* come
+    /// up active. That covers both "never granted" (the OS only prompts
+    /// once; a dismissal or denial is remembered and never re-asked) and
+    /// "unsupported on this system" - either way, it's otherwise a
+    /// silently-missing feature nobody would know to look for.
+    /// </summary>
+    private async Task StartNotificationWatcherAsync()
+    {
+        bool active = await _notificationWatcher.StartAsync(_lifetimeCts.Token);
+        if (!active && OnboardingHints.ShouldShow("discord-notifications"))
+        {
+            OnboardingHints.MarkShown("discord-notifications");
+            ShowSpeech("Psst - I can react to your Discord calls and messages too, if you allow notification access in Windows settings!");
         }
     }
 
@@ -395,6 +418,13 @@ public partial class MainWindow : Window
             }
         }
 
+        // Released before launching the replacement rather than left for
+        // this window's Closed handler - the new process (a different
+        // character, so a different lock name here, but kept consistent
+        // with the other two relaunch sites below) shouldn't have to race
+        // this process's actual shutdown to acquire its own lock.
+        _instanceGuard.Release();
+
         string? exePath = Environment.ProcessPath;
         if (!string.IsNullOrEmpty(exePath))
         {
@@ -466,6 +496,12 @@ public partial class MainWindow : Window
         string folderName = Path.GetFileName(_definition.SourceFolder);
         ScalePreferenceStore.Save(folderName, newScale);
 
+        // This relaunch targets the *same* character folder as this
+        // instance - without releasing the lock first, the new process
+        // would race this one's actual shutdown for the same named mutex
+        // and likely lose, treating itself as a spurious duplicate.
+        _instanceGuard.Release();
+
         string? exePath = Environment.ProcessPath;
         if (!string.IsNullOrEmpty(exePath))
         {
@@ -506,6 +542,7 @@ public partial class MainWindow : Window
         }
 
         CharacterPreferenceStore.Save(folderName);
+        _instanceGuard.Release();
 
         string? exePath = Environment.ProcessPath;
         if (!string.IsNullOrEmpty(exePath))

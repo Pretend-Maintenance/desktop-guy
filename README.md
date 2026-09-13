@@ -168,9 +168,22 @@ are pressed; the only thing it ever keeps is a single timestamp of the
 last key-down, overwritten every time. Discord awareness reads Discord's
 own notifications via Windows' notification listener - see **Context
 awareness setup** below, since that one needs a one-time permission grant.
+If that permission was never granted (denied, dismissed, or just never
+asked because it's unsupported here), you'll get a one-time speech bubble
+the first time the app ever notices - after that it doesn't repeat itself,
+so check **View Error Log** below if you want to know why it's not active
+on a later run.
 
 ## System tray, fullscreen auto-hide, and troubleshooting
 
+- **One instance per character**: launching the same character while it's
+  already running (double-clicking the exe again, a manual launch racing
+  a "Start with Windows" copy) just quietly exits instead of opening a
+  second overlapping window and a second tray icon. Different characters
+  are unaffected and can still run side by side if you want more than one
+  companion at once - this only guards against the exact same one twice.
+  Picking a new size or switching characters from the menu isn't affected
+  either, since those already replace the running instance on purpose.
 - **System tray icon**: alongside the character itself, there's a small
   tray icon (a picture of whichever character is currently running) -
   right-click it for the exact same menu as right-clicking the character,
