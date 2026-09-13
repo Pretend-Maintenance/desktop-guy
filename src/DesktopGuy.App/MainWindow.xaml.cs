@@ -54,14 +54,18 @@ public partial class MainWindow : Window
         Width = windowWidth;
         Height = windowHeight;
 
-        var workArea = SystemParameters.WorkArea;
+        // Only the horizontal spot is remembered - he always starts resting
+        // on the ground rather than wherever he happened to be lifted to.
+        // The remembered X also decides which monitor's work area to use -
+        // otherwise a second monitor would be permanently unreachable, and
+        // a position saved there would snap back onto the primary
+        // monitor's edge on every restart (see MonitorLayout).
+        var remembered = PositionStore.TryLoad(definition.Id);
+        var workArea = MonitorLayout.GetWorkAreaFor(remembered?.X);
         double minX = workArea.Left;
         double maxX = workArea.Right - windowWidth;
         double groundY = workArea.Bottom - windowHeight;
 
-        // Only the horizontal spot is remembered - he always starts resting
-        // on the ground rather than wherever he happened to be lifted to.
-        var remembered = PositionStore.TryLoad(definition.Id);
         double startX = remembered is { } p ? Math.Clamp(p.X, minX, maxX) : workArea.Right - windowWidth - 40;
         double startY = groundY;
         Left = startX;
@@ -109,6 +113,15 @@ public partial class MainWindow : Window
 
         CompositionTarget.Rendering += OnRenderingFrame;
         _clock.Start();
+
+        // Shown once, ever, regardless of which character or how many
+        // times the app's been relaunched since - the right-click menu
+        // isn't otherwise discoverable from just looking at him.
+        if (OnboardingHints.ShouldShow("right-click-menu"))
+        {
+            OnboardingHints.MarkShown("right-click-menu");
+            ShowSpeech("Right-click me anytime for options - characters, size, and more!");
+        }
 
         // Context awareness talks to Windows over WinRT APIs and process
         // lists, which can quietly fail (unsupported OS build, permission
@@ -594,6 +607,53 @@ public partial class MainWindow : Window
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
         }
+    }
+
+    /// <summary>
+    /// Wipes all remembered state (position, scale, character choice,
+    /// onscreen time, pet milestones, the error log, which onboarding
+    /// hints have shown) and turns off "Start with Windows", then
+    /// restarts fresh into whatever character comes up first - the same
+    /// zero-config state as a brand new install.
+    /// </summary>
+    private void OnResetAllSettingsClicked(object sender, RoutedEventArgs e)
+    {
+        var confirmed = MessageBox.Show(
+            "This clears everything the app remembers - position, size, which " +
+            "character you last picked, onscreen-time progress, and the " +
+            "startup setting - and restarts fresh. This can't be undone. Continue?",
+            "Reset All Settings",
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Warning);
+
+        if (confirmed != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        try
+        {
+            AppDataReset.ResetAll();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Couldn't fully reset:\n{ex.Message}",
+                "Desktop Guy",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+            return;
+        }
+
+        _instanceGuard.Release();
+
+        string? exePath = Environment.ProcessPath;
+        if (!string.IsNullOrEmpty(exePath))
+        {
+            Process.Start(new ProcessStartInfo(exePath) { UseShellExecute = true });
+        }
+
+        Application.Current.Shutdown();
     }
 
     private void OnExitClicked(object sender, RoutedEventArgs e)

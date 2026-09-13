@@ -86,7 +86,17 @@ register that temporary path instead of your real install.
   otherwise. Petting it (a click that isn't a drag) is unrelated to this -
   that always just pops up a normal phrase from `phrases`.
 - **Position memory**: it remembers roughly where you left it (per
-  character) and starts there next time, instead of always the same corner.
+  character) and starts there next time, instead of always the same corner
+  - including which monitor, if you have more than one (wandering, the
+    ground line, and drag physics all use whichever monitor it's actually
+    on rather than always the primary display). This assumes every
+    monitor runs the same DPI/display scale; on a mixed-DPI setup (a
+    laptop screen at 150% next to an external monitor at 100%, say) the
+    position on a non-primary monitor can be slightly off.
+- **First-run hint**: the very first time you ever run the app (regardless
+  of which character), it mentions the right-click menu once via a speech
+  bubble - it never repeats itself after that, even across restarts or
+  switching characters.
 - **Music**: if something is playing that looks like music (Spotify, YouTube
   Music, etc.) it puts on headphones and dances instead of wandering off -
   and if the track title is available, it announces it once ("~ Now
@@ -219,6 +229,20 @@ on a later run.
   small text file (`%AppData%\DesktopGuy\errors.log`) with the last 10
   such failures, each one timestamped and naming which piece of the app
   hit it.
+- **Reset All Settings / uninstalling**: right-click → **Reset All
+  Settings...** clears everything the app remembers (position, size,
+  which character you last picked, onscreen-time and pet-milestone
+  progress, the error log, which one-time hints have shown) and turns off
+  "Start with Windows", then restarts fresh - the same state as a brand
+  new install. To remove the app entirely: delete the installed folder
+  (or uninstall it, if you installed it via a packaged installer rather
+  than just running the built `.exe`), and optionally delete
+  `%AppData%\DesktopGuy\` too if you don't want its files lingering
+  (Reset All Settings already does this for you, so it's only needed if
+  you want to skip straight to deleting the app without launching it
+  again first). There's no separate registry cleanup needed beyond that -
+  "Start with Windows" only ever writes the one `HKCU` Run-key value this
+  reset (or unchecking the menu item) already removes.
 
 ## Context awareness setup
 

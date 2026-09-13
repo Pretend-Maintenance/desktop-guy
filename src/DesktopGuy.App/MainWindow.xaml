@@ -30,6 +30,7 @@
                       IsCheckable="True"
                       Click="OnStartWithWindowsToggled" />
             <MenuItem Header="View Error Log" Click="OnViewErrorLogClicked" />
+            <MenuItem Header="Reset All Settings..." Click="OnResetAllSettingsClicked" />
             <Separator />
             <MenuItem Header="Exit" Click="OnExitClicked" />
         </ContextMenu>
