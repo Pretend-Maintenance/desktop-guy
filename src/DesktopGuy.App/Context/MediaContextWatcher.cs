@@ -64,8 +64,9 @@ public sealed class MediaContextWatcher
         {
             _manager = await GlobalSystemMediaTransportControlsSessionManager.RequestAsync();
         }
-        catch
+        catch (Exception ex)
         {
+            ErrorLog.Record("MediaContextWatcher.StartAsync", ex);
             _manager = null;
             return;
         }

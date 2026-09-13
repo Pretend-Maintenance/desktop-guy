@@ -169,6 +169,39 @@ last key-down, overwritten every time. Discord awareness reads Discord's
 own notifications via Windows' notification listener - see **Context
 awareness setup** below, since that one needs a one-time permission grant.
 
+## System tray, fullscreen auto-hide, and troubleshooting
+
+- **System tray icon**: alongside the character itself, there's a small
+  tray icon (a picture of whichever character is currently running) -
+  right-click it for the exact same menu as right-clicking the character,
+  and left-click it to manually show/hide the character on demand (handy
+  if he's ended up somewhere awkward, or you just want him out of the way
+  for a bit without exiting the app). The tray icon and its menu keep
+  working even while the character itself is hidden, either manually or by
+  the fullscreen behavior below.
+- **Fullscreen auto-hide**: if whatever you're focused on (a game, a video
+  player, a presentation) is genuinely fullscreen - its window covers the
+  entire monitor - the character hides itself automatically rather than
+  floating on top of it, and reappears the moment you're back to something
+  windowed. This is a heuristic (the same rough "focused window exactly
+  fills the monitor" check several taskbar-autohide-style tools use), not
+  a true "is this app in exclusive fullscreen mode" API call, so a
+  borderless-windowed app that happens to size itself to the full screen
+  will also trigger it - which in practice is the same case you'd want it
+  to hide for anyway. Everything (onscreen-time tracking, the tray icon,
+  ambient state changes) keeps running normally while hidden; only the
+  window itself stops being drawn.
+- **Error log**: several of the context-awareness pieces above (media
+  detection, Discord notifications, the keyboard hooks) depend on Windows
+  APIs that can fail to start for reasons outside the app's control (an
+  older Windows build, a locked-down system, a denied permission) - when
+  that happens they just quietly do nothing rather than crash, which is
+  usually the right call but can make "why isn't X detecting anything"
+  hard to debug from the outside. Right-click → **View Error Log** opens a
+  small text file (`%AppData%\DesktopGuy\errors.log`) with the last 10
+  such failures, each one timestamped and naming which piece of the app
+  hit it.
+
 ## Context awareness setup
 
 The first time you run the app, Windows may prompt to let it read your

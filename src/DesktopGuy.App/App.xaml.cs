@@ -13,6 +13,13 @@ public partial class App : Application
     {
         base.OnStartup(e);
 
+        // A last-resort net so a crash leaves a trace in the error log
+        // before Windows' default "app stopped working" handling kicks in -
+        // doesn't suppress the crash (e.Handled is left false), just makes
+        // "why did it close" answerable afterwards.
+        DispatcherUnhandledException += (_, args) =>
+            ErrorLog.Record("UnhandledException", args.Exception);
+
         var definition = LoadRequestedCharacter(e.Args);
         ApplyScaleOverride(definition, e.Args);
 

@@ -2,6 +2,7 @@ using System;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using DesktopGuy.App.Engine;
 
 namespace DesktopGuy.App.Context;
 
@@ -65,8 +66,9 @@ public sealed class BatteryWatcher
             _isLow = onBattery && status.BatteryLifePercent <= LowBatteryPercent;
             _isFull = pluggedIn && status.BatteryLifePercent >= 100;
         }
-        catch
+        catch (Exception ex)
         {
+            ErrorLog.Record("BatteryWatcher.RefreshOnce", ex);
             _isLow = false;
             _isFull = false;
         }

@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using DesktopGuy.App.Engine;
 
 namespace DesktopGuy.App.Context;
 
@@ -46,8 +47,9 @@ public sealed class ScreenshotWatcher : IDisposable
             IntPtr moduleHandle = GetModuleHandle(currentModule?.ModuleName);
             _hookHandle = SetWindowsHookEx(WH_KEYBOARD_LL, _hookProc, moduleHandle, 0);
         }
-        catch
+        catch (Exception ex)
         {
+            ErrorLog.Record("ScreenshotWatcher.Start", ex);
             _hookHandle = IntPtr.Zero;
         }
     }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using DesktopGuy.App.Engine;
 using Windows.UI.Notifications;
 using Windows.UI.Notifications.Management;
 
@@ -47,10 +48,11 @@ public sealed class NotificationWatcher
                 return false;
             }
         }
-        catch
+        catch (Exception ex)
         {
             // API unsupported on this system/build (e.g. requires package
             // identity here) - fall back to no Discord awareness.
+            ErrorLog.Record("NotificationWatcher.StartAsync", ex);
             _listener = null;
             return false;
         }

@@ -11,6 +11,10 @@
     <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
     <TargetPlatformMinVersion>10.0.17763.0</TargetPlatformMinVersion>
     <UseWPF>true</UseWPF>
+    <!-- Only for System.Windows.Forms.NotifyIcon - WPF has no tray icon of
+         its own, and this is part of the Windows Desktop shared framework
+         already, not an extra NuGet dependency. -->
+    <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>DesktopGuy.App</RootNamespace>

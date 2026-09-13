@@ -5,6 +5,7 @@ using System.IO;
 using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -28,9 +29,12 @@ public partial class MainWindow : Window
     private readonly BatteryWatcher _batteryWatcher = new();
     private readonly MeetingWatcher _meetingWatcher = new();
     private readonly ScreenshotWatcher _screenshotWatcher = new();
+    private readonly FullscreenWatcher _fullscreenWatcher = new();
     private readonly CancellationTokenSource _lifetimeCts = new();
     private readonly Stopwatch _clock = new();
     private DispatcherTimer? _speechHideTimer;
+    private TrayIconController? _trayIcon;
+    private bool _manuallyHidden;
 
     public MainWindow(CharacterDefinition definition)
     {
@@ -76,8 +80,19 @@ public partial class MainWindow : Window
         _notificationWatcher.DiscordEventDetected += OnDiscordEventDetected;
         _screenshotWatcher.ScreenshotTaken += () => _controller.RequestSnapshotReaction();
 
+        // Reuses the very first idle frame as the tray icon's picture -
+        // whichever character is currently running is instantly
+        // recognizable in the tray rather than a generic placeholder icon.
+        _trayIcon = new TrayIconController(_animator.CurrentFrame, definition.DisplayName);
+        _trayIcon.LeftClicked += OnTrayIconLeftClicked;
+        _trayIcon.RightClicked += OnTrayIconRightClicked;
+
         SourceInitialized += (_, _) =>
-            Win32Interop.HideFromAltTabAndTaskbar(new WindowInteropHelper(this).Handle);
+        {
+            var hwnd = new WindowInteropHelper(this).Handle;
+            Win32Interop.HideFromAltTabAndTaskbar(hwnd);
+            _fullscreenWatcher.SetOwnWindowHandle(hwnd);
+        };
         Closed += (_, _) =>
         {
             PositionStore.Save(_definition.Id, Left, Top);
@@ -85,6 +100,7 @@ public partial class MainWindow : Window
             _lifetimeCts.Cancel();
             _typingWatcher.Dispose();
             _screenshotWatcher.Dispose();
+            _trayIcon?.Dispose();
         };
 
         CompositionTarget.Rendering += OnRenderingFrame;
@@ -101,6 +117,7 @@ public partial class MainWindow : Window
         _batteryWatcher.Start(_lifetimeCts.Token);
         _meetingWatcher.Start(_lifetimeCts.Token);
         _screenshotWatcher.Start();
+        _fullscreenWatcher.Start(_lifetimeCts.Token);
     }
 
     private static BitmapImage LoadSpriteSheet(CharacterDefinition definition)
@@ -138,6 +155,51 @@ public partial class MainWindow : Window
         CharacterImage.Source = _animator.CurrentFrame;
         NextCharacterImage.Source = _animator.NextFrame;
         NextCharacterImage.Opacity = _definition.SmoothTransitions ? _animator.BlendProgress : 0;
+
+        UpdateVisibility();
+    }
+
+    /// <summary>
+    /// Hides the window - rather than closing it, everything (Tick,
+    /// onscreen-time accrual, the tray icon) keeps running underneath -
+    /// while either a fullscreen app has taken over the screen or the
+    /// tray icon's been left-clicked to manually tuck the character away.
+    /// Also closes the speech bubble on the way out so it doesn't linger
+    /// alone over whatever's now fullscreen.
+    /// </summary>
+    private void UpdateVisibility()
+    {
+        bool shouldHide = _manuallyHidden || _fullscreenWatcher.IsActive;
+        bool isHidden = Visibility != Visibility.Visible;
+
+        if (shouldHide == isHidden)
+        {
+            return;
+        }
+
+        Visibility = shouldHide ? Visibility.Hidden : Visibility.Visible;
+        if (shouldHide)
+        {
+            SpeechPopup.IsOpen = false;
+        }
+    }
+
+    private void OnTrayIconLeftClicked()
+    {
+        _manuallyHidden = !_manuallyHidden;
+    }
+
+    private void OnTrayIconRightClicked()
+    {
+        var menu = ContextMenu;
+        if (menu is null)
+        {
+            return;
+        }
+
+        menu.PlacementTarget = this;
+        menu.Placement = PlacementMode.MousePoint;
+        menu.IsOpen = true;
     }
 
     private void OnAnimatorAnimationCompleted()
@@ -474,6 +536,23 @@ public partial class MainWindow : Window
             StartWithWindowsMenuItem.IsChecked = !StartWithWindowsMenuItem.IsChecked;
             MessageBox.Show(
                 $"Couldn't update the startup setting:\n{ex.Message}",
+                "Desktop Guy",
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
+    }
+
+    private void OnViewErrorLogClicked(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            string path = ErrorLog.GetOrCreatePath();
+            Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Couldn't open the error log:\n{ex.Message}",
                 "Desktop Guy",
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
