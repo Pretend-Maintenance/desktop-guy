@@ -184,6 +184,11 @@ on a later run.
   companion at once - this only guards against the exact same one twice.
   Picking a new size or switching characters from the menu isn't affected
   either, since those already replace the running instance on purpose.
+  This relies on a named lock that a security/permissions quirk could
+  occasionally prevent from working (e.g. one copy launched "as
+  Administrator" while another runs normally) - if that happens it fails
+  open (launches anyway, logging the issue to **View Error Log**) rather
+  than refusing to start over what's essentially a niceness check.
 - **System tray icon**: alongside the character itself, there's a small
   tray icon (a picture of whichever character is currently running) -
   right-click it for the exact same menu as right-clicking the character,
