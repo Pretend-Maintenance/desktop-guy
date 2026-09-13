@@ -80,5 +80,24 @@
     "Foxes are nocturnal, but are you?",
     "One more thing and then bed, promise?",
     "*sleepy yawn* Still up, huh?"
+  ],
+  "seasonalPhrases": {
+    "halloween": [
+      "*ears perk up* Spooky season is my season!",
+      "Foxes and Halloween just go together, don't they?"
+    ],
+    "christmas": [
+      "Happy holidays! *tail wag*",
+      "I'd like a stocking. A big one. For treats."
+    ],
+    "newYear": [
+      "New year, same sneaky fox.",
+      "Here's to another year of foxing around!"
+    ]
+  },
+  "affectionPhrases": [
+    "That's a lot of pets. My tail can't keep up!",
+    "Okay, official record: you like me. Noted and appreciated.",
+    "*happy tail wag intensifies*"
   ]
 }

@@ -90,5 +90,24 @@
     "*yawn-squawk*",
     "Rawr... rawr.",
     "*drowsy chirp*"
+  ],
+  "seasonalPhrases": {
+    "halloween": [
+      "*spooky squawk*",
+      "*rustles feathers menacingly, then trips*"
+    ],
+    "christmas": [
+      "*festive chirp*",
+      "*headbutts a wrapped present curiously*"
+    ],
+    "newYear": [
+      "*proud roar into the new year*",
+      "SQUAWK! (happy new year)"
+    ]
+  },
+  "affectionPhrases": [
+    "*chirps approvingly, still counting*",
+    "*happy stomping intensifies*",
+    "Grrrr! (this is good, keep going)"
   ]
 }

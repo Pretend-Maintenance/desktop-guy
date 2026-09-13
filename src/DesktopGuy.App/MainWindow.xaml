@@ -78,7 +78,7 @@
                     BorderThickness="1.5"
                     CornerRadius="10"
                     Padding="10,6"
-                    MaxWidth="220">
+                    MaxWidth="260">
                 <TextBlock x:Name="SpeechText"
                            TextWrapping="Wrap"
                            FontFamily="Segoe UI"

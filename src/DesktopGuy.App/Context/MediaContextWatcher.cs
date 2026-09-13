@@ -37,8 +37,21 @@ public sealed class MediaContextWatcher
     private GlobalSystemMediaTransportControlsSessionManager? _manager;
     private readonly AudioLevelWatcher _audioLevel = new();
     private volatile MediaPlaybackContext _current = MediaPlaybackContext.None;
+    private volatile string? _currentTitle;
+    private volatile string? _currentArtist;
 
     public MediaPlaybackContext Current => _current;
+
+    /// <summary>
+    /// The track/video title self-reported by whatever's currently playing,
+    /// if anything - null whenever Current is None, or if the app just
+    /// didn't report one (some browser tabs don't). Best-effort only, used
+    /// for an occasional "now playing" speech bubble.
+    /// </summary>
+    public string? CurrentTitle => _currentTitle;
+
+    /// <summary>The artist/uploader self-reported alongside CurrentTitle, if any.</summary>
+    public string? CurrentArtist => _currentArtist;
 
     public async Task StartAsync(CancellationToken cancellationToken)
     {
@@ -64,7 +77,7 @@ public sealed class MediaContextWatcher
     {
         while (!cancellationToken.IsCancellationRequested)
         {
-            RefreshOnce();
+            await RefreshOnceAsync();
             try
             {
                 await Task.Delay(PollInterval, cancellationToken);
@@ -76,20 +89,25 @@ public sealed class MediaContextWatcher
         }
     }
 
-    private void RefreshOnce()
+    private async Task RefreshOnceAsync()
     {
         if (_manager is null)
         {
             _current = MediaPlaybackContext.None;
+            _currentTitle = null;
+            _currentArtist = null;
             return;
         }
 
         try
         {
-            var playbackInfo = FindPlayingSession()?.GetPlaybackInfo();
+            var session = FindPlayingSession();
+            var playbackInfo = session?.GetPlaybackInfo();
             if (playbackInfo?.PlaybackStatus != GlobalSystemMediaTransportControlsSessionPlaybackStatus.Playing)
             {
                 _current = MediaPlaybackContext.None;
+                _currentTitle = null;
+                _currentArtist = null;
                 return;
             }
 
@@ -99,6 +117,8 @@ public sealed class MediaContextWatcher
             if (!_audioLevel.IsAudible)
             {
                 _current = MediaPlaybackContext.None;
+                _currentTitle = null;
+                _currentArtist = null;
                 return;
             }
 
@@ -108,21 +128,32 @@ public sealed class MediaContextWatcher
             // (e.g. Music for an actual YouTube video), not just an absent
             // one - so a clear video-site title in the title bar is trusted
             // over a possibly-wrong self-reported type.
-            if (IsFocusedOnVideoSite())
-            {
-                _current = MediaPlaybackContext.Video;
-                return;
-            }
-
-            _current = playbackInfo.PlaybackType == MediaPlaybackType.Video
+            _current = IsFocusedOnVideoSite() || playbackInfo.PlaybackType == MediaPlaybackType.Video
                 ? MediaPlaybackContext.Video
                 : MediaPlaybackContext.Music;
+
+            try
+            {
+                var properties = await session!.TryGetMediaPropertiesAsync();
+                _currentTitle = string.IsNullOrWhiteSpace(properties?.Title) ? null : properties.Title;
+                _currentArtist = string.IsNullOrWhiteSpace(properties?.Artist) ? null : properties.Artist;
+            }
+            catch
+            {
+                // Title/artist are a nice-to-have for the "now playing"
+                // speech bubble - not worth losing the play/pause state
+                // over if this particular call fails.
+                _currentTitle = null;
+                _currentArtist = null;
+            }
         }
         catch
         {
             // A session can disappear between finding it and reading it
             // (app closed mid-poll); just wait for the next tick.
             _current = MediaPlaybackContext.None;
+            _currentTitle = null;
+            _currentArtist = null;
         }
     }
 

@@ -71,17 +71,29 @@ register that temporary path instead of your real install.
   distance left or right along the bottom of the screen - right along the
   top edge of the taskbar, since that's where the usable work area ends.
 - **Speech bubbles**: at random intervals it pops up a little speech bubble
-  with a line picked from `phrases` in its character.json.
+  with a line picked from `phrases` in its character.json - plus, during a
+  few narrow holiday windows (Oct 25-31, Dec 20-26, and Dec 31/Jan 1), extra
+  lines from `seasonalPhrases` if the character defines any for that
+  occasion, same layering as the morning/evening/late-night pools below.
 - **Drag**: click and hold to pick it up - a quick startled "pickUp" hop
   plays, then it follows the cursor with a little wobble. Drop it above the
   ground and it gently falls back down; drop it on the ground and it's ready
   to wander again.
+- **Affection**: petting it (a click that isn't a drag) usually just pops up
+  a normal phrase, but at a few pet-count milestones (10, 25, 50, 100, 250,
+  500, 1000 - remembered per character across restarts) it says something
+  special instead, from `affectionPhrases` if the character defines any, or
+  a generic line otherwise.
 - **Position memory**: it remembers roughly where you left it (per
   character) and starts there next time, instead of always the same corner.
 - **Music**: if something is playing that looks like music (Spotify, YouTube
-  Music, etc.) it puts on headphones and dances instead of wandering off.
+  Music, etc.) it puts on headphones and dances instead of wandering off -
+  and if the track title is available, it announces it once ("~ Now
+  playing: ...") the moment it starts, not on every beat.
 - **Video**: if something is playing that looks like a video (a YouTube tab,
-  Netflix, ...) it puts on sunglasses, grabs popcorn, and settles in to watch.
+  Netflix, ...) it puts on sunglasses, grabs popcorn, and settles in to
+  watch - same one-off "now playing" announcement as music, when a title's
+  available.
 - **Terminal or code editor focused, or you're typing**: if a shell or
   terminal app (Command Prompt, PowerShell, Windows Terminal, PuTTY, ...),
   or a code editor/IDE (VS Code, Visual Studio, a JetBrains IDE, Sublime
@@ -250,6 +262,12 @@ sprite sheet, which is how new characters get added.
      are non-looping - they play once and then move on; everything else loops)
    - `behavior`: idle timeout, wander timing, speech timing
    - `phrases`: the lines it can say
+   - `morningPhrases` / `eveningPhrases` / `lateNightPhrases`: optional
+     extra lines mixed in alongside `phrases` at the matching time of day
+   - `seasonalPhrases`: optional, keyed by `"halloween"` / `"christmas"` /
+     `"newYear"` - extra lines mixed in only during those windows
+   - `affectionPhrases`: optional - special lines it might say instead of a
+     normal phrase at a pet-count milestone (see "How it behaves" above)
 4. In the `.csproj`, files under `Assets/Characters/**` are already
    configured to copy to the output folder automatically - no project file
    changes needed.

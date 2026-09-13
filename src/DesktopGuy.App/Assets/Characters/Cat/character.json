@@ -97,5 +97,24 @@
     "Cats are nocturnal, but are you?",
     "One more thing and then bed, promise?",
     "*sleepy blink* Still up, huh?"
+  ],
+  "seasonalPhrases": {
+    "halloween": [
+      "A regal cat needs no costume. I simply am the costume.",
+      "Spooky season suits me. Everything suits me."
+    ],
+    "christmas": [
+      "Bring tribute. Preferably wrapped.",
+      "The kingdom observes the holidays. Mostly by napping more."
+    ],
+    "newYear": [
+      "A new year begins. I remain unbothered and fabulous.",
+      "Resolutions are for peasants. I am already perfect."
+    ]
+  },
+  "affectionPhrases": [
+    "Acceptable. You may continue.",
+    "A queen keeping count of her tributes. This is a lot of tributes.",
+    "I permit this level of attention. Rare, but permitted."
   ]
 }

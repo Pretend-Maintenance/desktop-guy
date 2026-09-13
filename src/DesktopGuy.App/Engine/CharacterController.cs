@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using DesktopGuy.App.Characters;
 using DesktopGuy.App.Context;
 
@@ -69,6 +70,17 @@ public sealed class CharacterController
     private double _previewWeatherSecondsRemaining;
     private bool _wasBatteryLow;
     private bool _wasBatteryFull;
+    private int _petCount;
+    private string? _lastAnnouncedTrack;
+
+    private static readonly int[] AffectionMilestones = { 10, 25, 50, 100, 250, 500, 1000 };
+
+    private static readonly string[] GenericAffectionPhrases =
+    {
+        "Wow, that's a lot of pets. Keep 'em coming!",
+        "I'm keeping count, you know. This is going great.",
+        "We're really building something here.",
+    };
 
     public CharacterState State { get; private set; } = CharacterState.Idle;
     public double PositionX { get; private set; }
@@ -105,6 +117,7 @@ public sealed class CharacterController
             definition.Behavior.SpeechIntervalMinSeconds, definition.Behavior.SpeechIntervalMaxSeconds);
         _secondsUntilNextIdleSurprise = RandomBetween(
             definition.Behavior.IdleSurpriseIntervalMinSeconds, definition.Behavior.IdleSurpriseIntervalMaxSeconds);
+        _petCount = PetCountStore.Load(Path.GetFileName(definition.SourceFolder));
     }
 
     /// <summary>Confines wandering/dragging to the visible work area, and sets the "floor" the character rests on.</summary>
@@ -153,15 +166,41 @@ public sealed class CharacterController
     /// </summary>
     public void OnPetted()
     {
-        var pool = GetCurrentPhrasePool();
-        if (pool.Count == 0)
+        _petCount++;
+        PetCountStore.Save(Path.GetFileName(_definition.SourceFolder), _petCount);
+
+        string? phrase = Array.IndexOf(AffectionMilestones, _petCount) >= 0
+            ? PickAffectionMilestonePhrase()
+            : null;
+
+        if (phrase is null)
         {
-            return;
+            var pool = GetCurrentPhrasePool();
+            if (pool.Count == 0)
+            {
+                return;
+            }
+
+            phrase = pool[_random.Next(pool.Count)];
         }
 
-        SpeechRequested?.Invoke(pool[_random.Next(pool.Count)]);
+        SpeechRequested?.Invoke(phrase);
         _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
             _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
+    }
+
+    /// <summary>
+    /// Picks a milestone celebration line - the character's own
+    /// AffectionPhrases if it defines any, otherwise a generic fallback -
+    /// fired once at each threshold in AffectionMilestones.
+    /// </summary>
+    private string PickAffectionMilestonePhrase()
+    {
+        IReadOnlyList<string> pool = _definition.AffectionPhrases.Count > 0
+            ? _definition.AffectionPhrases
+            : GenericAffectionPhrases;
+
+        return pool[_random.Next(pool.Count)];
     }
 
     /// <summary>
@@ -485,6 +524,7 @@ public sealed class CharacterController
             {
                 TransitionTo(CharacterState.Watching);
             }
+            AnnounceNowPlayingIfChanged();
             return true;
         }
 
@@ -494,18 +534,49 @@ public sealed class CharacterController
             {
                 TransitionTo(CharacterState.Dancing);
             }
+            AnnounceNowPlayingIfChanged();
             return true;
         }
 
         // Media stopped while we were still showing a media state - fall
-        // back to idle so the rest of Tick can take over normally.
+        // back to idle so the rest of Tick can take over normally, and
+        // forget the last-announced track so the same song coming back
+        // later (e.g. a loop) gets announced again.
         if (State == CharacterState.Dancing || State == CharacterState.Watching)
         {
             TransitionTo(CharacterState.Idle);
             ScheduleNextWalk();
         }
 
+        _lastAnnouncedTrack = null;
         return false;
+    }
+
+    /// <summary>
+    /// Pops up a one-off "now playing" bubble the moment a new track/video
+    /// title is seen - edge-triggered on the title actually changing, not
+    /// every tick, so it doesn't repeat itself for as long as the same
+    /// thing keeps playing. Silently does nothing if the app playing it
+    /// didn't report a title (common for some browser tabs).
+    /// </summary>
+    private void AnnounceNowPlayingIfChanged()
+    {
+        string? title = _mediaContext?.CurrentTitle;
+        if (title is null || title == _lastAnnouncedTrack)
+        {
+            return;
+        }
+
+        _lastAnnouncedTrack = title;
+
+        string? artist = _mediaContext?.CurrentArtist;
+        string announcement = string.IsNullOrEmpty(artist)
+            ? $"~ Now playing: {title}"
+            : $"~ Now playing: {artist} - {title}";
+
+        SpeechRequested?.Invoke(announcement);
+        _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
+            _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
     }
 
     /// <summary>Returns true if a manually-triggered weather preview (see PreviewWeather) took over this tick.</summary>
@@ -646,8 +717,8 @@ public sealed class CharacterController
     /// </summary>
     private IReadOnlyList<string> GetCurrentPhrasePool()
     {
-        int hour = DateTime.Now.Hour;
-        List<string> timeSpecific = hour switch
+        var now = DateTime.Now;
+        List<string> timeSpecific = now.Hour switch
         {
             >= 5 and < 12 => _definition.MorningPhrases,
             >= 18 and < 23 => _definition.EveningPhrases,
@@ -655,15 +726,49 @@ public sealed class CharacterController
             _ => EmptyPhrases,
         };
 
-        if (timeSpecific.Count == 0)
+        List<string> seasonal = GetSeasonalKey(now) is { } key && _definition.SeasonalPhrases.TryGetValue(key, out var list)
+            ? list
+            : EmptyPhrases;
+
+        if (timeSpecific.Count == 0 && seasonal.Count == 0)
         {
             return _definition.Phrases;
         }
 
-        var combined = new List<string>(_definition.Phrases.Count + timeSpecific.Count);
+        var combined = new List<string>(_definition.Phrases.Count + timeSpecific.Count + seasonal.Count);
         combined.AddRange(_definition.Phrases);
         combined.AddRange(timeSpecific);
+        combined.AddRange(seasonal);
         return combined;
+    }
+
+    /// <summary>
+    /// A handful of fixed, deliberately narrow holiday windows - not meant
+    /// to cover every possible date, just enough to make the character feel
+    /// a little seasonally aware without any external calendar/timezone
+    /// dependency. Returns null (no seasonal flavor) for every other day.
+    /// </summary>
+    private static string? GetSeasonalKey(DateTime now)
+    {
+        int month = now.Month;
+        int day = now.Day;
+
+        if (month == 10 && day >= 25)
+        {
+            return "halloween";
+        }
+
+        if (month == 12 && day >= 20 && day <= 26)
+        {
+            return "christmas";
+        }
+
+        if ((month == 12 && day == 31) || (month == 1 && day == 1))
+        {
+            return "newYear";
+        }
+
+        return null;
     }
 
     private static readonly List<string> EmptyPhrases = new();

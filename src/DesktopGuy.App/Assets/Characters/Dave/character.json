@@ -80,5 +80,24 @@
     "*drowsy plooo*",
     "Snoo... snoo...",
     "*sleepy bark* yeahhh snooks"
+  ],
+  "seasonalPhrases": {
+    "halloween": [
+      "Spooky snooks! *bork*",
+      "Con con... in a costume? Ploooo."
+    ],
+    "christmas": [
+      "Snooks under the tree! Yeahhh!",
+      "*sniffs presents intensely* plooooos"
+    ],
+    "newYear": [
+      "New year snooks! *zoomies*",
+      "Yeahhh! Con con, new year con con!"
+    ]
+  },
+  "affectionPhrases": [
+    "Ooo con con! So many pets, so much snooks!",
+    "*melts into a puddle of happy pug* ploooo",
+    "Yeahhh! Snooks! Best day ever, snooks!"
   ]
 }

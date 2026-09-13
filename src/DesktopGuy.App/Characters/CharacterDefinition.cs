@@ -39,6 +39,21 @@ public sealed class CharacterDefinition
     /// <summary>Extra phrases mixed in alongside Phrases during roughly 11pm-5am. Optional.</summary>
     public List<string> LateNightPhrases { get; set; } = new();
 
+    /// <summary>
+    /// Extra phrases mixed in alongside Phrases only during a few fixed
+    /// holiday windows (see CharacterController.GetSeasonalKey) - keyed by
+    /// "halloween", "christmas", or "newYear". Optional; leave a key out
+    /// (or the whole thing empty) for no holiday-specific flavor.
+    /// </summary>
+    public Dictionary<string, List<string>> SeasonalPhrases { get; set; } = new();
+
+    /// <summary>
+    /// Special lines that can be spoken instead of a normal phrase when a
+    /// pet-count milestone is reached (see CharacterController.OnPetted).
+    /// Optional - a character with none just gets a generic fallback line.
+    /// </summary>
+    public List<string> AffectionPhrases { get; set; } = new();
+
     /// <summary>Absolute path to the folder this definition was loaded from.</summary>
     public string SourceFolder { get; set; } = "";
 }

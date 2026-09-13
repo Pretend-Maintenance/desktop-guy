@@ -73,5 +73,24 @@
     "Blobs don't really sleep, but you should.",
     "One more thing and then bed, promise?",
     "*sleepy wobble* Still up, huh?"
+  ],
+  "seasonalPhrases": {
+    "halloween": [
+      "*wobbles ominously* Spooky season!",
+      "I'd wear a costume, but I'm already shapeless."
+    ],
+    "christmas": [
+      "Happy holidays! *tinsel-wobble*",
+      "I wish for more blankets. That's it. That's the wish."
+    ],
+    "newYear": [
+      "New year, same wobble.",
+      "Here's to another year of squishing around!"
+    ]
+  },
+  "affectionPhrases": [
+    "That's a lot of pets. I'm basically vibrating.",
+    "Okay, official record: you like me. Noted and appreciated.",
+    "Squish squish squish, this is the good stuff."
   ]
 }
