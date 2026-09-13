@@ -70,16 +70,23 @@ public sealed class CharacterController
     private double _previewWeatherSecondsRemaining;
     private bool _wasBatteryLow;
     private bool _wasBatteryFull;
-    private int _petCount;
+    private double _totalSecondsOnscreen;
+    private double _secondsSinceLastOnscreenSave;
     private string? _lastAnnouncedTrack;
 
-    private static readonly int[] AffectionMilestones = { 10, 25, 50, 100, 250, 500, 1000 };
+    // Cumulative seconds spent onscreen (across restarts) at which a
+    // special affection line plays once, in ascending order: 5 min, 30 min,
+    // 1 hour, 4 hours, 1 day, 1 week, 30 days.
+    private static readonly double[] OnscreenMilestoneSeconds =
+        { 300, 1800, 3600, 14400, 86400, 604800, 2592000 };
+
+    private const double OnscreenSaveIntervalSeconds = 60;
 
     private static readonly string[] GenericAffectionPhrases =
     {
-        "Wow, that's a lot of pets. Keep 'em coming!",
-        "I'm keeping count, you know. This is going great.",
-        "We're really building something here.",
+        "We've been hanging out for a while now. I like that.",
+        "Just noting: this is a good amount of time to spend together.",
+        "Still here, still glad you're around.",
     };
 
     public CharacterState State { get; private set; } = CharacterState.Idle;
@@ -117,7 +124,20 @@ public sealed class CharacterController
             definition.Behavior.SpeechIntervalMinSeconds, definition.Behavior.SpeechIntervalMaxSeconds);
         _secondsUntilNextIdleSurprise = RandomBetween(
             definition.Behavior.IdleSurpriseIntervalMinSeconds, definition.Behavior.IdleSurpriseIntervalMaxSeconds);
-        _petCount = PetCountStore.Load(Path.GetFileName(definition.SourceFolder));
+        _totalSecondsOnscreen = OnscreenTimeStore.Load(Path.GetFileName(definition.SourceFolder));
+    }
+
+    /// <summary>
+    /// Total seconds this character has spent onscreen, including previous
+    /// sessions - exposed so MainWindow can do one final save on shutdown
+    /// (Tick itself only saves periodically, see TickOnscreenTime).
+    /// </summary>
+    public double TotalSecondsOnscreen => _totalSecondsOnscreen;
+
+    /// <summary>Forces an immediate save of the onscreen-time total - call this when the app is closing.</summary>
+    public void SaveOnscreenTime()
+    {
+        OnscreenTimeStore.Save(Path.GetFileName(_definition.SourceFolder), _totalSecondsOnscreen);
     }
 
     /// <summary>Confines wandering/dragging to the visible work area, and sets the "floor" the character rests on.</summary>
@@ -166,25 +186,13 @@ public sealed class CharacterController
     /// </summary>
     public void OnPetted()
     {
-        _petCount++;
-        PetCountStore.Save(Path.GetFileName(_definition.SourceFolder), _petCount);
-
-        string? phrase = Array.IndexOf(AffectionMilestones, _petCount) >= 0
-            ? PickAffectionMilestonePhrase()
-            : null;
-
-        if (phrase is null)
+        var pool = GetCurrentPhrasePool();
+        if (pool.Count == 0)
         {
-            var pool = GetCurrentPhrasePool();
-            if (pool.Count == 0)
-            {
-                return;
-            }
-
-            phrase = pool[_random.Next(pool.Count)];
+            return;
         }
 
-        SpeechRequested?.Invoke(phrase);
+        SpeechRequested?.Invoke(pool[_random.Next(pool.Count)]);
         _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
             _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
     }
@@ -192,7 +200,7 @@ public sealed class CharacterController
     /// <summary>
     /// Picks a milestone celebration line - the character's own
     /// AffectionPhrases if it defines any, otherwise a generic fallback -
-    /// fired once at each threshold in AffectionMilestones.
+    /// fired once at each threshold in OnscreenMilestoneSeconds.
     /// </summary>
     private string PickAffectionMilestonePhrase()
     {
@@ -282,6 +290,7 @@ public sealed class CharacterController
         double dt = elapsed.TotalSeconds;
 
         TickBattery();
+        TickOnscreenTime(dt);
 
         if (State == CharacterState.Dragging)
         {
@@ -463,6 +472,38 @@ public sealed class CharacterController
         }
 
         _wasBatteryFull = isFull;
+    }
+
+    /// <summary>
+    /// Accumulates total onscreen time (regardless of what state the
+    /// character is in - sleeping, dragging, dancing, all of it counts as
+    /// "here"), fires a one-off affection line the moment cumulative time
+    /// crosses a threshold in OnscreenMilestoneSeconds, and periodically
+    /// persists the running total so it survives a restart without writing
+    /// to disk every single frame.
+    /// </summary>
+    private void TickOnscreenTime(double dt)
+    {
+        double previousTotal = _totalSecondsOnscreen;
+        _totalSecondsOnscreen += dt;
+
+        foreach (var milestone in OnscreenMilestoneSeconds)
+        {
+            if (previousTotal < milestone && _totalSecondsOnscreen >= milestone)
+            {
+                SpeechRequested?.Invoke(PickAffectionMilestonePhrase());
+                _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
+                    _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
+                break;
+            }
+        }
+
+        _secondsSinceLastOnscreenSave += dt;
+        if (_secondsSinceLastOnscreenSave >= OnscreenSaveIntervalSeconds)
+        {
+            _secondsSinceLastOnscreenSave = 0;
+            SaveOnscreenTime();
+        }
     }
 
     /// <summary>Returns true if a focused terminal or active typing took over this tick.</summary>

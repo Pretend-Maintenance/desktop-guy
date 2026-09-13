@@ -49,8 +49,9 @@ public sealed class CharacterDefinition
 
     /// <summary>
     /// Special lines that can be spoken instead of a normal phrase when a
-    /// pet-count milestone is reached (see CharacterController.OnPetted).
-    /// Optional - a character with none just gets a generic fallback line.
+    /// cumulative-onscreen-time milestone is reached (see
+    /// CharacterController.TickOnscreenTime). Optional - a character with
+    /// none just gets a generic fallback line.
     /// </summary>
     public List<string> AffectionPhrases { get; set; } = new();
 

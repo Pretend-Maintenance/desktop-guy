@@ -79,11 +79,12 @@ register that temporary path instead of your real install.
   plays, then it follows the cursor with a little wobble. Drop it above the
   ground and it gently falls back down; drop it on the ground and it's ready
   to wander again.
-- **Affection**: petting it (a click that isn't a drag) usually just pops up
-  a normal phrase, but at a few pet-count milestones (10, 25, 50, 100, 250,
-  500, 1000 - remembered per character across restarts) it says something
-  special instead, from `affectionPhrases` if the character defines any, or
-  a generic line otherwise.
+- **Affection**: total time it's spent onscreen is tracked per character,
+  cumulative across restarts. At a few thresholds (5 min, 30 min, 1 hour,
+  4 hours, 1 day, 1 week, 30 days) it says something special once, from
+  `affectionPhrases` if the character defines any, or a generic line
+  otherwise. Petting it (a click that isn't a drag) is unrelated to this -
+  that always just pops up a normal phrase from `phrases`.
 - **Position memory**: it remembers roughly where you left it (per
   character) and starts there next time, instead of always the same corner.
 - **Music**: if something is playing that looks like music (Spotify, YouTube
@@ -266,8 +267,8 @@ sprite sheet, which is how new characters get added.
      extra lines mixed in alongside `phrases` at the matching time of day
    - `seasonalPhrases`: optional, keyed by `"halloween"` / `"christmas"` /
      `"newYear"` - extra lines mixed in only during those windows
-   - `affectionPhrases`: optional - special lines it might say instead of a
-     normal phrase at a pet-count milestone (see "How it behaves" above)
+   - `affectionPhrases`: optional - special lines it might say once a
+     cumulative-onscreen-time milestone is reached (see "How it behaves" above)
 4. In the `.csproj`, files under `Assets/Characters/**` are already
    configured to copy to the output folder automatically - no project file
    changes needed.

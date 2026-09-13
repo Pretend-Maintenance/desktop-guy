@@ -81,6 +81,7 @@ public partial class MainWindow : Window
         Closed += (_, _) =>
         {
             PositionStore.Save(_definition.Id, Left, Top);
+            _controller.SaveOnscreenTime();
             _lifetimeCts.Cancel();
             _typingWatcher.Dispose();
             _screenshotWatcher.Dispose();
