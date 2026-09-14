@@ -612,8 +612,8 @@ public sealed class CharacterController
 
         string? artist = _mediaContext?.CurrentArtist;
         string announcement = string.IsNullOrEmpty(artist)
-            ? $"~ Now playing: {title}"
-            : $"~ Now playing: {artist} - {title}";
+            ? $"▶ Now playing: {title}"
+            : $"▶ Now playing: {artist} - {title}";
 
         SpeechRequested?.Invoke(announcement);
         _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(

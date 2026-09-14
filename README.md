@@ -134,7 +134,7 @@ register that temporary path instead of your real install.
   switching characters.
 - **Music**: if something is playing that looks like music (Spotify, YouTube
   Music, etc.) it puts on headphones and dances instead of wandering off -
-  and if the track title is available, it announces it once ("~ Now
+  and if the track title is available, it announces it once ("▶ Now
   playing: ...") the moment it starts, not on every beat.
 - **Video**: if something is playing that looks like a video (a YouTube tab,
   Netflix, ...) it puts on sunglasses, grabs popcorn, and settles in to
@@ -415,12 +415,21 @@ ones; edit `character.json` afterwards to personalize those; there's no
 in-app editor for phrases.
 
 This only handles the common case cheaply - it expects an evenly-spaced
-grid and a plain, roughly-flat green background. A messier upload (a
-non-green-adjacent background color, hand-drawn grid lines, a background
-with a strong vignette or gradient, a palette that's itself green-adjacent
-like Mongo's turquoise skin) will come out with visible cleanup artifacts
-or outright fail the size check, and needs the manual, AI-assisted process
-described above instead.
+grid (the **same number of columns in every row**) and a plain,
+roughly-flat green background. A messier upload (a non-green-adjacent
+background color, hand-drawn grid lines, a background with a strong
+vignette or gradient, a palette that's itself green-adjacent like Mongo's
+turquoise skin) will come out with visible cleanup artifacts or outright
+fail the size check, and needs the manual, AI-assisted process described
+above instead - as does the per-row-generated workflow in that section,
+since it deliberately varies frame counts row to row (8 for `walk`, 4 for
+a one-shot, ...) for smoother motion, which this importer's fixed-column
+grid can't represent. Compositing rows of different frame counts into one
+`character.json` needs the manual route: pad each row's unused trailing
+cells with transparent pixels up to the widest row's frame count when
+building the final sheet, and set each animation's own (correct, smaller)
+`frameCount` in `character.json` - the engine just ignores anything past
+that count.
 
 ## About the placeholder art
 
@@ -436,109 +445,221 @@ prompt below) or any new character and nothing else needs to change.
 
 ### Generating real art for a new character
 
-Here's a reusable template for handing a new character off to an AI image
-generator, refined from actually doing this for Fox (see
-`Assets/Characters/Fox/NOTES.md` for the specific problems this template's
-wording is designed to head off). Four big lessons baked in:
+The engine places zero limit on frames per row - `frameCount` in
+`character.json` is just a number, checked nowhere else - so "more frames
+for smoother motion" is purely an art/prompting question, not a code
+change. The guidance below reflects that: it recommends frame counts based
+on actual 2D animation convention (a walk cycle reads far better at 8
+frames than 6 - see "Frame counts, and why" below) rather than the
+"whatever's cheap to generate" 6-frames-flat that every built-in character
+so far has used.
 
-- **Ask for a solid green background, not transparency.** Most image
-  generators (this was tested with Gemini) don't produce real alpha - they
-  either bake in a fake checkerboard "this is transparent" pattern as
-  actual opaque pixels, or leave faint colored fringing at edges. A solid,
-  unambiguous green background is trivial to chroma-key out reliably in a
-  cleanup pass afterward (any decent image library - Pillow, ImageMagick -
-  can do this; ask an AI coding assistant for a script if you don't want to
-  write one), and it's the one color guaranteed to never appear in the
-  character's own design, so removal is unambiguous.
+**Every documented defect across every built-in character's `NOTES.md` so
+far traces back to the same root cause: asking one generation call for an
+entire multi-row grid at once, and the model drifting partway through it**
+- a cursor icon baked into two frames of Mongo's `drag` row, his eye color
+changing between frames, a whole unrelated bear appearing on one of Fox's
+rows, a missing prop leaving artifact patches, a last frame that abandons
+the pose entirely. A single-shot "generate this whole 6x15 grid" prompt
+asks a lot of any current image model's consistency - the workflow below
+generates *one row at a time*, feeding the model a reference image of the
+character back into each request (Gemini's image model supports exactly
+this: attaching an image and asking for a new one that matches it, within
+the same conversation) instead of describing the whole cast of poses in
+one text prompt and hoping the model holds the character steady across
+all of them.
+
+#### Step 1: generate one reference image first
+
+Establish the character's design once, cleanly, before generating any
+poses - this becomes the anchor every later row is generated against.
+
+> A single character reference image, front-facing, standing in a simple
+> neutral pose (arms/limbs relaxed at its sides, facing the camera), on a
+> solid flat green background (like a green-screen) - the same exact
+> green everywhere, no gradients, shadows, or texture. Solid black
+> outlines around the entire character - never colored or blended into
+> the green background.
+>
+> Character: [DESCRIBE THE CHARACTER - species/shape, color palette,
+> face/eyes, distinguishing features, size proportions, no more than a
+> couple of sentences]. Style: [e.g. "flat cartoon shading" or "crisp
+> hard-edged pixel art, no anti-aliasing"] - pick one style; every later
+> image needs to match this exact character design and style.
+
+Look this over carefully before moving on - this is the one image every
+later generation will be measured against, so it's worth regenerating a
+few times to get a design you're happy with before building anything on
+top of it.
+
+#### Step 2: generate one row at a time, attaching the reference image
+
+In the *same* Gemini conversation (so the reference image stays attached
+as context - a fresh chat won't have it), ask for one animation row per
+message, referencing the image you just approved:
+
+> Using the exact same character shown in the attached reference image -
+> identical colors, proportions, outline style, and art style, no
+> deviation - generate a new image: a horizontal strip of [N] frames,
+> left to right, each frame [FRAME SIZE]x[FRAME SIZE] pixels, consistent
+> even spacing between frames, on the same solid flat green background as
+> the reference (same exact green, no gradients/shadows/texture).
+>
+> Animation: [ROW NAME] - [DETAILED POSE DESCRIPTION - see the per-row
+> list below]. The character's feet/base must stay at the same height in
+> every single frame (no vertical bobbing/drift frame to frame unless the
+> pose specifically calls for it). If the character holds or wears
+> anything in this pose, it must appear in every frame consistently - not
+> only some of them - and must not be colored green (a green prop
+> chroma-keys out invisibly against the background). Do not add any UI
+> elements, cursors, icons, text, or watermarks anywhere in the image -
+> only the character and the green background.
+
+Do this for every row you want, one message at a time - it costs more
+generation calls than one giant sheet, but each call is a much easier
+consistency problem for the model, and you can regenerate just the one
+row that came back wrong instead of the whole sheet.
+
+#### Step 3: composite the rows into one sheet
+
+Once every row looks right individually, stitch the separate horizontal
+strips into the final grid (stacked top to bottom, in the row order your
+`character.json` will use) - a short Pillow script does this in a few
+lines; ask an AI coding assistant to write one if you're not comfortable
+with image processing directly, or adapt the cleanup approach documented
+in any existing character's `NOTES.md`. Expect to still need a
+chroma-key + edge-despill cleanup pass afterward (see the lessons below)
+even with this more consistent workflow.
+
+#### Lessons learned (read before writing the character/pose descriptions)
+
+- **Ask for a solid green background, not transparency**, for the
+  reasons in Step 1/2 above - a fake checkerboard "transparent" pattern
+  or faint colored edge fringing is what you get instead if you don't.
 - **Ask for solid black outlines specifically, not just "an outline."**
   Without that, the character's edge often comes back anti-aliased into
   the green background - a thin ring of green-tinted pixels rather than a
   clean line - which then needs a spill-suppression pass (clamp the green
   channel down wherever it's the dominant one on a kept pixel) to fix up
-  afterward. Asking for the outline color explicitly reduces how much of
-  that shows up in the first place, though the cleanup script should still
-  expect and handle some.
-- **Spell out every row's content explicitly and repeat the "only this
-  creature" instruction.** Without that, generators can and do drift -
-  wrong colors on one frame, or entirely unrelated content on a row (an
-  actual result on this project's second Fox sheet: a row that was
-  supposed to be a startled reaction came back as an unrelated bear, for
-  no apparent reason). Explicit per-row descriptions and a repeated
-  constraint make this less likely, but always look over what comes back
-  row by row rather than assuming it matched the brief.
+  afterward.
 - **Never ask for a green prop.** A real mistake made writing an earlier
   version of this template: it suggested a dinosaur character fan itself
-  with "a small leaf" for the hot-weather row. A green leaf on a green
-  background gets chroma-keyed out along with the background, since
-  there's nothing to tell them apart - the prop was just gone in the
-  result, leaving faint artifact patches where it used to be. Keep any
-  held/worn prop a color clearly different from the background green
-  (the umbrella, phone, and laptop in this template's own row list are
-  all fine - none of them are green). Also worth knowing: a character
-  whose own skin/fur color is itself green-adjacent (teal, lime, olive)
-  needs a more careful cleanup pass than one whose colors sit far from
-  green (like Fox's orange or Cat's beige/black) - see the "turquoise
-  skin" section of `Assets/Characters/Dinosaur/NOTES.md` for what that
-  actually took to get right.
+  with "a small leaf." A green leaf on a green background chroma-keys out
+  along with the background - the prop was just gone in the result,
+  leaving faint artifact patches where it used to be. Keep any held/worn
+  prop a color clearly different from the background green. Also worth
+  knowing: a character whose own skin/fur color is itself green-adjacent
+  (teal, lime, olive) needs a more careful cleanup pass than one whose
+  colors sit far from green - see the "turquoise skin" section of
+  `Assets/Characters/Dinosaur/NOTES.md`.
+- **Don't let a held prop hide the character's limbs.** Mongo's `hacking`-
+  equivalent laptop pose and Dave's actual `hacking` row both ended up
+  with paws/legs completely hidden behind the prop in every frame - not a
+  cropping bug, just the prop drawn too large/low. Explicitly ask for the
+  prop sized and positioned so all limbs stay visible around or beside
+  it, not behind it.
+- **A prop that appears must appear in every frame of that row,
+  consistently** - Mongo's `watch` row had sunglasses vanish and popcorn
+  appear/disappear inconsistently across its 6 frames, which looked
+  jarring on loop. Say explicitly (as in the Step 2 template) that
+  anything held or worn must be present in every frame, not phased in
+  partway through.
+- **No UI elements baked into the art.** A real defect found this
+  session: Mongo's `drag` row came back with an actual mouse-cursor icon
+  drawn into two of six frames, as if illustrating "being dragged by the
+  cursor" a little too literally. Say explicitly that only the character
+  and background may appear - no cursors, icons, text, or watermarks.
+- **Keep eye color/style identical across every frame of a row** (and
+  ideally across rows) - another real defect: one frame of a row came
+  back with a different eye color than the other five, for no apparent
+  reason. Nothing prevents this proactively as reliably as the reference-
+  image + per-row workflow above, but it's still worth explicitly
+  checking on a fresh sheet.
+- **Spell out every row's content explicitly and repeat the "only this
+  creature" instruction anyway**, even with the reference-image workflow -
+  drift is reduced, not eliminated. An earlier version of this project
+  had an entirely unrelated animal appear on one row for no apparent
+  reason. Always look over what comes back row by row rather than
+  assuming it matched the brief.
+- **The first and last frames of a loop are where drift shows up most**,
+  for two different reasons. Cat (`dance`, `hacking`, `hot`) and Dinosaur
+  (`dance`) both had their *first* frame missing a prop the character
+  should already be holding - the model apparently treating "put it on"
+  as part of the sequence rather than a constant across every frame,
+  which pops jarringly every loop since a loop cuts straight from its
+  last frame back to its first. Mongo's `watch` row (this session) had
+  its *last* frame abandon the pose entirely instead - a different
+  failure, but the same lesson: check both ends of a loop specifically,
+  not just skim the row as a whole. A copy of a nearby good frame fixes a
+  missing-prop first frame; a lower `frameCount` (dropping a broken last
+  frame) is usually easier than trying to regenerate just one frame in
+  isolation.
+- Expect imperfect grid/strip alignment even within a single row (uneven
+  frame spacing, a few stray pixels of a neighboring frame bleeding in) -
+  a boundary-detection pass based on where the actual content is (rather
+  than assuming even spacing) handles this more reliably than trusting
+  the nominal frame width.
 
-Also expect imperfect grid alignment (uneven row/column spacing, a few
-stray pixels of a neighboring cell bleeding into another) - a boundary
-detection pass based on where the actual content is (rather than assuming
-even spacing) handles this more reliably than trusting the nominal grid;
-ask an AI coding assistant to write that if you're not comfortable with
-image processing directly. This template describes a 6-column x 15-row
-layout, one animation per row - adjust the column/row counts if you want
-more/fewer frames per animation or to skip some optional animations:
+#### Frame counts, and why
 
-> Sprite sheet, 6 columns x 15 rows, one grid cell per pose, each cell
-> approximately [FRAME SIZE]x[FRAME SIZE] pixels with consistent, even
-> spacing between all rows and columns. Solid flat green background
-> (like a green-screen), the same exact green in every cell - no gradients,
-> shadows, or texture in the background. Character centered in each cell,
-> consistent size, proportions, color palette, and art style in every
-> single cell across the whole sheet - the character must look like the
-> same individual throughout, never a different creature, animal, or
-> object in any cell.
->
-> Character: [DESCRIBE THE CHARACTER - species/shape, color palette,
-> face/eyes, distinguishing features, size proportions, no more than a
-> couple of sentences]. Style: [e.g. "flat cartoon shading" or "crisp
-> hard-edged pixel art, no anti-aliasing"] with solid black outlines
-> around the character - never colored or blended into the green
-> background - pick one style and keep it identical across every cell.
->
-> Each row is one animation, frames left to right (leave any unused
-> trailing cells in a row blank, still green background):
-> - Row 1 (X frames): idle - [describe a subtle idle loop, e.g. breathing/blinking]
-> - Row 2 (X frames): walking - [a walk cycle, legs/body alternating]
-> - Row 3 (X frames): sleeping - [eyes closed, a "Zzz" or similar sleep cue]
-> - Row 4 (X frames): being dragged by the cursor - [startled/wide-eyed, swaying]
-> - Row 5 (X frames): waking up - [eyes opening, groggy to alert]
-> - Row 6 (X frames): dancing to music - [headphones or a musical cue, bouncing]
-> - Row 7 (X frames): watching a video - [sunglasses/popcorn or similar, facing forward]
-> - Row 8 (X frames): answering a phone call - [a phone prop rising to an ear]
-> - Row 9 (X frames): opening an envelope/message - [the envelope opening across frames]
-> - Row 10 (X frames): typing/at a computer - [a small screen/keyboard prop]
-> - Row 11 (X frames): just picked up - [a quick startled squish/flinch]
-> - Row 12 (X frames): it's hot outside - [fanning itself with a
->   non-green prop, a sweat drop]
-> - Row 13 (X frames): it's sunny outside - [sunglasses, relaxed/happy]
-> - Row 14 (X frames): it's raining - [holding/using an umbrella]
-> - Row 15 (X frames): it's cold outside - [bundled up, visible breath]
->
-> Remember: every cell shows the exact same character described above,
-> just in a different pose - no unrelated creatures, objects, or scenery.
+More frames per row is just smoother motion at the same fps - there's no
+code-side reason to stick to 6. Rough guidance based on standard 2D
+animation practice, not just "whatever's cheap":
 
-Fill in `[FRAME SIZE]`, the character description, style, and per-row
-frame counts (`X`) before using it, and drop any rows you don't want (an
-animation left out of `character.json` is simply never used). Once you
-have art back: check it row by row against the brief, chroma-key out the
-green, verify/fix row and column boundaries, then drop the result in as
-`Assets/Characters/<Name>/spritesheet.png` - the `row`/`frameCount` values
-in `character.json` just need to match whatever grid the art actually
-ended up with (see the row-remapping note in Fox's `NOTES.md` for a real
-example of this not matching the brief on the first try, and how it was
-fixed without regenerating).
+- **`walk`**: 8 is the classic convention for a readable walk cycle
+  (contact - down - passing - up, twice) - noticeably smoother than 6,
+  which tends to look like a shuffle.
+- **`dance`**: 8, for the same reason - a rhythmic loop benefits from
+  enough frames to read as "on the beat" rather than a slow wobble.
+- **`idle`**: 5-8, a subtle breathing/blink loop - more than 8 is wasted
+  detail for how understated this pose usually is.
+- **`sleep`, `hacking`, weather loops (`hot`/`sunny`/`rainy`/`cold`)**:
+  4-6, slow ambient loops where extra frames add little.
+- **`watch`**: 5-6 - keep it on the lower end per the "last frame drifts"
+  lesson above, and double-check the last one specifically before
+  committing to a higher count.
+- **One-shot (non-looping) rows** - `wake`, `answerCall`, `openMail`,
+  `pickUp`, `eating`, `playing`, `lowBattery`, `snapshot` - 3-6 frames
+  covering a clear beginning-to-end arc (e.g. `wake`: eyes-closed →
+  eyes-opening → alert) reads better than 2 abrupt extremes, but don't
+  overdo it - these play once and move on, so smoothness matters less
+  than for a loop you'll see for seconds at a time.
+
+The row list to work through, with suggested frame counts baked in
+(adjust freely - drop any row you don't want, an animation simply left
+out of `character.json` is never used):
+
+- `idle` (6 frames): a subtle breathing/blink loop
+- `walk` (8 frames): a walk cycle, legs/body alternating
+- `sleep` (5 frames): eyes closed, a "Zzz" or similar sleep cue
+- `drag` (5 frames): being held/carried - startled/wide-eyed, swaying
+  (no cursor icon - see the lessons above)
+- `wake` (4 frames, one-shot): eyes opening, groggy to alert
+- `dance` (8 frames): headphones or a musical cue, bouncing to a beat
+- `watch` (5 frames): sunglasses/popcorn or similar, facing forward -
+  the prop must appear in every frame, not partway through
+- `answerCall` (4 frames, one-shot): a phone prop rising to an ear
+- `openMail` (4 frames, one-shot): an envelope opening across frames
+- `hacking` (6 frames): at a small screen/keyboard prop, sized so all
+  limbs stay visible around it
+- `pickUp` (3 frames, one-shot): a quick startled squish/flinch
+- `hot` (5 frames): fanning itself with a non-green prop, a sweat drop
+- `sunny` (5 frames): sunglasses, relaxed/happy
+- `rainy` (5 frames): holding/using an umbrella
+- `cold` (5 frames): bundled up, visible breath
+- `eating` (4 frames, one-shot): a small snack/food prop
+- `playing` (4 frames, one-shot): tossing/chasing something, a moment of fun
+- `lowBattery` (4 frames, one-shot): a droopy, low-energy moment
+- `snapshot` (3 frames, one-shot): a startled camera-flash reaction
+
+Once you have art back: check every row against the brief (frame by
+frame, not just at a glance - see the lessons above), chroma-key out the
+green, verify/fix frame boundaries, then drop the result in as
+`Assets/Characters/<Name>/spritesheet.png` - the `row`/`frameCount`
+values in `character.json` just need to match whatever grid the art
+actually ended up with (see the row-remapping note in Fox's `NOTES.md`
+for a real example of this not matching the brief on the first try, and
+how it was fixed without regenerating).
 
 ### Adding new rows to an existing character (an "expansion sheet")
 
