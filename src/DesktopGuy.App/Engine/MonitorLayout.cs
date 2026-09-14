@@ -14,32 +14,39 @@ namespace DesktopGuy.App.Engine;
 /// actually falls on, or the primary monitor for a fresh install or if
 /// that monitor's been disconnected since.
 ///
-/// Caveat: System.Windows.Forms.Screen reports bounds in raw pixels,
-/// used here directly as WPF's device-independent units. That's exact
-/// when every monitor runs the same DPI scale (the common case,
-/// especially on a desktop with matched monitors); on a mixed-DPI setup
-/// (e.g. a laptop's own screen at 150% next to an external monitor at
-/// 100%) the numbers can be slightly off on a non-primary monitor - still
-/// strictly better than being unable to use anything but the primary
-/// monitor at all.
+/// System.Windows.Forms.Screen reports bounds in physical pixels, but
+/// WPF's Window.Left/Top/Width/Height are in device-independent units
+/// (96 per inch) - on anything other than exactly 100% display scaling
+/// (125%/150% is the Windows default on most modern displays), using
+/// those pixel values directly would place the window far outside the
+/// actual visible area, which is exactly what happened the first time
+/// this shipped. Every Screen rect is converted to WPF units via a scale
+/// factor derived from comparing SystemParameters.WorkArea (already
+/// correctly DPI-converted, but primary-monitor-only) against the
+/// primary Screen's own raw-pixel work area - assumes every monitor runs
+/// the same DPI scale, which holds for a single monitor (now handled
+/// correctly again) and for the common multi-monitor case of matched
+/// displays; a mixed-DPI multi-monitor setup (a laptop's own screen at
+/// 150% next to an external at 100%) can still be slightly off on the
+/// non-primary monitor.
 /// </summary>
 public static class MonitorLayout
 {
     public readonly record struct WorkArea(double Left, double Top, double Right, double Bottom);
+
+    private static readonly double ScaleFactor = ComputeScaleFactor();
 
     /// <summary>The work area of whichever monitor contains the given X, or the primary monitor if x is null or off every currently connected monitor.</summary>
     public static WorkArea GetWorkAreaFor(double? x)
     {
         try
         {
-            if (x is { } knownX)
+            foreach (var screen in Screen.AllScreens)
             {
-                foreach (var screen in Screen.AllScreens)
+                var area = ToWorkArea(screen.WorkingArea);
+                if (x is { } knownX && knownX >= area.Left && knownX < area.Right)
                 {
-                    if (knownX >= screen.WorkingArea.Left && knownX < screen.WorkingArea.Right)
-                    {
-                        return ToWorkArea(screen.WorkingArea);
-                    }
+                    return area;
                 }
             }
 
@@ -54,11 +61,38 @@ public static class MonitorLayout
         }
 
         // Last-resort fallback if System.Windows.Forms.Screen is somehow
-        // unavailable - WPF's own primary-monitor-only work area.
+        // unavailable - WPF's own primary-monitor-only work area, already
+        // in the right units with no conversion needed.
         var wpfArea = System.Windows.SystemParameters.WorkArea;
         return new WorkArea(wpfArea.Left, wpfArea.Top, wpfArea.Right, wpfArea.Bottom);
     }
 
-    private static WorkArea ToWorkArea(System.Drawing.Rectangle rect) =>
-        new(rect.Left, rect.Top, rect.Right, rect.Bottom);
+    private static WorkArea ToWorkArea(System.Drawing.Rectangle rect) => new(
+        rect.Left * ScaleFactor, rect.Top * ScaleFactor, rect.Right * ScaleFactor, rect.Bottom * ScaleFactor);
+
+    /// <summary>
+    /// WPF DIP units per physical pixel, e.g. ~0.667 at 150% scaling. Derived
+    /// once from two already-available values rather than any DPI-specific
+    /// Win32 API - SystemParameters.WorkArea.Width is the primary monitor's
+    /// width in DIPs, Screen.PrimaryScreen.WorkingArea.Width is the same
+    /// monitor's width in physical pixels; their ratio is exactly 96/actualDPI.
+    /// </summary>
+    private static double ComputeScaleFactor()
+    {
+        try
+        {
+            double dipWidth = System.Windows.SystemParameters.WorkArea.Width;
+            double pixelWidth = Screen.PrimaryScreen?.WorkingArea.Width ?? 0;
+            if (dipWidth > 0 && pixelWidth > 0)
+            {
+                return dipWidth / pixelWidth;
+            }
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Record("MonitorLayout.ComputeScaleFactor", ex);
+        }
+
+        return 1.0;
+    }
 }
