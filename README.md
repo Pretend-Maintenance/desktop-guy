@@ -193,9 +193,25 @@ register that temporary path instead of your real install.
   you unlock it - a different signal from the idle-timeout-based
   Sleeping/Waking pair, which only ever knows "no input for a while," not
   a genuine lock.
+- **USB/removable drive**: a speech bubble whenever a removable drive
+  (USB stick, external HDD/SSD, an SD card via a reader, ...) shows up or
+  disappears, naming the drive letter ("Ooh, what's this? New drive at
+  D:\!" / "Huh, D:\ is gone now."). Checked via a 2-second poll of the
+  drive list rather than a device-change hook - no window handle or native
+  struct marshaling needed for something this low-stakes.
 
 None of these have dedicated animations - just phrases, layered on top of
 whatever pose it's already in, the same way the battery nudges above work.
+
+None of the above needs administrator rights. Every watcher in the app -
+battery, network, disk space, session lock, USB drives, Discord awareness,
+media/terminal/typing detection - uses plain standard-user Windows APIs
+(WMI-free file-system/network enumeration, public broadcast events like
+`SystemEvents.SessionSwitch`, or reading the same "now playing"/session
+info any app can read). The app runs fine as a normal user the whole time;
+the only unrelated friction is the SmartScreen warning mentioned below,
+which is about the executable being unsigned, not about needing elevated
+permissions.
 
 There are also four weather poses - `cold`, `hot`, `sunny`, `rainy` - but
 they're preview-only, triggered from the right-click menu's **Preview

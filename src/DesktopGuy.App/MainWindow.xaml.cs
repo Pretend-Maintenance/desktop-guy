@@ -35,6 +35,7 @@ public partial class MainWindow : Window
     private readonly NetworkStatusWatcher _networkWatcher = new();
     private readonly DiskSpaceWatcher _diskSpaceWatcher = new();
     private readonly SessionLockWatcher _sessionLockWatcher = new();
+    private readonly UsbDriveWatcher _usbDriveWatcher = new();
     private readonly CancellationTokenSource _lifetimeCts = new();
     private readonly Stopwatch _clock = new();
     private readonly SingleInstanceGuard _instanceGuard;
@@ -102,6 +103,8 @@ public partial class MainWindow : Window
         _systemResumeWatcher.Resumed += () => _controller.RequestSystemResumeReaction();
         _sessionLockWatcher.Locked += () => _controller.OnSessionLocked();
         _sessionLockWatcher.Unlocked += () => _controller.OnSessionUnlocked();
+        _usbDriveWatcher.DriveConnected += drive => _controller.OnUsbDriveConnected(drive);
+        _usbDriveWatcher.DriveDisconnected += drive => _controller.OnUsbDriveDisconnected(drive);
 
         // Reuses the very first idle frame as the tray icon's picture -
         // whichever character is currently running is instantly
@@ -154,6 +157,7 @@ public partial class MainWindow : Window
         _meetingWatcher.Start(_lifetimeCts.Token);
         _networkWatcher.Start(_lifetimeCts.Token);
         _diskSpaceWatcher.Start(_lifetimeCts.Token);
+        _usbDriveWatcher.Start(_lifetimeCts.Token);
         _screenshotWatcher.Start();
         _fullscreenWatcher.Start(_lifetimeCts.Token);
     }

@@ -141,6 +141,21 @@ public sealed class CharacterController
         "*perks up* There you are!",
     };
 
+    // {0} is filled in with the drive letter (e.g. "D:\").
+    private static readonly string[] UsbConnectedPhraseTemplates =
+    {
+        "Ooh, what's this? New drive at {0}!",
+        "*sniffs curiously* something just plugged into {0}.",
+        "New drive spotted at {0}. Hi there.",
+    };
+
+    private static readonly string[] UsbDisconnectedPhraseTemplates =
+    {
+        "Huh, {0} is gone now.",
+        "*tilts head* the drive at {0} just left.",
+        "Bye, {0}! Safe travels.",
+    };
+
     public CharacterState State { get; private set; } = CharacterState.Idle;
     public double PositionX { get; private set; }
     public double PositionY { get; private set; }
@@ -270,6 +285,22 @@ public sealed class CharacterController
     public void OnSessionUnlocked()
     {
         SpeechRequested?.Invoke(PickPhrase(SessionUnlockedPhrases));
+        _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
+            _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
+    }
+
+    /// <summary>Called by MainWindow when a removable drive (USB stick, external drive, ...) is plugged in.</summary>
+    public void OnUsbDriveConnected(string driveLetter)
+    {
+        SpeechRequested?.Invoke(string.Format(PickPhrase(UsbConnectedPhraseTemplates), driveLetter));
+        _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
+            _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
+    }
+
+    /// <summary>Called by MainWindow when a removable drive is pulled out (or safely ejected).</summary>
+    public void OnUsbDriveDisconnected(string driveLetter)
+    {
+        SpeechRequested?.Invoke(string.Format(PickPhrase(UsbDisconnectedPhraseTemplates), driveLetter));
         _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
             _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
     }
