@@ -107,5 +107,51 @@
     "Ooo con con! So much time together, so much snooks!",
     "*melts into a puddle of happy pug* ploooo",
     "Yeahhh! Snooks! Best day ever, snooks!"
+  ],
+  "networkDownPhrases": [
+    "*ears perk* ...ooh, the {0} is gone. Ah, snooks.",
+    "Con con! Con con! Where'd the {0} go?! *bork bork*",
+    "*startled zoomies* THE {0}'S GONE THE {0}'S GONE",
+    "Wait, con con - did you feel that? The {0} just left.",
+    "*low growl at the router* snooks... the {0}'s gone AND no treats to console me."
+  ],
+  "networkUpPhrases": [
+    "Ah, the {0}'s back! *happy snort* good, good.",
+    "Con con, the {0}'s back! Snooks!",
+    "*flops down, relieved* {0}'s here again. Ploooo.",
+    "The {0}! It returned! *tail going crazy*"
+  ],
+  "diskSpaceLowPhrases": [
+    "Ah, we're getting a bit full up in here. *concerned snook*",
+    "Con con... the computer's getting a bit crowded. Just saying.",
+    "*eyeing the hard drive* not much room left, snooks.",
+    "Might be worth clearing some space, con con. *worried tilt*"
+  ],
+  "diskSpaceRecoveredPhrases": [
+    "Ah, more room now. Good, good. *relaxed snort*",
+    "Breathing room again! Snooks."
+  ],
+  "sessionLockedPhrases": [
+    "Ah, locking up. I'm going to have a nap now, con con.",
+    "*curls up by the door* Off you go. I'll wait, snooks.",
+    "Locked! Sleepy time. *yawns, flops*",
+    "Con con's gone quiet. Nap time. Ploooo."
+  ],
+  "sessionUnlockedPhrases": [
+    "CON CON! You're back!! *zoomies*",
+    "*leaps up* Oh! Oh! Con con's back, snooks!",
+    "Welcome back, con con! *tail going mental*",
+    "There you are! Does this mean treats? *bork bork bork*"
+  ],
+  "usbConnectedPhrases": [
+    "*bark bark* what's THAT?! Something plugged into {0}, con con?",
+    "Ooh, new thing at {0}! Con con, what is it? What IS it??",
+    "*sniffs suspiciously at the computer* something's at {0}. Snooks?",
+    "New drive! At {0}! Can I see, con con? Can I see??"
+  ],
+  "usbDisconnectedPhrases": [
+    "Huh. The thing at {0} is gone. *tilts head* where'd it go, con con?",
+    "*confused bork* {0}'s empty now. Snooks?",
+    "Aw, the {0} thing left. Bye, thing."
   ]
 }
