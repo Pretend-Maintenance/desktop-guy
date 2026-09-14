@@ -1,11 +1,65 @@
 # Dave character notes
 
 `spritesheet.png` is the cleaned-up sheet actually used by the app.
-`spritesheet_raw.png` and `spritesheet_expansion_raw.png` are the
-original uploads, kept as backups - not used by the app, safe to delete
-if you don't want them around.
+`spritesheet_raw.png`, `spritesheet_expansion_raw.png`, and
+`spritesheet_raw2.png` are the original uploads, kept as backups - not
+used by the app, safe to delete if you don't want them around.
 
-## Expansion sheet (rows 15-18)
+## v2: regenerated via the per-row Gemini workflow (fixes the hidden-legs bug)
+
+Replaced the entire sheet using the new "one reference image, then one
+row at a time" workflow from the README's AI-art template, specifically
+to fix the `hacking` row hiding his legs (see "Known limitation" below,
+now resolved) and the general animation-quality issues the original
+single-shot-grid sheet had. The new upload (`spritesheet_raw2.png`)
+wasn't a uniform grid - it's the individually-generated row strips
+arranged loosely into a two-column layout with uneven gaps, not a fixed
+column/row count - so the usual "assume an evenly-spaced grid" cropping
+didn't apply. Processed instead with connected-component detection
+(`scipy.ndimage.label` on a green-background chroma mask) to find each
+individual frame's own tight bounding box directly, then cropped each
+frame to its own bbox + 8px margin (clamped to image bounds), padded to
+square, and resized to 84x84 - avoids the bleeding-between-rows artifact
+a single fixed-size crop window produced when tried first (rows were
+only 13-20px apart, closer than a sensibly-sized shared window).
+
+What actually came back, and what changed from the original brief:
+- **`answerCall` and `sunny` weren't generated this round** - no phone-
+  call or plain-sunglasses-relaxed row anywhere in the upload. Left out
+  of `character.json` entirely (same as any other character missing an
+  optional row) rather than faked - add them later with their own
+  per-row generation whenever convenient.
+- **One frame got merged into its neighbor** by the chroma-mask
+  connected-component detection (`lowBattery` frames 1-2 were touching,
+  same silhouette blob) - split by hand at the visual midpoint once
+  found, rather than needed for every character, just this one pair.
+- **`sleep` and `wake` both got generated with an overlapping "curled up,
+  eyes closed" starting pose** (my per-row wake prompt explicitly asked
+  for that as frame 1, same as the sleep prompt) - used the cleanest
+  pure-sleep 3-frame group (no alert ending) for `sleep`, and a separate
+  4-frame group that runs all the way to a clear sitting-up-alert last
+  frame for `wake`. A leftover pair of "wide awake, sitting" frames from
+  the same generation batch went unused rather than duplicating `wake`.
+- **Frame counts came back lower than the per-row prompts asked for** in
+  most rows (e.g. `idle` asked for 6, got 5; `dance`/`walk` asked for 8,
+  got 6) - used whatever was actually generated rather than padding
+  artificially. `hacking` is the one exception that came back *larger*
+  than asked (7, combined from two separate laptop-pose generations that
+  turned out consistent enough to use together) - kept all 7 for a
+  smoother loop.
+- **`watch`'s popcorn prop still isn't in every frame** (present in 2 of
+  6) - the exact "prop must persist every frame" lesson from the
+  prompt template, not fully followed by this generation. Left as-is
+  rather than re-patching by hand this time; a stricter re-prompt for
+  just this row would fix it properly if it reads as jarring in practice.
+- **`rainy` only came back with 1 frame** (just the umbrella pose, no
+  variation) - kept as a single static frame rather than dropped
+  entirely, so the row still exists; a fuller multi-frame `rainy` needs
+  its own regeneration.
+
+## v1 history (superseded by v2 above - kept for the general cleanup lessons, which still apply)
+
+### Expansion sheet (rows 15-18)
 
 Added `eating`, `playing`, `lowBattery`, and `snapshot` as a separate
 6x4 sheet, appended onto the bottom of the existing 15-row sheet. No
@@ -18,7 +72,7 @@ A black pug with a cute underbite, generated from the AI-art prompt
 template in the main README, same green-background/grid-line approach as
 Cat and Dinosaur.
 
-## Solid black fur needed two adjustments from the standard cleanup
+### Solid black fur needed two adjustments from the standard cleanup
 
 - **`strip_gridlines()` was skipped entirely.** That step blanks out any
   row/column within a cell that's mostly dark and opaque, on the
@@ -47,31 +101,30 @@ they're safe here because of what Dave's own colors are, not something to
 copy automatically onto the next character without checking whether the
 same reasoning actually applies.
 
-## No frame patches needed this time
+### No frame patches needed this time
 
 Unlike Cat and Dinosaur, no looping animation had its defining prop
 missing on frame 1 (dance/hacking/hot all stay consistent frame-to-frame
 here) - nothing to patch.
 
-## Frame counts
+### Frame counts
 
 Every animation came back with a full 6 frames except `wake` and
 `pickUp` (2 each, per the prompt) - no partial rows like Cat/Dinosaur's
 5-frame `idle` this time.
 
-## Known limitation: `hacking` never shows his legs
+### Known limitation: `hacking` never showed his legs - fixed in v2
 
 Reported as "legs cut off" after seeing it run - checked both
 `spritesheet.png` and `spritesheet_raw.png` directly (cropped each frame
-of row 9 out and looked at the actual pixels), and this isn't a cropping
-bug: the raw, unprocessed art already has him drawn sitting low behind
+of row 9 out and looked at the actual pixels), and it wasn't a cropping
+bug: the raw, unprocessed art already had him drawn sitting low behind
 the laptop with his lower body/paws entirely hidden behind it in all six
-frames, consistently. There's no extra artwork just outside the current
-crop to reveal by nudging it - the background is clean right down to the
-frame boundary. Fixing this properly means regenerating this one row
-with the laptop positioned lower/smaller so his paws stay visible, via
-the AI-art prompt template - not something fixable by reprocessing the
-existing image.
+frames, consistently. No extra artwork just outside the crop to reveal by
+nudging it - the background was clean right down to the frame boundary.
+Fixed in v2 by regenerating the row via the per-row Gemini workflow with
+an explicit "size and position the prop so all limbs stay visible"
+instruction - the new `hacking` row shows all four paws in every frame.
 
 ## Try it
 
