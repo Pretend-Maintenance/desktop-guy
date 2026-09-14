@@ -1,11 +1,41 @@
 # Dave character notes
 
 `spritesheet.png` is the cleaned-up sheet actually used by the app.
-`spritesheet_raw.png`, `spritesheet_expansion_raw.png`, and
-`spritesheet_raw2.png` are the original uploads, kept as backups - not
+`spritesheet_raw.png`, `spritesheet_expansion_raw.png`, `spritesheet_raw2.png`,
+and `spritesheet_raw3.png` are the original uploads, kept as backups - not
 used by the app, safe to delete if you don't want them around.
 
-## v2: regenerated via the per-row Gemini workflow (fixes the hidden-legs bug)
+## v3: a cleaner single-shot regeneration, used for the base 15 rows
+
+After v2 (below) read as too somber and had a stray phone prop drifting
+into `watch`, this replaced the base 15 rows (`idle` through `cold`)
+again with a single-shot 6x15 grid generation - closer to the *original*
+Dave prompt (a proper uniform grid) than v2's per-row-strips-composited-
+loosely approach, and it came out both more complete and more
+consistent: `answerCall` and `sunny` (missing entirely from v2) are back
+with a full 6 frames each, `rainy` has all 6 frames with the umbrella
+held throughout (v2 only had 1 static frame), and `watch`'s popcorn stays
+present from frame 2 onward instead of flickering. The upload already
+had real alpha transparency (not a flat green background) - only needed
+an edge despill pass (any pixel where green was still the dominant
+channel got clamped down to the stronger of red/blue) rather than a full
+chroma-key removal.
+
+`eating`/`playing`/`lowBattery`/`snapshot` (the expansion rows) and
+`bonk`/`systemResume`/`milestone` weren't part of this regeneration -
+they're not in the older 15-row template this used. Reused as-is from
+before: the expansion rows from the last commit prior to any of this
+session's Dave changes (`6a6a9c0`), and bonk/systemResume/milestone from
+v2 (those three still read fine mood-wise, unlike the base rows) -
+copied directly into rows 15-21 of the new sheet, since they were
+already clean 84x84 cells needing no reprocessing.
+
+**Known gap:** `hot` has no fan prop at all in this version (just tongue-
+out panting and a sweat drop) - the original brief asked for one held
+throughout. Not patched; would need a targeted regeneration of just that
+row to fix properly.
+
+## v2 history (superseded by v3 above for the base rows - the hidden-legs fix and the bonk/systemResume/milestone rows it introduced still stand)
 
 Replaced the entire sheet using the new "one reference image, then one
 row at a time" workflow from the README's AI-art template, specifically
