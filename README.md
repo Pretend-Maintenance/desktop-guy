@@ -77,6 +77,49 @@ Running `dotnet run` from source (rather than a published `.exe`) mostly
 sidesteps this, since there's no separately-downloaded executable file for
 Windows to flag in the first place.
 
+#### If Windows blocks it outright (Smart App Control) rather than just warning
+
+A stricter, separate mechanism from SmartScreen above: Windows 11's **Smart
+App Control** (Settings → Privacy & security → Windows Security → App &
+browser control) can outright refuse to load an unsigned binary rather than
+just warning about it - no "run anyway" option, just a hard failure. It
+showed up here as:
+
+```
+System.IO.FileLoadException: Could not load file or assembly '...DesktopGuy.dll'.
+An Application Control policy has blocked this file. (0x800711C7)
+```
+
+Unlike SmartScreen, `dotnet run` doesn't sidestep this - it still has to
+load the freshly-compiled DLL, and a *fresh* compile means a *new* file
+hash Windows has never evaluated before, every single time. Rebuilding via
+`dotnet run` on every launch was effectively asking Smart App Control to
+re-judge a brand new file on every run.
+
+The fix that worked here, without touching Smart App Control's settings or
+needing a code-signing certificate: **publish a stable build once, then
+launch that same file repeatedly instead of rebuilding on every launch.**
+
+```powershell
+dotnet publish src/DesktopGuy.App -c Release -r win-x64 --self-contained false
+```
+
+This produces a stable `DesktopGuy.exe` (plus its `.dll` and the `Assets`
+folder alongside it) under
+`src\DesktopGuy.App\bin\Release\net10.0-windows10.0.19041.0\win-x64\publish\`.
+Run that exe directly (double-click it, or `.\DesktopGuy.exe --character
+Dave` from that folder) instead of `dotnet run` from then on - its hash
+only changes when you actually rebuild after a real code change, not on
+every launch.
+
+If a *first* run of a freshly published build still gets blocked, that's a
+genuine Smart App Control call on this specific binary rather than a
+build-freshness artifact, and the real fixes are the two mentioned in the
+SmartScreen section above (click through / code-sign) - Smart App Control
+has no per-app exception list to add this app to, and turning it off
+entirely is a one-way decision (it can't be re-enabled without a full
+Windows reset).
+
 ### Always on Top
 
 Right-click the character and toggle **"Always on Top"** to control
