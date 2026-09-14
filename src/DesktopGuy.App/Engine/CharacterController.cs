@@ -98,8 +98,9 @@ public sealed class CharacterController
     };
 
     // {0} is filled in with "wifi" or "internet" depending on what the
-    // connection looked like right before it dropped.
-    private static readonly string[] NetworkDownPhraseTemplates =
+    // connection looked like right before it dropped. Used only when a
+    // character doesn't define its own NetworkDownPhrases.
+    private static readonly string[] GenericNetworkDownPhrases =
     {
         "Uh oh, the {0} just dropped!",
         "*ears perk up* ...where'd the {0} go?",
@@ -107,34 +108,34 @@ public sealed class CharacterController
         "The {0}'s gone. Not panicking. Definitely panicking.",
     };
 
-    private static readonly string[] NetworkUpPhraseTemplates =
+    private static readonly string[] GenericNetworkUpPhrases =
     {
         "{0}'s back! Phew.",
         "Oh good, the {0}'s back.",
         "*relieved noise* {0} reconnected!",
     };
 
-    private static readonly string[] DiskSpaceLowPhrases =
+    private static readonly string[] GenericDiskSpaceLowPhrases =
     {
         "Your disk's getting pretty full - might want to clear some space.",
         "Running low on disk space over here, just so you know.",
         "*eyeing the hard drive nervously* it's getting a little full in there.",
     };
 
-    private static readonly string[] DiskSpaceRecoveredPhrases =
+    private static readonly string[] GenericDiskSpaceRecoveredPhrases =
     {
         "Disk space is looking better now, nice.",
         "Ah, breathing room on the drive again.",
     };
 
-    private static readonly string[] SessionLockedPhrases =
+    private static readonly string[] GenericSessionLockedPhrases =
     {
         "Alright, locking up. I'll be here.",
         "*curls up* Catch you when you're back.",
         "Locked! I'll keep an eye on things. Sort of.",
     };
 
-    private static readonly string[] SessionUnlockedPhrases =
+    private static readonly string[] GenericSessionUnlockedPhrases =
     {
         "Welcome back!",
         "Oh hey, you're back!",
@@ -142,14 +143,14 @@ public sealed class CharacterController
     };
 
     // {0} is filled in with the drive letter (e.g. "D:\").
-    private static readonly string[] UsbConnectedPhraseTemplates =
+    private static readonly string[] GenericUsbConnectedPhrases =
     {
         "Ooh, what's this? New drive at {0}!",
         "*sniffs curiously* something just plugged into {0}.",
         "New drive spotted at {0}. Hi there.",
     };
 
-    private static readonly string[] UsbDisconnectedPhraseTemplates =
+    private static readonly string[] GenericUsbDisconnectedPhrases =
     {
         "Huh, {0} is gone now.",
         "*tilts head* the drive at {0} just left.",
@@ -276,7 +277,7 @@ public sealed class CharacterController
     /// </summary>
     public void OnSessionLocked()
     {
-        SpeechRequested?.Invoke(PickPhrase(SessionLockedPhrases));
+        SpeechRequested?.Invoke(PickPhrase(_definition.SessionLockedPhrases, GenericSessionLockedPhrases));
         _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
             _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
     }
@@ -284,7 +285,7 @@ public sealed class CharacterController
     /// <summary>Called by MainWindow when the OS session unlocks again.</summary>
     public void OnSessionUnlocked()
     {
-        SpeechRequested?.Invoke(PickPhrase(SessionUnlockedPhrases));
+        SpeechRequested?.Invoke(PickPhrase(_definition.SessionUnlockedPhrases, GenericSessionUnlockedPhrases));
         _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
             _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
     }
@@ -292,7 +293,7 @@ public sealed class CharacterController
     /// <summary>Called by MainWindow when a removable drive (USB stick, external drive, ...) is plugged in.</summary>
     public void OnUsbDriveConnected(string driveLetter)
     {
-        SpeechRequested?.Invoke(string.Format(PickPhrase(UsbConnectedPhraseTemplates), driveLetter));
+        SpeechRequested?.Invoke(string.Format(PickPhrase(_definition.UsbConnectedPhrases, GenericUsbConnectedPhrases), driveLetter));
         _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
             _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
     }
@@ -300,7 +301,7 @@ public sealed class CharacterController
     /// <summary>Called by MainWindow when a removable drive is pulled out (or safely ejected).</summary>
     public void OnUsbDriveDisconnected(string driveLetter)
     {
-        SpeechRequested?.Invoke(string.Format(PickPhrase(UsbDisconnectedPhraseTemplates), driveLetter));
+        SpeechRequested?.Invoke(string.Format(PickPhrase(_definition.UsbDisconnectedPhrases, GenericUsbDisconnectedPhrases), driveLetter));
         _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
             _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
     }
@@ -694,11 +695,11 @@ public sealed class CharacterController
 
         if (!isAvailable && _wasNetworkAvailable)
         {
-            SpeechRequested?.Invoke(string.Format(PickPhrase(NetworkDownPhraseTemplates), kind));
+            SpeechRequested?.Invoke(string.Format(PickPhrase(_definition.NetworkDownPhrases, GenericNetworkDownPhrases), kind));
         }
         else if (isAvailable && !_wasNetworkAvailable)
         {
-            SpeechRequested?.Invoke(string.Format(PickPhrase(NetworkUpPhraseTemplates), kind));
+            SpeechRequested?.Invoke(string.Format(PickPhrase(_definition.NetworkUpPhrases, GenericNetworkUpPhrases), kind));
         }
 
         _wasNetworkAvailable = isAvailable;
@@ -719,17 +720,29 @@ public sealed class CharacterController
         bool isLow = _diskSpaceContext.IsLow;
         if (isLow && !_wasDiskSpaceLow)
         {
-            SpeechRequested?.Invoke(PickPhrase(DiskSpaceLowPhrases));
+            SpeechRequested?.Invoke(PickPhrase(_definition.DiskSpaceLowPhrases, GenericDiskSpaceLowPhrases));
         }
         else if (!isLow && _wasDiskSpaceLow)
         {
-            SpeechRequested?.Invoke(PickPhrase(DiskSpaceRecoveredPhrases));
+            SpeechRequested?.Invoke(PickPhrase(_definition.DiskSpaceRecoveredPhrases, GenericDiskSpaceRecoveredPhrases));
         }
 
         _wasDiskSpaceLow = isLow;
     }
 
     private string PickPhrase(string[] pool) => pool[_random.Next(pool.Length)];
+
+    /// <summary>
+    /// Picks from a character's own custom phrase pool when it defines one,
+    /// otherwise falls back to the generic pool - same shape as
+    /// PickAffectionMilestonePhrase, reused for every system-event phrase
+    /// (network, disk space, lock/unlock, USB) so any character can
+    /// override these in its own voice without every character needing to.
+    /// </summary>
+    private string PickPhrase(List<string> custom, string[] generic)
+    {
+        return custom.Count > 0 ? custom[_random.Next(custom.Count)] : PickPhrase(generic);
+    }
 
     /// <summary>
     /// Accumulates total onscreen time (regardless of what state the

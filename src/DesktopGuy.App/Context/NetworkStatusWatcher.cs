@@ -8,12 +8,19 @@ namespace DesktopGuy.App.Context;
 
 /// <summary>
 /// Tracks whether the machine currently has a usable network connection,
-/// via the same best-effort signal Windows itself exposes
-/// (NetworkInterface.GetIsNetworkAvailable() - at least one non-loopback
-/// interface that's up). Not a true internet-reachability check (a router
-/// with no upstream still reports "available"), but cheap, synchronous,
-/// and good enough for a mascot's "hey, you're offline" nudge - same
-/// trade-off BatteryWatcher makes for battery state.
+/// by looking directly at physical wifi/ethernet adapters rather than
+/// trusting NetworkInterface.GetIsNetworkAvailable() - that call counts
+/// *any* non-loopback interface that's up, which includes virtual
+/// adapters (Hyper-V, WSL, Docker, a VPN client, ...) that commonly stay
+/// "up" the entire time regardless of whether the machine's actual wifi
+/// or ethernet is connected. Filtering to only Wireless80211/Ethernet-type
+/// interfaces, and excluding ones whose name/description looks virtual,
+/// is what actually reacts to flipping wifi on/off.
+///
+/// Not a true internet-reachability check (a router with no upstream
+/// still reports "available") - cheap and good enough for a mascot's
+/// "hey, you're offline" nudge, same trade-off BatteryWatcher makes for
+/// battery state.
 ///
 /// Reacts immediately to NetworkChange's events, with a slow poll running
 /// alongside as a safety net in case an event gets missed (some adapters/
@@ -26,10 +33,21 @@ public sealed class NetworkStatusWatcher : IDisposable
 {
     private static readonly TimeSpan PollInterval = TimeSpan.FromMinutes(3);
 
+    // Substrings (checked case-insensitively against both Name and
+    // Description) that flag an adapter as virtual/not-the-real-connection -
+    // these are the common ones that stay "up" regardless of actual wifi/
+    // ethernet state and would otherwise mask a real disconnect.
+    private static readonly string[] VirtualAdapterMarkers =
+    {
+        "virtual", "hyper-v", "vmware", "virtualbox", "vbox", "loopback",
+        "wsl", "docker", "tap-windows", "tap adapter", "bluetooth",
+        "pseudo", "tunnel", "vpn",
+    };
+
     private volatile bool _isAvailable = true;
     private volatile bool _wasWireless;
 
-    /// <summary>True when at least one non-loopback network interface is up.</summary>
+    /// <summary>True when at least one physical wifi/ethernet adapter is up.</summary>
     public bool IsAvailable => _isAvailable;
 
     /// <summary>Best-effort guess at whether the (most recent) connection was over wifi rather than wired.</summary>
@@ -72,10 +90,27 @@ public sealed class NetworkStatusWatcher : IDisposable
     {
         try
         {
-            _isAvailable = NetworkInterface.GetIsNetworkAvailable();
+            bool anyPhysicalUp = false;
+            bool anyWirelessUp = false;
+
+            foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
+            {
+                if (nic.OperationalStatus != OperationalStatus.Up || !IsPhysicalInterface(nic))
+                {
+                    continue;
+                }
+
+                anyPhysicalUp = true;
+                if (nic.NetworkInterfaceType == NetworkInterfaceType.Wireless80211)
+                {
+                    anyWirelessUp = true;
+                }
+            }
+
+            _isAvailable = anyPhysicalUp;
             if (_isAvailable)
             {
-                _wasWireless = HasActiveWirelessInterface();
+                _wasWireless = anyWirelessUp;
             }
         }
         catch (Exception ex)
@@ -84,18 +119,33 @@ public sealed class NetworkStatusWatcher : IDisposable
         }
     }
 
-    private static bool HasActiveWirelessInterface()
+    private static bool IsPhysicalInterface(NetworkInterface nic)
     {
-        foreach (var nic in NetworkInterface.GetAllNetworkInterfaces())
+        bool isEthernetOrWifi = nic.NetworkInterfaceType is
+            NetworkInterfaceType.Wireless80211 or
+            NetworkInterfaceType.Ethernet or
+            NetworkInterfaceType.GigabitEthernet or
+            NetworkInterfaceType.FastEthernetT or
+            NetworkInterfaceType.FastEthernetFx;
+
+        if (!isEthernetOrWifi)
         {
-            if (nic.OperationalStatus == OperationalStatus.Up &&
-                nic.NetworkInterfaceType == NetworkInterfaceType.Wireless80211)
+            return false;
+        }
+
+        string name = nic.Name ?? string.Empty;
+        string description = nic.Description ?? string.Empty;
+
+        foreach (var marker in VirtualAdapterMarkers)
+        {
+            if (name.Contains(marker, StringComparison.OrdinalIgnoreCase) ||
+                description.Contains(marker, StringComparison.OrdinalIgnoreCase))
             {
-                return true;
+                return false;
             }
         }
 
-        return false;
+        return true;
     }
 
     public void Dispose()

@@ -432,6 +432,22 @@ sprite sheet, which is how new characters get added.
      `"newYear"` - extra lines mixed in only during those windows
    - `affectionPhrases`: optional - special lines it might say once a
      cumulative-onscreen-time milestone is reached (see "How it behaves" above)
+   - `networkDownPhrases` / `networkUpPhrases`: optional - override the
+     generic wifi/internet drop-and-reconnect lines with the character's own
+     voice. Use `{0}` as a placeholder - it's filled in with `"wifi"` or
+     `"internet"` depending on what the connection looked like right before
+     it dropped, e.g. `"WHERE'S THE {0}?!"` becomes "WHERE'S THE WIFI?!".
+   - `diskSpaceLowPhrases` / `diskSpaceRecoveredPhrases`: optional - same
+     idea for the low-disk-space nudge, no placeholder needed.
+   - `sessionLockedPhrases` / `sessionUnlockedPhrases`: optional - same idea
+     for the OS session lock/unlock nudge, no placeholder needed.
+   - `usbConnectedPhrases` / `usbDisconnectedPhrases`: optional - same idea
+     for the removable-drive nudge. Use `{0}` as a placeholder for the drive
+     letter, e.g. `"ooh, {0}!"` becomes "ooh, D:\!".
+   - Any of the eight above left out entirely (or set to an empty array)
+     just falls back to a generic line - only worth adding once a
+     character has enough personality established to be worth writing
+     event-specific lines for.
 4. In the `.csproj`, files under `Assets/Characters/**` are already
    configured to copy to the output folder automatically - no project file
    changes needed.

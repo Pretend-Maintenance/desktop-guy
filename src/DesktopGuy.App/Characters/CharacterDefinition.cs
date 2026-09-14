@@ -55,6 +55,24 @@ public sealed class CharacterDefinition
     /// </summary>
     public List<string> AffectionPhrases { get; set; } = new();
 
+    /// <summary>
+    /// System-event phrase pools - all optional, and all fall back to a
+    /// generic line (see the matching "Generic...Phrases" fields in
+    /// CharacterController) when a character doesn't define its own. Each
+    /// "Down"/"Low"/"Locked" style pool may use "{0}" as a placeholder -
+    /// filled in with "wifi"/"internet" for network phrases, or the drive
+    /// letter for USB phrases. Lock/unlock and disk-space phrases don't use
+    /// a placeholder.
+    /// </summary>
+    public List<string> NetworkDownPhrases { get; set; } = new();
+    public List<string> NetworkUpPhrases { get; set; } = new();
+    public List<string> DiskSpaceLowPhrases { get; set; } = new();
+    public List<string> DiskSpaceRecoveredPhrases { get; set; } = new();
+    public List<string> SessionLockedPhrases { get; set; } = new();
+    public List<string> SessionUnlockedPhrases { get; set; } = new();
+    public List<string> UsbConnectedPhrases { get; set; } = new();
+    public List<string> UsbDisconnectedPhrases { get; set; } = new();
+
     /// <summary>Absolute path to the folder this definition was loaded from.</summary>
     public string SourceFolder { get; set; } = "";
 }
