@@ -52,6 +52,8 @@ public sealed class CharacterController
     private readonly BatteryWatcher? _batteryContext;
     private readonly MeetingWatcher? _meetingContext;
     private readonly ScreenshotWatcher? _screenshotContext;
+    private readonly NetworkStatusWatcher? _networkContext;
+    private readonly DiskSpaceWatcher? _diskSpaceContext;
     private readonly Random _random = new();
 
     private double _minX;
@@ -74,6 +76,8 @@ public sealed class CharacterController
     private double _previewWeatherSecondsRemaining;
     private bool _wasBatteryLow;
     private bool _wasBatteryFull;
+    private bool _wasNetworkAvailable = true;
+    private bool _wasDiskSpaceLow;
     private double _totalSecondsOnscreen;
     private double _secondsSinceLastOnscreenSave;
     private string? _lastAnnouncedTrack;
@@ -91,6 +95,50 @@ public sealed class CharacterController
         "We've been hanging out for a while now. I like that.",
         "Just noting: this is a good amount of time to spend together.",
         "Still here, still glad you're around.",
+    };
+
+    // {0} is filled in with "wifi" or "internet" depending on what the
+    // connection looked like right before it dropped.
+    private static readonly string[] NetworkDownPhraseTemplates =
+    {
+        "Uh oh, the {0} just dropped!",
+        "*ears perk up* ...where'd the {0} go?",
+        "Hey! We lost the {0}.",
+        "The {0}'s gone. Not panicking. Definitely panicking.",
+    };
+
+    private static readonly string[] NetworkUpPhraseTemplates =
+    {
+        "{0}'s back! Phew.",
+        "Oh good, the {0}'s back.",
+        "*relieved noise* {0} reconnected!",
+    };
+
+    private static readonly string[] DiskSpaceLowPhrases =
+    {
+        "Your disk's getting pretty full - might want to clear some space.",
+        "Running low on disk space over here, just so you know.",
+        "*eyeing the hard drive nervously* it's getting a little full in there.",
+    };
+
+    private static readonly string[] DiskSpaceRecoveredPhrases =
+    {
+        "Disk space is looking better now, nice.",
+        "Ah, breathing room on the drive again.",
+    };
+
+    private static readonly string[] SessionLockedPhrases =
+    {
+        "Alright, locking up. I'll be here.",
+        "*curls up* Catch you when you're back.",
+        "Locked! I'll keep an eye on things. Sort of.",
+    };
+
+    private static readonly string[] SessionUnlockedPhrases =
+    {
+        "Welcome back!",
+        "Oh hey, you're back!",
+        "*perks up* There you are!",
     };
 
     public CharacterState State { get; private set; } = CharacterState.Idle;
@@ -111,7 +159,9 @@ public sealed class CharacterController
         TypingWatcher? typingContext = null,
         BatteryWatcher? batteryContext = null,
         MeetingWatcher? meetingContext = null,
-        ScreenshotWatcher? screenshotContext = null)
+        ScreenshotWatcher? screenshotContext = null,
+        NetworkStatusWatcher? networkContext = null,
+        DiskSpaceWatcher? diskSpaceContext = null)
     {
         _definition = definition;
         _mediaContext = mediaContext;
@@ -120,6 +170,8 @@ public sealed class CharacterController
         _batteryContext = batteryContext;
         _meetingContext = meetingContext;
         _screenshotContext = screenshotContext;
+        _networkContext = networkContext;
+        _diskSpaceContext = diskSpaceContext;
         PositionX = startX;
         PositionY = startY;
         _secondsUntilNextWalk = RandomBetween(
@@ -197,6 +249,27 @@ public sealed class CharacterController
         }
 
         SpeechRequested?.Invoke(pool[_random.Next(pool.Count)]);
+        _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
+            _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
+    }
+
+    /// <summary>
+    /// Called by MainWindow when the OS session locks (Win+L, screensaver,
+    /// auto-lock, ...) - just a phrase, no dedicated art/state, same as the
+    /// battery nudges below. Also resets the next-speech countdown so a
+    /// queued-up ambient line doesn't fire while nobody's looking.
+    /// </summary>
+    public void OnSessionLocked()
+    {
+        SpeechRequested?.Invoke(PickPhrase(SessionLockedPhrases));
+        _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
+            _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
+    }
+
+    /// <summary>Called by MainWindow when the OS session unlocks again.</summary>
+    public void OnSessionUnlocked()
+    {
+        SpeechRequested?.Invoke(PickPhrase(SessionUnlockedPhrases));
         _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
             _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
     }
@@ -329,6 +402,8 @@ public sealed class CharacterController
         double dt = elapsed.TotalSeconds;
 
         TickBattery();
+        TickNetwork();
+        TickDiskSpace();
         TickOnscreenTime(dt);
 
         if (State == CharacterState.Dragging)
@@ -569,6 +644,61 @@ public sealed class CharacterController
 
         _wasBatteryFull = isFull;
     }
+
+    /// <summary>
+    /// Fires a one-off speech bubble the moment the network connection
+    /// drops or comes back, edge-triggered the same way as the battery
+    /// checks above. Wording picks "wifi" vs "internet" based on what the
+    /// connection looked like the moment it was last known to be up.
+    /// </summary>
+    private void TickNetwork()
+    {
+        if (_networkContext is null)
+        {
+            return;
+        }
+
+        bool isAvailable = _networkContext.IsAvailable;
+        string kind = _networkContext.IsWireless ? "wifi" : "internet";
+
+        if (!isAvailable && _wasNetworkAvailable)
+        {
+            SpeechRequested?.Invoke(string.Format(PickPhrase(NetworkDownPhraseTemplates), kind));
+        }
+        else if (isAvailable && !_wasNetworkAvailable)
+        {
+            SpeechRequested?.Invoke(string.Format(PickPhrase(NetworkUpPhraseTemplates), kind));
+        }
+
+        _wasNetworkAvailable = isAvailable;
+    }
+
+    /// <summary>
+    /// Fires a one-off speech bubble the moment free disk space crosses
+    /// DiskSpaceWatcher's low-space threshold in either direction - same
+    /// edge-triggered shape as the battery/network checks above.
+    /// </summary>
+    private void TickDiskSpace()
+    {
+        if (_diskSpaceContext is null)
+        {
+            return;
+        }
+
+        bool isLow = _diskSpaceContext.IsLow;
+        if (isLow && !_wasDiskSpaceLow)
+        {
+            SpeechRequested?.Invoke(PickPhrase(DiskSpaceLowPhrases));
+        }
+        else if (!isLow && _wasDiskSpaceLow)
+        {
+            SpeechRequested?.Invoke(PickPhrase(DiskSpaceRecoveredPhrases));
+        }
+
+        _wasDiskSpaceLow = isLow;
+    }
+
+    private string PickPhrase(string[] pool) => pool[_random.Next(pool.Length)];
 
     /// <summary>
     /// Accumulates total onscreen time (regardless of what state the

@@ -176,6 +176,26 @@ register that temporary path instead of your real install.
   the same idle-surprise rotation as `eating`/`playing` while the battery's
   actually low (see "Adding a new character" below) - desktops with no
   battery just never trigger any of this.
+- **Network/wifi**: a speech bubble the moment the network connection drops
+  ("Uh oh, the wifi just dropped!") and another the moment it comes back
+  ("Wifi's back! Phew.") - wording picks "wifi" or "internet" depending on
+  what the connection looked like right before it went down. This is a
+  best-effort link-level check (the same one Windows itself uses), not a
+  true "can I actually reach the internet" test, so a router with no
+  upstream still reads as connected - good enough for a nudge, not a
+  diagnostic tool.
+- **Disk space**: a speech bubble once free space on the app's own drive
+  drops below 2 GB, and another once it's back above that - checked every
+  few minutes rather than continuously, since disk usage doesn't change
+  fast enough to need anything tighter.
+- **Session lock/unlock**: a speech bubble when you lock the machine
+  (Win+L, the screensaver, an auto-lock policy, ...) and another the moment
+  you unlock it - a different signal from the idle-timeout-based
+  Sleeping/Waking pair, which only ever knows "no input for a while," not
+  a genuine lock.
+
+None of these have dedicated animations - just phrases, layered on top of
+whatever pose it's already in, the same way the battery nudges above work.
 
 There are also four weather poses - `cold`, `hot`, `sunny`, `rainy` - but
 they're preview-only, triggered from the right-click menu's **Preview

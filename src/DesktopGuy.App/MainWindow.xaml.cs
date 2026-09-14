@@ -32,6 +32,9 @@ public partial class MainWindow : Window
     private readonly ScreenshotWatcher _screenshotWatcher = new();
     private readonly FullscreenWatcher _fullscreenWatcher = new();
     private readonly SystemResumeWatcher _systemResumeWatcher = new();
+    private readonly NetworkStatusWatcher _networkWatcher = new();
+    private readonly DiskSpaceWatcher _diskSpaceWatcher = new();
+    private readonly SessionLockWatcher _sessionLockWatcher = new();
     private readonly CancellationTokenSource _lifetimeCts = new();
     private readonly Stopwatch _clock = new();
     private readonly SingleInstanceGuard _instanceGuard;
@@ -88,7 +91,7 @@ public partial class MainWindow : Window
 
         _controller = new CharacterController(
             definition, startX, startY, _mediaContext, _terminalWatcher, _typingWatcher, _batteryWatcher,
-            _meetingWatcher, _screenshotWatcher);
+            _meetingWatcher, _screenshotWatcher, _networkWatcher, _diskSpaceWatcher);
         _controller.SetBounds(minX, maxX, groundY);
         _controller.StateChanged += OnControllerStateChanged;
         _controller.PositionChanged += OnControllerPositionChanged;
@@ -97,6 +100,8 @@ public partial class MainWindow : Window
         _notificationWatcher.DiscordEventDetected += OnDiscordEventDetected;
         _screenshotWatcher.ScreenshotTaken += () => _controller.RequestSnapshotReaction();
         _systemResumeWatcher.Resumed += () => _controller.RequestSystemResumeReaction();
+        _sessionLockWatcher.Locked += () => _controller.OnSessionLocked();
+        _sessionLockWatcher.Unlocked += () => _controller.OnSessionUnlocked();
 
         // Reuses the very first idle frame as the tray icon's picture -
         // whichever character is currently running is instantly
@@ -119,6 +124,8 @@ public partial class MainWindow : Window
             _typingWatcher.Dispose();
             _screenshotWatcher.Dispose();
             _systemResumeWatcher.Dispose();
+            _networkWatcher.Dispose();
+            _sessionLockWatcher.Dispose();
             _trayIcon?.Dispose();
             _instanceGuard.Dispose();
         };
@@ -145,6 +152,8 @@ public partial class MainWindow : Window
         _typingWatcher.Start();
         _batteryWatcher.Start(_lifetimeCts.Token);
         _meetingWatcher.Start(_lifetimeCts.Token);
+        _networkWatcher.Start(_lifetimeCts.Token);
+        _diskSpaceWatcher.Start(_lifetimeCts.Token);
         _screenshotWatcher.Start();
         _fullscreenWatcher.Start(_lifetimeCts.Token);
     }
