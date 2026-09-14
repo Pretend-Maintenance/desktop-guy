@@ -51,6 +51,9 @@ public partial class MainWindow : Window
         _definition = definition;
         _instanceGuard = instanceGuard;
         StartWithWindowsMenuItem.IsChecked = StartupRegistration.IsEnabled();
+        bool alwaysOnTop = AlwaysOnTopPreferenceStore.Load();
+        AlwaysOnTopMenuItem.IsChecked = alwaysOnTop;
+        Topmost = alwaysOnTop;
         PopulateCharacterMenu();
         PopulateScaleMenu();
 
@@ -589,6 +592,12 @@ public partial class MainWindow : Window
     {
         var condition = Enum.Parse<WeatherCondition>((string)((MenuItem)sender).Tag);
         _controller.PreviewWeather(condition);
+    }
+
+    private void OnAlwaysOnTopToggled(object sender, RoutedEventArgs e)
+    {
+        Topmost = AlwaysOnTopMenuItem.IsChecked;
+        AlwaysOnTopPreferenceStore.Save(Topmost);
     }
 
     private void OnStartWithWindowsToggled(object sender, RoutedEventArgs e)

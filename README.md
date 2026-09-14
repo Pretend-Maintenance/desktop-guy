@@ -49,6 +49,41 @@ Copy that whole `publish` folder wherever you like (it needs the
 `Assets` folder alongside the exe) - or just the exe if you don't mind it
 fetching the character files from the original location.
 
+#### About the "Windows protected your PC" (SmartScreen) warning
+
+Running a freshly-built, unsigned `.exe` - especially one that arrived via
+a browser download (a ZIP from GitHub, say), which tags it with a "Mark of
+the Web" - can trigger Windows SmartScreen. This isn't a bug and can't be
+fixed by changing anything in this repo: it's Windows flagging any
+executable it doesn't recognize (no publisher signature, no download
+reputation built up yet), which is true of essentially any personal/hobby
+`.exe` that isn't code-signed. Options, roughly cheapest to most involved:
+
+- **Click through it once.** "More info" → "Run anyway" on the SmartScreen
+  dialog. Windows remembers that decision for that *exact* file (by hash) -
+  rebuilding produces a new file and resets it, which is why this can
+  reappear after a fresh `dotnet publish`.
+- **Unblock the file** before running it, if it came from a ZIP download -
+  this removes the Mark-of-the-Web that triggers the prompt in the first
+  place: `Unblock-File .\DesktopGuy.exe` in PowerShell (or right-click →
+  Properties → check "Unblock" at the bottom, if present).
+- **Code-sign it** for a real, permanent fix - needs a code-signing
+  certificate (a paid one, typically, though free options exist for open-
+  source projects like SignPath's program) and a publishing pipeline to
+  actually sign the build. Out of scope for a personal project like this
+  one unless you're distributing it more widely.
+
+Running `dotnet run` from source (rather than a published `.exe`) mostly
+sidesteps this, since there's no separately-downloaded executable file for
+Windows to flag in the first place.
+
+### Always on Top
+
+Right-click the character and toggle **"Always on Top"** to control
+whether he stays drawn over other windows (the default) or behaves like a
+normal window that other apps can cover. Remembered across restarts, and
+applies immediately without needing to relaunch.
+
 ### Starting automatically at login
 
 Right-click the character and toggle **"Start with Windows"**. This writes a

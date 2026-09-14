@@ -83,9 +83,32 @@ suggestion should specify a color other than green.
 
 Same issue as Cat's sheet: `dance` (row 6) had no headphones on frame 1,
 which would've visibly popped in on every loop - replaced with a copy of
-frame 2. Everything else that varies frame-to-frame (the popcorn box in
-`watch`, sun-ray marks in `sunny`) is a decorative flourish on top of a
+frame 2. Sun-ray marks in `sunny` are a decorative flourish on top of a
 constant core pose, not a loop-breaking issue - left as-is.
+
+## `watch` (row 6) had a broken last frame
+
+Reported as "the watching animation looks weird" after actually seeing it
+run - frame 6 dropped the sunglasses entirely, closed the eyes, and
+tilted the head, completely unlike the other five (which read as a
+coherent "watching, then popcorn appears, then eating" sequence).
+Dropped it via `frameCount: 5` rather than patching - frames 0-4 already
+tell a complete loop on their own, and there's nothing in the other
+frames to convincingly reconstruct sunglasses+consistent head angle from
+for a frame that different.
+
+## `drag` (row 3) had a mouse cursor baked into two frames, plus a stray eye color
+
+Frames 1-2 (0-indexed 0-1) had an actual cursor-arrow icon drawn into the
+bottom-right corner of the art itself - not a UI element, part of the
+sprite - which would have flickered in and out every loop. Frame 1 also
+had gold/yellow eyes where every other frame (of every animation, not
+just this row) uses plain white. Both patched directly in
+`spritesheet.png`: the cursor's region copied from frame 4 (clean, same
+pose, no cursor) over frames 1-2, and frame 1's eyes copied from frame
+2's (already-correct) eyes - the body/head position is pixel-identical
+across this row's frames, which is what made a direct region copy safe
+rather than needing an actual redraw.
 
 ## Frame counts that don't match a full 6
 

@@ -5,7 +5,6 @@
         WindowStyle="None"
         AllowsTransparency="True"
         Background="Transparent"
-        Topmost="True"
         ShowInTaskbar="False"
         ResizeMode="NoResize"
         SizeToContent="Manual"
@@ -25,6 +24,10 @@
                 <MenuItem Header="Cold" Click="OnPreviewWeatherClicked" Tag="Cold" />
             </MenuItem>
             <Separator />
+            <MenuItem x:Name="AlwaysOnTopMenuItem"
+                      Header="Always on Top"
+                      IsCheckable="True"
+                      Click="OnAlwaysOnTopToggled" />
             <MenuItem x:Name="StartWithWindowsMenuItem"
                       Header="Start with Windows"
                       IsCheckable="True"

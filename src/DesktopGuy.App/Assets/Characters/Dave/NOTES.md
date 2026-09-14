@@ -59,6 +59,20 @@ Every animation came back with a full 6 frames except `wake` and
 `pickUp` (2 each, per the prompt) - no partial rows like Cat/Dinosaur's
 5-frame `idle` this time.
 
+## Known limitation: `hacking` never shows his legs
+
+Reported as "legs cut off" after seeing it run - checked both
+`spritesheet.png` and `spritesheet_raw.png` directly (cropped each frame
+of row 9 out and looked at the actual pixels), and this isn't a cropping
+bug: the raw, unprocessed art already has him drawn sitting low behind
+the laptop with his lower body/paws entirely hidden behind it in all six
+frames, consistently. There's no extra artwork just outside the current
+crop to reveal by nudging it - the background is clean right down to the
+frame boundary. Fixing this properly means regenerating this one row
+with the laptop positioned lower/smaller so his paws stay visible, via
+the AI-art prompt template - not something fixable by reprocessing the
+existing image.
+
 ## Try it
 
 ```
