@@ -35,6 +35,22 @@ out panting and a sweat drop) - the original brief asked for one held
 throughout. Not patched; would need a targeted regeneration of just that
 row to fix properly.
 
+**Processing bug found and fixed after first shipping this version:**
+the very first pass cropped `spritesheet_raw3.png` assuming a uniform
+6x15 grid (dividing the sheet's width/height evenly) - reported back as
+"his legs are on his head." The rows in this upload are *not* evenly
+spaced (measured directly: row heights ranged 74-99px, not a flat
+~109px each), so a uniform division cut across actual row boundaries,
+grabbing a sliver of the row above/below into each frame. Re-processed
+using the same per-frame connected-component detection technique as v2
+(find each dog's own tight bounding box directly via `scipy.ndimage.label`
+on the alpha channel, rather than assuming any grid spacing) - this
+sheet already had real alpha transparency, which made that detection
+reliable without needing a chroma-key pass first. **Lesson for next
+time:** never assume a "clean-looking" uniform grid actually has uniform
+cell spacing - measure the real content boundaries directly, even when
+an upload looks tidy at a glance.
+
 ## v2 history (superseded by v3 above for the base rows - the hidden-legs fix and the bonk/systemResume/milestone rows it introduced still stand)
 
 Replaced the entire sheet using the new "one reference image, then one
