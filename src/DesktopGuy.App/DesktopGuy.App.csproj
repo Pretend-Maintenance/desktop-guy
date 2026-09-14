@@ -23,6 +23,18 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Enabling UseWindowsForms alongside UseWPF makes the SDK add a
+         global implicit "using System.Windows.Forms;" to every file,
+         which collides with System.Windows' own Application/MessageBox/
+         Clipboard/... (exactly what broke the build: App.xaml.cs's plain
+         "Application" became ambiguous). WinForms is only here for
+         NotifyIcon (see TrayIconController.cs, which already references
+         System.Windows.Forms explicitly via a `Forms` alias) - removing
+         this one global using keeps every other file WPF-only by default. -->
+    <Using Remove="System.Windows.Forms" />
+  </ItemGroup>
+
+  <ItemGroup>
     <!-- Character templates: each subfolder under Assets/Characters is a
          self-contained companion (character.json + sprite sheet) copied
          next to the built exe so new characters can be added without
