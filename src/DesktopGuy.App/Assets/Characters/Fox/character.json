@@ -99,5 +99,48 @@
     "That's a lot of time together. My tail can't keep up!",
     "Okay, official record: we've been at this a while. Noted and appreciated.",
     "*happy tail wag intensifies*"
+  ],
+  "networkDownPhrases": [
+    "Uh oh, the {0} vanished. Very sneaky of it, actually.",
+    "*ears drop* ...where did the {0} go?",
+    "The {0}'s gone! Not as sneaky as me, but still, rude.",
+    "Hm. No {0}. Even I can't sniff this one out."
+  ],
+  "networkUpPhrases": [
+    "Ooh, {0}'s back! My tail's doing a happy wiggle.",
+    "There it is - {0}'s back. Crisis averted, mostly.",
+    "*happy tail wag* {0} returned. As foxes do, eventually."
+  ],
+  "diskSpaceLowPhrases": [
+    "Getting a little full in here. Might be worth a tidy-up~",
+    "Psst - running low on space. Just a friendly nudge.",
+    "*tail curls nervously* not much room left on this drive."
+  ],
+  "diskSpaceRecoveredPhrases": [
+    "Ahh, breathing room again. Much better.",
+    "Space cleared! I can stretch out properly now."
+  ],
+  "sessionLockedPhrases": [
+    "Locking up? Perfect timing, I was due a nap anyway.",
+    "*curls into a fox-shaped loaf* Off you go, I'll hold down the fort.",
+    "See you soon. I'll just be here. Sneakily napping.",
+    "Locked! Foxes nap 12 hours a day, remember? Getting a head start."
+  ],
+  "sessionUnlockedPhrases": [
+    "Oh! You're back. *tail wag intensifies*",
+    "Welcome back~ I missed exactly zero seconds of napping, don't worry.",
+    "There you are! Did you bring snacks? Asking for a friend. The friend is me.",
+    "*ears perk up* You're back! Onwards, then."
+  ],
+  "usbConnectedPhrases": [
+    "Ooh, what's this at {0}? *sniffs curiously*",
+    "New drive at {0}. I shall investigate. Sneakily.",
+    "Something just plugged in at {0}. Very interested. Also slightly suspicious.",
+    "*ears perk up* {0}? Never heard of her. What is it?"
+  ],
+  "usbDisconnectedPhrases": [
+    "And just like that, {0}'s gone. Vanished. Very foxlike of it.",
+    "The {0} thing left. No goodbye? Rude.",
+    "*tail droops* {0}'s empty again."
   ]
 }
