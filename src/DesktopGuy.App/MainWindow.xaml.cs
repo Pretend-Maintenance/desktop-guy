@@ -36,7 +36,13 @@ public partial class MainWindow : Window
     private readonly SingleInstanceGuard _instanceGuard;
     private DispatcherTimer? _speechHideTimer;
     private TrayIconController? _trayIcon;
-    private bool _manuallyHidden;
+    // null = automatic (follow the fullscreen watcher); true/false = the
+    // tray icon's been left-clicked to force this state, which then wins
+    // over the fullscreen watcher entirely until clicked again - otherwise
+    // a false-positive fullscreen detection could never be manually
+    // overridden (forcing "show" would do nothing if OR'd with an
+    // fullscreen watcher that's stuck reporting true).
+    private bool? _forcedVisible;
 
     public MainWindow(CharacterDefinition definition, SingleInstanceGuard instanceGuard)
     {
@@ -179,31 +185,41 @@ public partial class MainWindow : Window
     /// <summary>
     /// Hides the window - rather than closing it, everything (Tick,
     /// onscreen-time accrual, the tray icon) keeps running underneath -
-    /// while either a fullscreen app has taken over the screen or the
-    /// tray icon's been left-clicked to manually tuck the character away.
-    /// Also closes the speech bubble on the way out so it doesn't linger
-    /// alone over whatever's now fullscreen.
+    /// while a fullscreen app has taken over the screen, unless the tray
+    /// icon's been used to force a particular state instead (see
+    /// _forcedVisible). Also closes the speech bubble on the way out so it
+    /// doesn't linger alone over whatever's now fullscreen.
     /// </summary>
     private void UpdateVisibility()
     {
-        bool shouldHide = _manuallyHidden || _fullscreenWatcher.IsActive;
-        bool isHidden = Visibility != Visibility.Visible;
+        bool shouldShow = _forcedVisible ?? !_fullscreenWatcher.IsActive;
+        bool isVisible = Visibility == Visibility.Visible;
 
-        if (shouldHide == isHidden)
+        if (shouldShow == isVisible)
         {
             return;
         }
 
-        Visibility = shouldHide ? Visibility.Hidden : Visibility.Visible;
-        if (shouldHide)
+        Visibility = shouldShow ? Visibility.Visible : Visibility.Hidden;
+        if (!shouldShow)
         {
             SpeechPopup.IsOpen = false;
         }
     }
 
+    /// <summary>
+    /// Forces the opposite of whatever's currently showing - including
+    /// overriding a fullscreen-watcher false positive that would otherwise
+    /// make a plain hide/show toggle a no-op (setting "show" while the
+    /// watcher still insists it's fullscreen would never actually reveal
+    /// him if this only flipped a flag that gets OR'd with the watcher).
+    /// The forced state then sticks until clicked again, regardless of
+    /// what the fullscreen watcher reports in the meantime.
+    /// </summary>
     private void OnTrayIconLeftClicked()
     {
-        _manuallyHidden = !_manuallyHidden;
+        bool currentlyVisible = _forcedVisible ?? !_fullscreenWatcher.IsActive;
+        _forcedVisible = !currentlyVisible;
     }
 
     private void OnTrayIconRightClicked()

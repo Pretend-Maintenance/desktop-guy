@@ -12,6 +12,8 @@ internal static class Win32Interop
 {
     private const int GWL_EXSTYLE = -20;
     private const int WS_EX_TOOLWINDOW = 0x00000080;
+    private const int GWL_STYLE = -16;
+    private const int WS_CAPTION = 0x00C00000;
 
     [DllImport("user32.dll", SetLastError = true)]
     private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
@@ -109,11 +111,18 @@ internal static class Win32Interop
 
     /// <summary>
     /// True if the currently focused window covers the entire monitor it's
-    /// on - the same rough heuristic taskbar-autohide-style tools use for
-    /// "is a game/video/presentation running exclusively fullscreen right
-    /// now". Excludes the desktop and taskbar's own window classes (which
-    /// also happen to be monitor-sized) and this app's own window, so it
-    /// doesn't hide itself just for being focused.
+    /// on AND lacks a title bar - the combination genuine exclusive-
+    /// fullscreen apps (games, video players, presentation software) use,
+    /// as opposed to an ordinary maximized window. The rect-covers-monitor
+    /// check alone isn't enough: normal maximized windows only cover the
+    /// *work area* (monitor minus the taskbar's reserved strip) - except
+    /// when the taskbar is set to auto-hide, where nothing is reserved and
+    /// any maximized window (a maximized Command Prompt, a browser, ...)
+    /// would satisfy that check too. WS_CAPTION - present on effectively
+    /// every normal app window whether or not its title bar is visually
+    /// drawn, absent on the borderless popup windows fullscreen apps
+    /// create - is what actually distinguishes the two. Also excludes the
+    /// desktop/taskbar's own window classes and this app's own window.
     /// </summary>
     public static bool IsForegroundWindowFullscreen(IntPtr ownHwnd)
     {
@@ -127,6 +136,12 @@ internal static class Win32Interop
         GetClassName(hwnd, classNameBuffer, classNameBuffer.Capacity);
         string className = classNameBuffer.ToString();
         if (Array.IndexOf(NonFullscreenClassNames, className) >= 0)
+        {
+            return false;
+        }
+
+        int style = GetWindowLong(hwnd, GWL_STYLE);
+        if ((style & WS_CAPTION) == WS_CAPTION)
         {
             return false;
         }

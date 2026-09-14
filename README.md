@@ -204,21 +204,23 @@ on a later run.
   right-click it for the exact same menu as right-clicking the character,
   and left-click it to manually show/hide the character on demand (handy
   if he's ended up somewhere awkward, or you just want him out of the way
-  for a bit without exiting the app). The tray icon and its menu keep
-  working even while the character itself is hidden, either manually or by
-  the fullscreen behavior below.
+  for a bit without exiting the app - or if fullscreen auto-hide below
+  ever gets it wrong, since a manual click always wins over it until
+  clicked again). The tray icon and its menu keep working even while the
+  character itself is hidden, either manually or by the fullscreen
+  behavior below.
 - **Fullscreen auto-hide**: if whatever you're focused on (a game, a video
   player, a presentation) is genuinely fullscreen - its window covers the
-  entire monitor - the character hides itself automatically rather than
-  floating on top of it, and reappears the moment you're back to something
-  windowed. This is a heuristic (the same rough "focused window exactly
-  fills the monitor" check several taskbar-autohide-style tools use), not
-  a true "is this app in exclusive fullscreen mode" API call, so a
-  borderless-windowed app that happens to size itself to the full screen
-  will also trigger it - which in practice is the same case you'd want it
-  to hide for anyway. Everything (onscreen-time tracking, the tray icon,
-  ambient state changes) keeps running normally while hidden; only the
-  window itself stops being drawn.
+  entire monitor *and* has no title bar - the character hides itself
+  automatically rather than floating on top of it, and reappears the
+  moment you're back to something windowed. Both conditions matter: an
+  ordinary maximized window (a browser, a terminal, ...) still has a title
+  bar even when its visible chrome is minimal, so it's never mistaken for
+  fullscreen - checking the monitor coverage alone isn't enough, since
+  with an auto-hiding taskbar a plain maximized window covers just as much
+  screen as a real fullscreen app would. Everything (onscreen-time
+  tracking, the tray icon, ambient state changes) keeps running normally
+  while hidden; only the window itself stops being drawn.
 - **Error log**: several of the context-awareness pieces above (media
   detection, Discord notifications, the keyboard hooks) depend on Windows
   APIs that can fail to start for reasons outside the app's control (an
