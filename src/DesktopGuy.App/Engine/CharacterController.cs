@@ -15,9 +15,10 @@ namespace DesktopGuy.App.Engine;
 /// the actual window.
 ///
 /// Priority each tick, highest first:
-///   1. A pending reaction (Discord call/message) - interrupts anything
-///      except an active drag, plays once, then falls through to whatever
-///      is appropriate next tick.
+///   1. A pending reaction (Discord call/message, a double-click "bonk",
+///      the PC resuming from sleep, or an onscreen-time milestone) -
+///      interrupts anything except an active drag, plays once, then
+///      falls through to whatever is appropriate next tick.
 ///   2. A terminal or code editor being focused, or you actively typing
 ///      anywhere (hacking) - checked before media, since "I'm clearly at
 ///      the keyboard doing something" is a stronger signal than
@@ -66,6 +67,9 @@ public sealed class CharacterController
     private bool _isFalling;
     private DiscordEvent? _pendingReaction;
     private bool _pendingSnapshot;
+    private bool _pendingBonk;
+    private bool _pendingSystemResume;
+    private bool _pendingMilestone;
     private WeatherCondition? _previewWeatherCondition;
     private double _previewWeatherSecondsRemaining;
     private bool _wasBatteryLow;
@@ -244,6 +248,39 @@ public sealed class CharacterController
     }
 
     /// <summary>
+    /// Queues a one-shot startled/annoyed reaction to a double-click -
+    /// distinct from a plain click (which is a pet, see OnPetted). Same
+    /// shape as RequestSnapshotReaction - picked up next Tick unless
+    /// mid-drag, a no-op if the character doesn't define a "bonk" pose.
+    /// </summary>
+    public void RequestBonkReaction()
+    {
+        if (!HasAnimation(CharacterState.Bonked))
+        {
+            return;
+        }
+
+        _pendingBonk = true;
+    }
+
+    /// <summary>
+    /// Queues a one-shot startled/disoriented reaction to the whole PC
+    /// resuming from sleep or hibernation - a different signal than the
+    /// idle-timeout-based Sleeping/Waking pair above, which tracks *you*
+    /// stepping away while the PC stays on. This one only fires on an
+    /// actual OS-level suspend/resume cycle (see SystemResumeWatcher).
+    /// </summary>
+    public void RequestSystemResumeReaction()
+    {
+        if (!HasAnimation(CharacterState.SystemResumed))
+        {
+            return;
+        }
+
+        _pendingSystemResume = true;
+    }
+
+    /// <summary>
     /// Forces a weather pose for a few seconds regardless of the actual
     /// weather or how long he's been idle - so it can be previewed from the
     /// context menu on demand, rather than waiting for it to genuinely be
@@ -267,8 +304,8 @@ public sealed class CharacterController
 
     /// <summary>
     /// Called by MainWindow once a one-shot reaction animation finishes
-    /// (answerCall/openMail/snapshot, or an idle surprise - eating/
-    /// playing/lowBattery).
+    /// (answerCall/openMail/snapshot/bonk/systemResume/milestone, or an
+    /// idle surprise - eating/playing/lowBattery).
     /// </summary>
     public void OnReactionAnimationFinished()
     {
@@ -283,7 +320,9 @@ public sealed class CharacterController
     private static bool IsOneShotReactionState(CharacterState state) => state is
         CharacterState.AnsweringCall or CharacterState.ReadingMessage or
         CharacterState.Snapshot or CharacterState.Eating or
-        CharacterState.Playing or CharacterState.LowBattery;
+        CharacterState.Playing or CharacterState.LowBattery or
+        CharacterState.Milestone or CharacterState.Bonked or
+        CharacterState.SystemResumed;
 
     public void Tick(TimeSpan elapsed)
     {
@@ -308,6 +347,21 @@ public sealed class CharacterController
         }
 
         if (TryStartPendingSnapshot())
+        {
+            return;
+        }
+
+        if (TryStartPendingBonk())
+        {
+            return;
+        }
+
+        if (TryStartPendingSystemResume())
+        {
+            return;
+        }
+
+        if (TryStartPendingMilestone())
         {
             return;
         }
@@ -403,6 +457,48 @@ public sealed class CharacterController
         return true;
     }
 
+    private bool TryStartPendingBonk()
+    {
+        if (!_pendingBonk)
+        {
+            return false;
+        }
+
+        _pendingBonk = false;
+        _isFalling = false;
+
+        TransitionTo(CharacterState.Bonked);
+        return true;
+    }
+
+    private bool TryStartPendingSystemResume()
+    {
+        if (!_pendingSystemResume)
+        {
+            return false;
+        }
+
+        _pendingSystemResume = false;
+        _isFalling = false;
+
+        TransitionTo(CharacterState.SystemResumed);
+        return true;
+    }
+
+    private bool TryStartPendingMilestone()
+    {
+        if (!_pendingMilestone)
+        {
+            return false;
+        }
+
+        _pendingMilestone = false;
+        _isFalling = false;
+
+        TransitionTo(CharacterState.Milestone);
+        return true;
+    }
+
     /// <summary>
     /// Occasionally plays a spontaneous "eating" or "playing" animation -
     /// or "lowBattery" too, while the battery's actually low - instead of
@@ -494,6 +590,12 @@ public sealed class CharacterController
                 SpeechRequested?.Invoke(PickAffectionMilestonePhrase());
                 _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
                     _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
+
+                if (HasAnimation(CharacterState.Milestone))
+                {
+                    _pendingMilestone = true;
+                }
+
                 break;
             }
         }

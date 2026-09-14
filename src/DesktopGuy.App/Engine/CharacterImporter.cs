@@ -58,6 +58,9 @@ public static class CharacterImporter
         ("playing", 4, false),
         ("lowBattery", 2, false),
         ("snapshot", 8, false),
+        ("bonk", 6, false),
+        ("systemResume", 4, false),
+        ("milestone", 4, false),
     };
 
     public static string[] StarterPhrases =

@@ -31,6 +31,7 @@ public partial class MainWindow : Window
     private readonly MeetingWatcher _meetingWatcher = new();
     private readonly ScreenshotWatcher _screenshotWatcher = new();
     private readonly FullscreenWatcher _fullscreenWatcher = new();
+    private readonly SystemResumeWatcher _systemResumeWatcher = new();
     private readonly CancellationTokenSource _lifetimeCts = new();
     private readonly Stopwatch _clock = new();
     private readonly SingleInstanceGuard _instanceGuard;
@@ -95,6 +96,7 @@ public partial class MainWindow : Window
 
         _notificationWatcher.DiscordEventDetected += OnDiscordEventDetected;
         _screenshotWatcher.ScreenshotTaken += () => _controller.RequestSnapshotReaction();
+        _systemResumeWatcher.Resumed += () => _controller.RequestSystemResumeReaction();
 
         // Reuses the very first idle frame as the tray icon's picture -
         // whichever character is currently running is instantly
@@ -116,6 +118,7 @@ public partial class MainWindow : Window
             _lifetimeCts.Cancel();
             _typingWatcher.Dispose();
             _screenshotWatcher.Dispose();
+            _systemResumeWatcher.Dispose();
             _trayIcon?.Dispose();
             _instanceGuard.Dispose();
         };
@@ -251,6 +254,9 @@ public partial class MainWindow : Window
             case "eating":
             case "playing":
             case "lowBattery":
+            case "bonk":
+            case "systemResume":
+            case "milestone":
                 _controller.OnReactionAnimationFinished();
                 break;
             case "pickUp":
@@ -314,6 +320,16 @@ public partial class MainWindow : Window
     {
         if (e.ChangedButton != MouseButton.Left)
         {
+            return;
+        }
+
+        // A double-click gets its own distinct reaction rather than
+        // falling through to the drag/pet logic below (which would
+        // otherwise just register it as two rapid pets in a row).
+        if (e.ClickCount >= 2)
+        {
+            _controller.RequestBonkReaction();
+            e.Handled = true;
             return;
         }
 

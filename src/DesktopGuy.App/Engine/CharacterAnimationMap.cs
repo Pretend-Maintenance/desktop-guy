@@ -29,6 +29,9 @@ public static class CharacterAnimationMap
         CharacterState.Playing => "playing",
         CharacterState.Snapshot => "snapshot",
         CharacterState.LowBattery => "lowBattery",
+        CharacterState.Milestone => "milestone",
+        CharacterState.Bonked => "bonk",
+        CharacterState.SystemResumed => "systemResume",
         _ => "idle",
     };
 }

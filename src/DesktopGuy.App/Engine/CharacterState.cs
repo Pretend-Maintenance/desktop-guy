@@ -20,4 +20,7 @@ public enum CharacterState
     Playing,
     Snapshot,
     LowBattery,
+    Milestone,
+    Bonked,
+    SystemResumed,
 }

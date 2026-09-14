@@ -114,12 +114,20 @@ register that temporary path instead of your real install.
   plays, then it follows the cursor with a little wobble. Drop it above the
   ground and it gently falls back down; drop it on the ground and it's ready
   to wander again.
+- **Bonk**: double-click for a distinct startled/annoyed reaction (`bonk`),
+  separate from a single click's plain pet.
 - **Affection**: total time it's spent onscreen is tracked per character,
   cumulative across restarts. At a few thresholds (5 min, 30 min, 1 hour,
   4 hours, 1 day, 1 week, 30 days) it says something special once, from
   `affectionPhrases` if the character defines any, or a generic line
-  otherwise. Petting it (a click that isn't a drag) is unrelated to this -
+  otherwise, plus a dedicated `milestone` animation if the character
+  defines one. Petting it (a click that isn't a drag) is unrelated to this -
   that always just pops up a normal phrase from `phrases`.
+- **Waking from sleep** (the PC's, not the idle-timeout kind above): if a
+  `systemResume` animation is defined, it plays once the moment Windows
+  itself resumes from suspend/hibernation - a startled "oh, we're back"
+  beat distinct from the calmer `wake` used for you simply stepping away
+  for a while with the PC left on.
 - **Position memory**: it remembers roughly where you left it (per
   character) and starts there next time, instead of always the same corner
   - including which monitor, if you have more than one (wandering, the
@@ -351,6 +359,13 @@ sprite sheet, which is how new characters get added.
    - `lowBattery` - mixed into the same idle-surprise rotation as `eating`/
      `playing`, but only while a laptop's battery is actually low and
      unplugged
+   - `bonk` - a double-click (as opposed to a plain click, which is a pet)
+   - `systemResume` - the whole PC waking from sleep/hibernation -
+     different from `wake`, which is about *you* being away for a while
+     with the PC still on
+   - `milestone` - a cumulative-onscreen-time milestone being reached (see
+     `affectionPhrases` below) - optional on top of the phrase that
+     already plays either way
 3. Add a `character.json` next to it (copy `Blob/character.json` as a
    starting point) describing:
    - `frameSize`: pixel width/height of a single frame in the sheet
@@ -397,7 +412,7 @@ above by hand. Right-click the character and choose **New Character...**:
    under `Assets/Characters/`).
 2. Browse to the sprite sheet PNG.
 3. Enter how many columns (frames per row) and rows the sheet has - the
-   grid is assumed evenly spaced, e.g. 6 columns x 19 rows for a sheet with
+   grid is assumed evenly spaced, e.g. 6 columns x 22 rows for a sheet with
    every optional animation.
 4. Click Import.
 
@@ -408,8 +423,9 @@ ready-to-use `character.json` (rows are assigned to animation names in the
 same fixed order used throughout this doc - `idle`, `walk`, `sleep`,
 `drag`, `wake`, `dance`, `watch`, `answerCall`, `openMail`, `hacking`,
 `pickUp`, `hot`, `sunny`, `rainy`, `cold`, `eating`, `playing`,
-`lowBattery`, `snapshot` - so a sheet with fewer rows just gets fewer
-animations, same as leaving them out of a hand-written `character.json`).
+`lowBattery`, `snapshot`, `bonk`, `systemResume`, `milestone` - so a
+sheet with fewer rows just gets fewer animations, same as leaving them
+out of a hand-written `character.json`).
 It starts with a small set of generic phrases and no time-of-day-specific
 ones; edit `character.json` afterwards to personalize those; there's no
 in-app editor for phrases.
@@ -619,7 +635,8 @@ animation practice, not just "whatever's cheap":
   lesson above, and double-check the last one specifically before
   committing to a higher count.
 - **One-shot (non-looping) rows** - `wake`, `answerCall`, `openMail`,
-  `pickUp`, `eating`, `playing`, `lowBattery`, `snapshot` - 3-6 frames
+  `pickUp`, `eating`, `playing`, `lowBattery`, `snapshot`, `bonk`,
+  `systemResume`, `milestone` - 3-6 frames
   covering a clear beginning-to-end arc (e.g. `wake`: eyes-closed →
   eyes-opening → alert) reads better than 2 abrupt extremes, but don't
   overdo it - these play once and move on, so smoothness matters less
@@ -651,6 +668,14 @@ out of `character.json` is never used):
 - `playing` (4 frames, one-shot): tossing/chasing something, a moment of fun
 - `lowBattery` (4 frames, one-shot): a droopy, low-energy moment
 - `snapshot` (3 frames, one-shot): a startled camera-flash reaction
+- `bonk` (3 frames, one-shot): a startled/annoyed double-click reaction -
+  a quick flinch or grumpy look, distinct from the plain idle pose a
+  single click/pet reuses
+- `systemResume` (4 frames, one-shot): the PC itself waking from sleep -
+  eyes snapping open disoriented, a beat more startled than the calmer
+  `wake` above
+- `milestone` (4 frames, one-shot): a small celebration - a sparkle, a
+  proud pose, a little cheer - for reaching an onscreen-time milestone
 
 Once you have art back: check every row against the brief (frame by
 frame, not just at a glance - see the lessons above), chroma-key out the
