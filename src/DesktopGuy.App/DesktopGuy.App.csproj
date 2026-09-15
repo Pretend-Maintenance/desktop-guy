@@ -20,6 +20,12 @@
     <RootNamespace>DesktopGuy.App</RootNamespace>
     <AssemblyName>DesktopGuy</AssemblyName>
     <StartupObject>DesktopGuy.App.App</StartupObject>
+    <!-- The .exe's own icon (Explorer, taskbar, Alt-tab) - separate from
+         the tray icon, which is set at runtime from whichever character is
+         actually running (see TrayIconController). This one's baked in at
+         build time, so it can't follow the selected character the same
+         way - uses Dave's idle pose as the app's general "face" instead. -->
+    <ApplicationIcon>app.ico</ApplicationIcon>
   </PropertyGroup>
 
   <ItemGroup>

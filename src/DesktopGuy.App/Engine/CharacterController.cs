@@ -79,6 +79,7 @@ public sealed class CharacterController
     private bool _wasNetworkAvailable = true;
     private bool _wasDiskSpaceLow;
     private double _totalSecondsOnscreen;
+    private double _secondsSinceMediaContextLost;
     private double _secondsSinceLastOnscreenSave;
     private string? _lastAnnouncedTrack;
 
@@ -89,6 +90,14 @@ public sealed class CharacterController
         { 300, 1800, 3600, 14400, 86400, 604800, 2592000 };
 
     private const double OnscreenSaveIntervalSeconds = 60;
+
+    // How long a media session can report "nothing playing" before it's
+    // treated as genuinely stopped - covers the ordinary gap between two
+    // tracks, a brief buffering pause, etc. without immediately dropping
+    // out of the dancing/watching pose or forgetting the last-announced
+    // track (which would otherwise re-announce the same song the moment
+    // it resumes a few seconds later).
+    private const double MediaContextLostGraceSeconds = 8;
 
     private static readonly string[] GenericAffectionPhrases =
     {
@@ -495,7 +504,7 @@ public sealed class CharacterController
             return;
         }
 
-        if (TickMediaContext())
+        if (TickMediaContext(dt))
         {
             return;
         }
@@ -831,12 +840,13 @@ public sealed class CharacterController
     }
 
     /// <summary>Returns true if a media context (music/video) took over this tick.</summary>
-    private bool TickMediaContext()
+    private bool TickMediaContext(double dt)
     {
         var context = _mediaContext?.Current ?? MediaPlaybackContext.None;
 
         if (context == MediaPlaybackContext.Video && HasAnimation(CharacterState.Watching))
         {
+            _secondsSinceMediaContextLost = 0;
             if (State != CharacterState.Watching)
             {
                 TransitionTo(CharacterState.Watching);
@@ -847,6 +857,7 @@ public sealed class CharacterController
 
         if (context == MediaPlaybackContext.Music && HasAnimation(CharacterState.Dancing))
         {
+            _secondsSinceMediaContextLost = 0;
             if (State != CharacterState.Dancing)
             {
                 TransitionTo(CharacterState.Dancing);
@@ -855,12 +866,21 @@ public sealed class CharacterController
             return true;
         }
 
-        // Media stopped while we were still showing a media state - fall
-        // back to idle so the rest of Tick can take over normally, and
-        // forget the last-announced track so the same song coming back
-        // later (e.g. a loop) gets announced again.
+        // The OS is reporting no active media right now - but that's also
+        // what a normal few-second gap between tracks (or a brief
+        // buffering hiccup) looks like from here. Rather than instantly
+        // falling back to idle and forgetting the last-announced track
+        // (which would re-announce the exact same song the moment it
+        // resumes), hold the current pose/bookkeeping for a short grace
+        // period and only really give up on it once that's elapsed.
         if (State == CharacterState.Dancing || State == CharacterState.Watching)
         {
+            _secondsSinceMediaContextLost += dt;
+            if (_secondsSinceMediaContextLost < MediaContextLostGraceSeconds)
+            {
+                return true;
+            }
+
             TransitionTo(CharacterState.Idle);
             ScheduleNextWalk();
         }
