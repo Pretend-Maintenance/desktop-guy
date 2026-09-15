@@ -1138,13 +1138,15 @@ public sealed class CharacterController
     private IReadOnlyList<string> GetCurrentPhrasePool()
     {
         var now = DateTime.Now;
+        // Exhaustive over 0-23 (no default arm needed - the compiler
+        // rejects one as unreachable, since every hour is already covered):
+        // 0-4 and 23 late night, 5-11 morning, 12-17 afternoon, 18-22 evening.
         List<string> timeSpecific = now.Hour switch
         {
             >= 5 and < 12 => _definition.MorningPhrases,
             >= 12 and < 18 => _definition.AfternoonPhrases,
             >= 18 and < 23 => _definition.EveningPhrases,
-            >= 23 or < 5 => _definition.LateNightPhrases,
-            _ => EmptyPhrases,
+            _ => _definition.LateNightPhrases,
         };
 
         List<string> seasonal = GetSeasonalKey(now) is { } key && _definition.SeasonalPhrases.TryGetValue(key, out var list)
