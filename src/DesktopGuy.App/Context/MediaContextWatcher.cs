@@ -13,7 +13,7 @@ namespace DesktopGuy.App.Context;
 /// powers the media transport controls on the lock screen and volume
 /// flyout) to notice when something is actively playing, and whether it
 /// looks like music or a video - Spotify, YouTube Music, a YouTube tab,
-/// Netflix, etc. all report through this without us needing to know
+/// Netflix, VLC, etc. all report through this without us needing to know
 /// anything about the specific app.
 ///
 /// This is a WinRT API. It works from an unpackaged Win32 app, but if it's
@@ -32,6 +32,18 @@ public sealed class MediaContextWatcher
     private static readonly string[] VideoSiteTitleMarkers =
     {
         "YouTube", "Netflix", "Twitch", "Prime Video", "Disney+", "Hulu", "HBO Max",
+    };
+
+    // Standalone video-player apps whose SMTC session isn't trusted to
+    // self-report PlaybackType.Video reliably (unlike browsers, which are
+    // instead disambiguated by IsFocusedOnVideoSite() above). Matched
+    // against the session's own SourceAppUserModelId rather than window
+    // title/focus, since a video player playing in the background (e.g.
+    // minimized to the taskbar) should still count, the same as Spotify
+    // doesn't need to be focused to trigger the dancing pose.
+    private static readonly string[] VideoPlayerAppIdMarkers =
+    {
+        "vlc",
     };
 
     private GlobalSystemMediaTransportControlsSessionManager? _manager;
@@ -129,7 +141,8 @@ public sealed class MediaContextWatcher
             // (e.g. Music for an actual YouTube video), not just an absent
             // one - so a clear video-site title in the title bar is trusted
             // over a possibly-wrong self-reported type.
-            _current = IsFocusedOnVideoSite() || playbackInfo.PlaybackType == MediaPlaybackType.Video
+            _current = IsFocusedOnVideoSite() || IsKnownVideoPlayerSession(session) ||
+                playbackInfo.PlaybackType == MediaPlaybackType.Video
                 ? MediaPlaybackContext.Video
                 : MediaPlaybackContext.Music;
 
@@ -184,5 +197,12 @@ public sealed class MediaContextWatcher
     {
         string title = Win32Interop.GetForegroundWindowTitle();
         return VideoSiteTitleMarkers.Any(marker => title.Contains(marker, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsKnownVideoPlayerSession(GlobalSystemMediaTransportControlsSession? session)
+    {
+        string? appId = session?.SourceAppUserModelId;
+        return appId is not null &&
+            VideoPlayerAppIdMarkers.Any(marker => appId.Contains(marker, StringComparison.OrdinalIgnoreCase));
     }
 }

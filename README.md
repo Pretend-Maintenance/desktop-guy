@@ -188,13 +188,20 @@ register that temporary path instead of your real install.
   and if the track title is available, it announces it once ("▶ Now
   playing: ...") the moment it starts, not on every beat.
 - **Video**: if something is playing that looks like a video (a YouTube tab,
-  Netflix, ...) it puts on sunglasses, grabs popcorn, and settles in to
-  watch - same one-off "now playing" announcement as music, when a title's
-  available. A brief gap with nothing detected (a few seconds of silence
-  between tracks, a buffering hiccup) doesn't immediately drop the pose or
-  forget the announcement - only a genuine stop lasting longer than that
-  grace period does, so the same song resuming after a short pause doesn't
-  re-announce itself.
+  Netflix, VLC, ...) it puts on sunglasses, grabs popcorn, and settles in
+  to watch - same one-off "now playing" announcement as music, when a
+  title's available. A brief gap with nothing detected (a few seconds of
+  silence between tracks, a buffering hiccup) doesn't immediately drop the
+  pose or forget the announcement - only a genuine stop lasting longer
+  than that grace period does, so the same song resuming after a short
+  pause doesn't re-announce itself.
+  - Browsers get disambiguated by checking the focused tab's title against
+    a list of known video sites, since some don't self-report the right
+    type. Standalone player apps that aren't trustworthy about
+    self-reporting either (currently just VLC) are instead matched by the
+    media session's own app ID, so it counts even while playing in the
+    background/minimized - see `VideoPlayerAppIdMarkers` in
+    `MediaContextWatcher.cs` to add another one.
 - **Terminal or code editor focused, or you're typing**: if a shell or
   terminal app (Command Prompt, PowerShell, Windows Terminal, PuTTY, ...),
   or a code editor/IDE (VS Code, Visual Studio, a JetBrains IDE, Sublime
