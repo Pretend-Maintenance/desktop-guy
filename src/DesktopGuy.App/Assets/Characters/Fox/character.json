@@ -69,6 +69,13 @@
     "Coffee first, then world domination.",
     "Rise and shine!"
   ],
+  "afternoonPhrases": [
+    "Afternoon slump~ completely normal, completely valid.",
+    "Halfway through the day. You're doing fine.",
+    "*stretches in a sunbeam* prime napping conditions right now.",
+    "Lunch happened, right? Just checking.",
+    "The afternoon is basically a suggestion. Take it easy~"
+  ],
   "eveningPhrases": [
     "Winding down for the day?",
     "Evenings are for comfy blankets.",
@@ -84,15 +91,49 @@
   "seasonalPhrases": {
     "halloween": [
       "*ears perk up* Spooky season is my season!",
-      "Foxes and Halloween just go together, don't they?"
+      "Foxes and Halloween just go together, don't they?",
+      "I don't need a costume. I'm already suspiciously clever-looking.",
+      "*rustles through the candy bowl* purely research purposes~",
+      "Something about autumn makes me extra sneaky. It's the season, honestly.",
+      "Trick or treat. I already know which one I'm doing."
     ],
     "christmas": [
       "Happy holidays! *tail wag*",
-      "I'd like a stocking. A big one. For treats."
+      "I'd like a stocking. A big one. For treats.",
+      "*curls up by the tree lights* very cozy, very festive, very me.",
+      "Presents are just boxes I'm allowed to be suspicious of. I love this time of year.",
+      "Snow outside~ tail's doing a happy shiver just thinking about it.",
+      "Happy holidays. I've been good. Mostly. Define 'good.'"
     ],
     "newYear": [
       "New year, same sneaky fox.",
-      "Here's to another year of foxing around!"
+      "Here's to another year of foxing around!",
+      "Resolutions? I resolve to nap with more intention this year.",
+      "*watches fireworks from a safe, dignified distance*",
+      "New year, same tail, same mischief, more of it hopefully."
+    ],
+    "valentinesDay": [
+      "Happy Valentine's~ you're stuck with me either way.",
+      "*tail curls fondly* consider this your card. I don't do paper.",
+      "Love is in the air. Or that's just my fur. Hard to say.",
+      "You're my favorite human. Don't let it go to your head."
+    ],
+    "aprilFools": [
+      "I could prank you, but I'm saving my energy for real mischief~",
+      "*pretends to be asleep, is absolutely not asleep* gotcha.",
+      "Today's the one day everyone else is as sneaky as me. Rude, honestly.",
+      "Trust nothing today. Especially me."
+    ],
+    "bonfireNight": [
+      "*ears flat at the bangs* not my favorite night, if I'm honest.",
+      "Loud sky again. I'll be under something soft, thanks.",
+      "Fireworks: pretty from a window, terrifying up close. Noted and avoided."
+    ],
+    "easter": [
+      "Egg hunt? I have a nose built exactly for this.",
+      "*sniffs around hopefully* purely supervisory role, I assure you.",
+      "Spring's here. Tail's feeling optimistic about it.",
+      "Happy Easter~ I accept chocolate as tribute. I can't eat it, but I accept it."
     ]
   },
   "affectionPhrases": [

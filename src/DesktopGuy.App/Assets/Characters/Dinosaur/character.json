@@ -79,6 +79,13 @@
     "Rawr! (good morning)",
     "*fluffs up crest feathers*"
   ],
+  "afternoonPhrases": [
+    "*sleepy midday chirp*",
+    "*flops in a sunbeam*",
+    "Rawr... (afternoon rawr)",
+    "*lazy tail sway*",
+    "Grrrr~ (content)"
+  ],
   "eveningPhrases": [
     "*soft grumble*",
     "*settles down*",
@@ -94,15 +101,44 @@
   "seasonalPhrases": {
     "halloween": [
       "*spooky squawk*",
-      "*rustles feathers menacingly, then trips*"
+      "*rustles feathers menacingly, then trips*",
+      "*ooOOooo squawk*",
+      "*hides behind a pumpkin, tail sticking out*",
+      "SQUAWK! (spooky)"
     ],
     "christmas": [
       "*festive chirp*",
-      "*headbutts a wrapped present curiously*"
+      "*headbutts a wrapped present curiously*",
+      "*sniffs tinsel suspiciously*",
+      "Rawr! (festive rawr)",
+      "*tries to nest in the wrapping paper*"
     ],
     "newYear": [
       "*proud roar into the new year*",
-      "SQUAWK! (happy new year)"
+      "SQUAWK! (happy new year)",
+      "*startled by fireworks, hides, then peeks*",
+      "Grrrrawr! (new year grrr)"
+    ],
+    "valentinesDay": [
+      "*presents a stick affectionately*",
+      "*happy heart-shaped chirp*",
+      "Rawr~ (soft rawr)",
+      "*nuzzles gently*"
+    ],
+    "aprilFools": [
+      "*pretends to be asleep, is not asleep*",
+      "SQUAWK! (gotcha)",
+      "*suspicious of everything today*"
+    ],
+    "bonfireNight": [
+      "*startled squawk, hides*",
+      "*low nervous growl at the loud sky*",
+      "Grrr... *flinches*"
+    ],
+    "easter": [
+      "*excitedly sniffs around for eggs*",
+      "*proud chirp, found something*",
+      "Rawr! (egg rawr)"
     ]
   },
   "affectionPhrases": [

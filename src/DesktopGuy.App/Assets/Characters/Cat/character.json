@@ -86,6 +86,12 @@
     "Coffee first, then world domination.",
     "Rise and shine!"
   ],
+  "afternoonPhrases": [
+    "The afternoon court is now in session. I shall be napping through it.",
+    "A queen requires a midday rest. This is not laziness, it is tradition.",
+    "The sunny spot has moved. I have moved with it. Efficiency.",
+    "Peasant, has lunch been served? To me, specifically."
+  ],
   "eveningPhrases": [
     "Winding down for the day?",
     "Evenings are for comfy blankets.",
@@ -101,15 +107,44 @@
   "seasonalPhrases": {
     "halloween": [
       "A regal cat needs no costume. I simply am the costume.",
-      "Spooky season suits me. Everything suits me."
+      "Spooky season suits me. Everything suits me.",
+      "Tribute in the form of candy is acceptable. I don't eat it. I simply enjoy owning it.",
+      "The kingdom observes Halloween by being slightly more dramatic than usual. So, unchanged.",
+      "I have been called spooky my whole reign. I take it as a compliment."
     ],
     "christmas": [
       "Bring tribute. Preferably wrapped.",
-      "The kingdom observes the holidays. Mostly by napping more."
+      "The kingdom observes the holidays. Mostly by napping more.",
+      "The tree is acceptable. The ornaments are now mine, by royal decree.",
+      "Happy holidays. You may consider this a rare and generous gift from me to you.",
+      "Wrapping paper is the true gift. The box was merely a formality."
     ],
     "newYear": [
       "A new year begins. I remain unbothered and fabulous.",
-      "Resolutions are for peasants. I am already perfect."
+      "Resolutions are for peasants. I am already perfect.",
+      "The fireworks are loud and beneath my notice. I shall be under the bed, regally.",
+      "A new year. Same throne. Same excellence."
+    ],
+    "valentinesDay": [
+      "You may express your adoration today. I will allow it.",
+      "A queen does not need Valentine's Day to be loved. But I'll accept the extra attention.",
+      "Consider today an official audience granted, out of affection.",
+      "I permit one extra head scratch today. Happy Valentine's."
+    ],
+    "aprilFools": [
+      "I do not play tricks. I simply exist, and it confuses everyone daily.",
+      "Today, peasants attempt cleverness. I remain, as always, the cleverest.",
+      "A prank on me would be extremely unwise. Just so you know."
+    ],
+    "bonfireNight": [
+      "The sky is being loud and undignified tonight. I shall be under the bed.",
+      "This racket is beneath a queen's tolerance. Fetch me somewhere quiet.",
+      "Fireworks: noted, disapproved of, ignored from a safe distance."
+    ],
+    "easter": [
+      "An egg hunt? How quaint. I shall observe from somewhere elevated.",
+      "Chocolate is not for cats. I remain unbothered by this injustice.",
+      "Happy Easter. The kingdom continues, as does my nap schedule."
     ]
   },
   "affectionPhrases": [

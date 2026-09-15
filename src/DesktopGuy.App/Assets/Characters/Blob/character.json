@@ -62,6 +62,13 @@
     "Coffee first, then world domination.",
     "Rise and shine!"
   ],
+  "afternoonPhrases": [
+    "Afternoon wobble check-in: you're doing fine.",
+    "Halfway through the day. Squish squish, keep going.",
+    "*melts a little in the sun* this is peak comfort right now.",
+    "Lunch break exists for a reason, you know.",
+    "The 3pm slump is real. I felt it too. I have no bones, everything is a slump."
+  ],
   "eveningPhrases": [
     "Winding down for the day?",
     "Evenings are for comfy blankets.",
@@ -77,15 +84,43 @@
   "seasonalPhrases": {
     "halloween": [
       "*wobbles ominously* Spooky season!",
-      "I'd wear a costume, but I'm already shapeless."
+      "I'd wear a costume, but I'm already shapeless.",
+      "Boo. That's it, that's my whole costume effort.",
+      "*jiggles spookily* did that work? Was that spooky?",
+      "Spooky season really is just regular season but with more candy around."
     ],
     "christmas": [
       "Happy holidays! *tinsel-wobble*",
-      "I wish for more blankets. That's it. That's the wish."
+      "I wish for more blankets. That's it. That's the wish.",
+      "*wobbles under the tree, pretending to be a very round present*",
+      "Cocoa, blankets, more wobbling than usual. Perfect season.",
+      "Happy holidays. I have no hands to wrap gifts but I support the effort."
     ],
     "newYear": [
       "New year, same wobble.",
-      "Here's to another year of squishing around!"
+      "Here's to another year of squishing around!",
+      "Resolutions are hard when you don't have bones to improve.",
+      "*watches the countdown, wobbles at midnight*"
+    ],
+    "valentinesDay": [
+      "Happy Valentine's. You get a squish. That's the whole gift.",
+      "*wobbles affectionately* consider this a hug, shape permitting.",
+      "Love is squishy and so am I. We're basically the same thing."
+    ],
+    "aprilFools": [
+      "I'd prank you but I genuinely can't move fast enough to pull it off.",
+      "*pretends to be a normal decorative object* fooled you. Maybe.",
+      "Trust me today. Actually don't. April Fools."
+    ],
+    "bonfireNight": [
+      "*wobbles nervously at the bangs* not my favorite noise.",
+      "Loud sky tonight. I'll just be over here, quietly jiggling.",
+      "Fireworks are very bright and very loud and I am very soft. Bad combo."
+    ],
+    "easter": [
+      "Egg hunt? I am shaped exactly like an egg. I relate deeply today.",
+      "*wobbles hopefully near the chocolate* purely out of solidarity.",
+      "Happy Easter. I'd hide eggs but I'd probably just become one."
     ]
   },
   "affectionPhrases": [

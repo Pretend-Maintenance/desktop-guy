@@ -1095,10 +1095,10 @@ public sealed class CharacterController
 
     /// <summary>
     /// The general phrase pool, plus whichever time-of-day pool (morning/
-    /// evening/late-night) matches the clock right now, if that character
-    /// defines any for this time - so "he mentions coffee in the morning"
-    /// is just extra lines layered on top of the always-available ones,
-    /// not a separate thing that replaces them.
+    /// afternoon/evening/late-night) matches the clock right now, if that
+    /// character defines any for this time - so "he mentions coffee in the
+    /// morning" is just extra lines layered on top of the always-available
+    /// ones, not a separate thing that replaces them.
     /// </summary>
     private IReadOnlyList<string> GetCurrentPhrasePool()
     {
@@ -1106,6 +1106,7 @@ public sealed class CharacterController
         List<string> timeSpecific = now.Hour switch
         {
             >= 5 and < 12 => _definition.MorningPhrases,
+            >= 12 and < 18 => _definition.AfternoonPhrases,
             >= 18 and < 23 => _definition.EveningPhrases,
             >= 23 or < 5 => _definition.LateNightPhrases,
             _ => EmptyPhrases,
@@ -1128,10 +1129,11 @@ public sealed class CharacterController
     }
 
     /// <summary>
-    /// A handful of fixed, deliberately narrow holiday windows - not meant
-    /// to cover every possible date, just enough to make the character feel
-    /// a little seasonally aware without any external calendar/timezone
-    /// dependency. Returns null (no seasonal flavor) for every other day.
+    /// A handful of fixed, deliberately narrow holiday windows (leaning UK,
+    /// since that's this app's primary audience) - not meant to cover every
+    /// possible date, just enough to make the character feel a little
+    /// seasonally aware without any external calendar/timezone dependency.
+    /// Returns null (no seasonal flavor) for every other day.
     /// </summary>
     private static string? GetSeasonalKey(DateTime now)
     {
@@ -1153,7 +1155,56 @@ public sealed class CharacterController
             return "newYear";
         }
 
+        if (month == 2 && day == 14)
+        {
+            return "valentinesDay";
+        }
+
+        if (month == 4 && day == 1)
+        {
+            return "aprilFools";
+        }
+
+        if (month == 11 && day == 5)
+        {
+            return "bonfireNight";
+        }
+
+        // Easter isn't a fixed calendar date, so it needs actual
+        // computation rather than a hardcoded month/day like the others -
+        // the window covers Good Friday through Easter Monday, the UK's
+        // usual Easter bank holiday stretch.
+        var easterSunday = GetEasterSunday(now.Year);
+        if (now.Date >= easterSunday.AddDays(-2) && now.Date <= easterSunday.AddDays(1))
+        {
+            return "easter";
+        }
+
         return null;
+    }
+
+    /// <summary>
+    /// Computes the date of Easter Sunday for a given year via the
+    /// "anonymous Gregorian algorithm" (Meeus/Jones/Butcher) - a standard,
+    /// well-tested closed-form calculation, not an approximation.
+    /// </summary>
+    private static DateTime GetEasterSunday(int year)
+    {
+        int a = year % 19;
+        int b = year / 100;
+        int c = year % 100;
+        int d = b / 4;
+        int e = b % 4;
+        int f = (b + 8) / 25;
+        int g = (b - f + 1) / 3;
+        int h = (19 * a + b - d - g + 15) % 30;
+        int i = c / 4;
+        int k = c % 4;
+        int l = (32 + 2 * e + 2 * i - h - k) % 7;
+        int m = (a + 11 * h + 22 * l) / 451;
+        int month = (h + l - 7 * m + 114) / 31;
+        int day = ((h + l - 7 * m + 114) % 31) + 1;
+        return new DateTime(year, month, day);
     }
 
     private static readonly List<string> EmptyPhrases = new();

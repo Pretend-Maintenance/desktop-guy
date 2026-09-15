@@ -33,6 +33,9 @@ public sealed class CharacterDefinition
     /// <summary>Extra phrases mixed in alongside Phrases during roughly 5am-noon. Optional - leave empty for no morning-specific flavor.</summary>
     public List<string> MorningPhrases { get; set; } = new();
 
+    /// <summary>Extra phrases mixed in alongside Phrases during roughly noon-6pm. Optional.</summary>
+    public List<string> AfternoonPhrases { get; set; } = new();
+
     /// <summary>Extra phrases mixed in alongside Phrases during roughly 6pm-11pm. Optional.</summary>
     public List<string> EveningPhrases { get; set; } = new();
 
@@ -42,8 +45,9 @@ public sealed class CharacterDefinition
     /// <summary>
     /// Extra phrases mixed in alongside Phrases only during a few fixed
     /// holiday windows (see CharacterController.GetSeasonalKey) - keyed by
-    /// "halloween", "christmas", or "newYear". Optional; leave a key out
-    /// (or the whole thing empty) for no holiday-specific flavor.
+    /// "halloween", "christmas", "newYear", "valentinesDay", "aprilFools",
+    /// "bonfireNight", or "easter". Optional; leave a key out (or the whole
+    /// thing empty) for no holiday-specific flavor.
     /// </summary>
     public Dictionary<string, List<string>> SeasonalPhrases { get; set; } = new();
 

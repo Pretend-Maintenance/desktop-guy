@@ -77,6 +77,14 @@
     "Con con! (good morning)",
     "*zoomies* SNOOK SNOOK SNOOK"
   ],
+  "afternoonPhrases": [
+    "Con con, afternoon snooks. Sun spot's mine now.",
+    "*flops in the sun patch* midday snooks.",
+    "Yeahhh, afternoon plooos.",
+    "Con con, is it treat time yet? Just checking.",
+    "*stretches* half the day done, half to go, snooks.",
+    "Ploooo... afternoon slump. Con con, same."
+  ],
   "eveningPhrases": [
     "*sleepy snook noises*",
     "Ploooos... settling in.",
@@ -92,15 +100,51 @@
   "seasonalPhrases": {
     "halloween": [
       "Spooky snooks! *bork*",
-      "Con con... in a costume? Ploooo."
+      "Con con... in a costume? Ploooo.",
+      "*growls at a pumpkin* suspicious snook.",
+      "Con con, do I get a costume? I'd be a very good ghost. Boo. Snooks.",
+      "*sniffs candy bowl intensely* not for dogs. I know. Still sniffing.",
+      "SPOOKY SNOOKS SPOOKY SNOOKS"
     ],
     "christmas": [
       "Snooks under the tree! Yeahhh!",
-      "*sniffs presents intensely* plooooos"
+      "*sniffs presents intensely* plooooos",
+      "Con con, is one of these presents mine? Just asking.",
+      "*wears the tiny santa hat with great dignity* snooks.",
+      "Ploooo! Snow outside! Con con, look, LOOK!",
+      "Con con con con, it's Christmas con con!"
     ],
     "newYear": [
       "New year snooks! *zoomies*",
-      "Yeahhh! Con con, new year con con!"
+      "Yeahhh! Con con, new year con con!",
+      "*hides from fireworks, brave face* snooks... loud snooks.",
+      "New year, same con con, same snooks. Perfect.",
+      "Ploooo! Countdown! Con con, count with me. Snook. Snook. SNOOK!"
+    ],
+    "valentinesDay": [
+      "Con con, happy love day. You're my favorite con con.",
+      "*presents a slightly chewed heart-shaped toy* for you, con con.",
+      "Ploooo, love snooks. Big love snooks.",
+      "Con con is my valentine. Was never in doubt, snooks.",
+      "*nuzzles* snook snook, love you con con."
+    ],
+    "aprilFools": [
+      "Con con, I am a very serious and dignified dog today. *falls over* SNOOKS, made you look.",
+      "*pretends the ball is gone, it is not gone* con con, april fools, snooks.",
+      "Ploooo, is this a trick? Is today tricky? Con con?",
+      "*suspicious of everything today* snook. SNOOK."
+    ],
+    "bonfireNight": [
+      "*ears flat, hiding under the desk* con con, loud snooks tonight.",
+      "Ploooo... BANG noises. Not a fan. Con con, hold me.",
+      "*brave face, still trembling* I am not scared. Snooks. I am NOT.",
+      "Con con, why is the sky doing that. Snooks. Why."
+    ],
+    "easter": [
+      "Con con! Egg hunt! I am VERY good at finding things that smell like food, snooks.",
+      "*sniffs a chocolate egg, is sad it is not for dogs* ploooo.",
+      "Snooks! Bunny ears? Con con, do I get bunny ears?",
+      "Ploooo, spring snooks. Happy egg day, con con."
     ]
   },
   "affectionPhrases": [

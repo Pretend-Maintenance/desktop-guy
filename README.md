@@ -492,10 +492,17 @@ sprite sheet, which is how new characters get added.
      are non-looping - they play once and then move on; everything else loops)
    - `behavior`: idle timeout, wander timing, speech timing
    - `phrases`: the lines it can say
-   - `morningPhrases` / `eveningPhrases` / `lateNightPhrases`: optional
-     extra lines mixed in alongside `phrases` at the matching time of day
-   - `seasonalPhrases`: optional, keyed by `"halloween"` / `"christmas"` /
-     `"newYear"` - extra lines mixed in only during those windows
+   - `morningPhrases` / `afternoonPhrases` / `eveningPhrases` /
+     `lateNightPhrases`: optional extra lines mixed in alongside `phrases`
+     at the matching time of day (roughly 5am-noon / noon-6pm / 6pm-11pm /
+     11pm-5am)
+   - `seasonalPhrases`: optional, keyed by `"halloween"`, `"christmas"`,
+     `"newYear"`, `"valentinesDay"`, `"aprilFools"`, `"bonfireNight"`, or
+     `"easter"` - extra lines mixed in only during those windows (leaning
+     UK - Bonfire Night is November 5th, and Easter's window is computed
+     properly per year, Good Friday through Easter Monday, rather than
+     hardcoded to one date). See `CharacterController.GetSeasonalKey` for
+     the exact date ranges.
    - `affectionPhrases`: optional - special lines it might say once a
      cumulative-onscreen-time milestone is reached (see "How it behaves" above)
    - `networkDownPhrases` / `networkUpPhrases`: optional - override the
