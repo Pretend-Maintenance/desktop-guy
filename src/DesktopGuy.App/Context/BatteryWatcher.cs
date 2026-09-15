@@ -22,12 +22,16 @@ public sealed class BatteryWatcher
 
     private volatile bool _isLow;
     private volatile bool _isFull;
+    private volatile bool _isPluggedIn;
 
     /// <summary>True when running on battery power and charge is at or below LowBatteryPercent.</summary>
     public bool IsLow => _isLow;
 
     /// <summary>True when plugged in and charge has reached 100%.</summary>
     public bool IsFull => _isFull;
+
+    /// <summary>True when running on AC power (plugged in), regardless of charge level.</summary>
+    public bool IsPluggedIn => _isPluggedIn;
 
     public void Start(CancellationToken cancellationToken)
     {
@@ -58,6 +62,7 @@ public sealed class BatteryWatcher
             {
                 _isLow = false;
                 _isFull = false;
+                _isPluggedIn = false;
                 return;
             }
 
@@ -65,12 +70,14 @@ public sealed class BatteryWatcher
             bool pluggedIn = status.ACLineStatus == 1;
             _isLow = onBattery && status.BatteryLifePercent <= LowBatteryPercent;
             _isFull = pluggedIn && status.BatteryLifePercent >= 100;
+            _isPluggedIn = pluggedIn;
         }
         catch (Exception ex)
         {
             ErrorLog.Record("BatteryWatcher.RefreshOnce", ex);
             _isLow = false;
             _isFull = false;
+            _isPluggedIn = false;
         }
     }
 

@@ -223,9 +223,12 @@ register that temporary path instead of your real install.
 - **Discord message**: a new Discord message makes it open an envelope for a
   moment, then resumes.
 - **Battery**: on a laptop, a speech bubble the moment charge drops to 20%
-  while unplugged ("Battery's getting low..."), and another the moment it
-  reaches 100% while plugged in ("Battery's fully charged!") - each only
-  fires once per transition, not repeatedly while it stays low/full. If a
+  while unplugged ("Battery's getting low..."), another the moment it's
+  plugged into power ("Plugged in! Charging now." - customizable per
+  character via `batteryPluggedInPhrases`, same fallback pattern as the
+  system-event phrases below), and another the moment it reaches 100%
+  while plugged in ("Battery's fully charged!") - each only fires once per
+  transition, not repeatedly while it stays low/plugged-in/full. If a
   character also defines a `lowBattery` animation, that pose is mixed into
   the same idle-surprise rotation as `eating`/`playing` while the battery's
   actually low (see "Adding a new character" below) - desktops with no
@@ -498,7 +501,9 @@ sprite sheet, which is how new characters get added.
    - `usbConnectedPhrases` / `usbDisconnectedPhrases`: optional - same idea
      for the removable-drive nudge. Use `{0}` as a placeholder for the drive
      letter, e.g. `"ooh, {0}!"` becomes "ooh, D:\!".
-   - Any of the eight above left out entirely (or set to an empty array)
+   - `batteryPluggedInPhrases`: optional - same idea for the moment the
+     laptop's plugged into power, no placeholder needed.
+   - Any of the nine above left out entirely (or set to an empty array)
      just falls back to a generic line - only worth adding once a
      character has enough personality established to be worth writing
      event-specific lines for.

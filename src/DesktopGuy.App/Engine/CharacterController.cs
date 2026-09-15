@@ -76,6 +76,7 @@ public sealed class CharacterController
     private double _previewWeatherSecondsRemaining;
     private bool _wasBatteryLow;
     private bool _wasBatteryFull;
+    private bool _wasPluggedIn;
     private bool _wasNetworkAvailable = true;
     private bool _wasDiskSpaceLow;
     private double _totalSecondsOnscreen;
@@ -164,6 +165,13 @@ public sealed class CharacterController
         "Huh, {0} is gone now.",
         "*tilts head* the drive at {0} just left.",
         "Bye, {0}! Safe travels.",
+    };
+
+    private static readonly string[] GenericBatteryPluggedInPhrases =
+    {
+        "Plugged in! Charging now.",
+        "Ooh, power! Topping up.",
+        "Plugged in - nice, free energy time.",
     };
 
     public CharacterState State { get; private set; } = CharacterState.Idle;
@@ -661,11 +669,12 @@ public sealed class CharacterController
 
     /// <summary>
     /// Fires a one-off speech bubble the moment the battery drops to/below
-    /// BatteryWatcher's low-battery threshold, or the moment it reaches a
-    /// full charge while plugged in - both edge-triggered on the
-    /// transition, not every tick while they hold, so it doesn't nag.
-    /// No dedicated art for either - just a phrase, layered on top of
-    /// whatever else is going on rather than changing state/animation.
+    /// BatteryWatcher's low-battery threshold, the moment it's plugged
+    /// into power, and the moment it reaches a full charge while plugged
+    /// in - all three edge-triggered on the transition, not every tick
+    /// while they hold, so it doesn't nag. No dedicated art for any of
+    /// these - just a phrase, layered on top of whatever else is going on
+    /// rather than changing state/animation.
     /// </summary>
     private void TickBattery()
     {
@@ -676,6 +685,14 @@ public sealed class CharacterController
         }
 
         _wasBatteryLow = isLow;
+
+        bool isPluggedIn = _batteryContext?.IsPluggedIn ?? false;
+        if (isPluggedIn && !_wasPluggedIn)
+        {
+            SpeechRequested?.Invoke(PickPhrase(_definition.BatteryPluggedInPhrases, GenericBatteryPluggedInPhrases));
+        }
+
+        _wasPluggedIn = isPluggedIn;
 
         bool isFull = _batteryContext?.IsFull ?? false;
         if (isFull && !_wasBatteryFull)

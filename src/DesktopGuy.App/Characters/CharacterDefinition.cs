@@ -72,6 +72,7 @@ public sealed class CharacterDefinition
     public List<string> SessionUnlockedPhrases { get; set; } = new();
     public List<string> UsbConnectedPhrases { get; set; } = new();
     public List<string> UsbDisconnectedPhrases { get; set; } = new();
+    public List<string> BatteryPluggedInPhrases { get; set; } = new();
 
     /// <summary>Absolute path to the folder this definition was loaded from.</summary>
     public string SourceFolder { get; set; } = "";
