@@ -152,6 +152,11 @@
     "*melts into a puddle of happy pug* ploooo",
     "Yeahhh! Snooks! Best day ever, snooks!"
   ],
+  "togetherTimePhrases": [
+    "Con con, we've been together {0} now! Snooks!",
+    "{0} together, con con. *happy pug wiggle*",
+    "Ploooo... {0} with you. Best snooks."
+  ],
   "networkDownPhrases": [
     "*ears perk* ...ooh, the {0} is gone. Ah, snooks.",
     "Con con! Con con! Where'd the {0} go?! *bork bork*",

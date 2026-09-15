@@ -161,11 +161,17 @@ register that temporary path instead of your real install.
   separate from a single click's plain pet.
 - **Affection**: total time it's spent onscreen is tracked per character,
   cumulative across restarts. At a few thresholds (5 min, 30 min, 1 hour,
-  4 hours, 1 day, 1 week, 30 days) it says something special once, from
-  `affectionPhrases` if the character defines any, or a generic line
-  otherwise, plus a dedicated `milestone` animation if the character
-  defines one. Petting it (a click that isn't a drag) is unrelated to this -
-  that always just pops up a normal phrase from `phrases`.
+  4 hours, 1 day, 1 week, 30 days) it says something special once, plus a
+  dedicated `milestone` animation if the character defines one. The line
+  itself is picked from a combined pool of `affectionPhrases` (general
+  celebratory lines, e.g. "we've been together for a while now") and
+  `togetherTimePhrases` (same idea, but with the actual elapsed time
+  filled in via a `{0}` placeholder, e.g. "We've been together for {0}
+  now!" becomes "We've been together for a day now!") - so it's a mix of
+  both flavors rather than always one or the other, and either falls back
+  to a generic line/template if the character doesn't define its own.
+  Petting it (a click that isn't a drag) is unrelated to this - that
+  always just pops up a normal phrase from `phrases`.
 - **Waking from sleep** (the PC's, not the idle-timeout kind above): if a
   `systemResume` animation is defined, it plays once the moment Windows
   itself resumes from suspend/hibernation - a startled "oh, we're back"
@@ -505,6 +511,13 @@ sprite sheet, which is how new characters get added.
      the exact date ranges.
    - `affectionPhrases`: optional - special lines it might say once a
      cumulative-onscreen-time milestone is reached (see "How it behaves" above)
+   - `togetherTimePhrases`: optional - same milestone moment as
+     `affectionPhrases` above, mixed into the same pool, but with the
+     actual elapsed time filled in. Use `{0}` as a placeholder - it's
+     filled in with a friendly label ("5 minutes", "30 minutes", "an
+     hour", "4 hours", "a day", "a week", "30 days") matching whichever
+     threshold was just crossed, e.g. `"Together for {0}!"` becomes
+     "Together for a day!".
    - `networkDownPhrases` / `networkUpPhrases`: optional - override the
      generic wifi/internet drop-and-reconnect lines with the character's own
      voice. Use `{0}` as a placeholder - it's filled in with `"wifi"` or

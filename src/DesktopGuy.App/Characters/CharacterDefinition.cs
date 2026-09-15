@@ -60,6 +60,18 @@ public sealed class CharacterDefinition
     public List<string> AffectionPhrases { get; set; } = new();
 
     /// <summary>
+    /// Milestone lines that call out the actual elapsed onscreen time,
+    /// mixed into the same pool as AffectionPhrases at each milestone
+    /// (see CharacterController.PickMilestonePhrase) rather than replacing
+    /// it - so a milestone sometimes surfaces the real duration and
+    /// sometimes just a general celebratory line. Use "{0}" as a
+    /// placeholder - filled in with a friendly label like "an hour" or
+    /// "a day". Optional - a character with none just never gets this
+    /// specific flavor, falling back to a generic template instead.
+    /// </summary>
+    public List<string> TogetherTimePhrases { get; set; } = new();
+
+    /// <summary>
     /// System-event phrase pools - all optional, and all fall back to a
     /// generic line (see the matching "Generic...Phrases" fields in
     /// CharacterController) when a character doesn't define its own. Each

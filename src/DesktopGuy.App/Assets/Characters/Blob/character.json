@@ -127,5 +127,10 @@
     "That's a lot of time together. I'm basically vibrating.",
     "Okay, official record: we've been at this a while. Noted and appreciated.",
     "Squish squish squish, this is the good stuff."
+  ],
+  "togetherTimePhrases": [
+    "{0} together! I'm basically vibrating with joy about it.",
+    "We've been at this {0} now. Squish squish, good stuff.",
+    "{0} together. I have no bones but I do have feelings, and they're good ones."
   ]
 }

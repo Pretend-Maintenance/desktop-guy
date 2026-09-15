@@ -145,5 +145,10 @@
     "*chirps approvingly, still counting*",
     "*happy stomping intensifies*",
     "Grrrr! (this is good, keep going)"
+  ],
+  "togetherTimePhrases": [
+    "*proud stomping* ({0} together!)",
+    "Grrrr~ (that's {0} so far)",
+    "*happy chirping intensifies* ({0}, still counting)"
   ]
 }

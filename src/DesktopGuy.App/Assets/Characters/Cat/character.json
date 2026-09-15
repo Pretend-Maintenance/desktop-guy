@@ -151,5 +151,10 @@
     "Acceptable. You may continue.",
     "A queen keeps track of loyal company. You've proven quite loyal.",
     "I permit this much time in my presence. Rare, but permitted."
+  ],
+  "togetherTimePhrases": [
+    "{0} in my presence. A rare honor, freely given.",
+    "The royal record shows {0} of loyal company. Noted favorably.",
+    "We have spent {0} together. I permit this to continue."
   ]
 }

@@ -90,6 +90,13 @@ public sealed class CharacterController
     private static readonly double[] OnscreenMilestoneSeconds =
         { 300, 1800, 3600, 14400, 86400, 604800, 2592000 };
 
+    // Human-friendly labels for each threshold above, same order/count -
+    // used to fill in a "we've been together for {0}" style phrase rather
+    // than computing a generic duration format, since these fixed
+    // thresholds already read cleanly as fixed words.
+    private static readonly string[] OnscreenMilestoneLabels =
+        { "5 minutes", "30 minutes", "an hour", "4 hours", "a day", "a week", "30 days" };
+
     private const double OnscreenSaveIntervalSeconds = 60;
 
     // How long a media session can report "nothing playing" before it's
@@ -105,6 +112,19 @@ public sealed class CharacterController
         "We've been hanging out for a while now. I like that.",
         "Just noting: this is a good amount of time to spend together.",
         "Still here, still glad you're around.",
+    };
+
+    // {0} is filled in with one of OnscreenMilestoneLabels above (e.g. "an
+    // hour", "a day"). Mixed into the same pool as AffectionPhrases at each
+    // milestone (see PickMilestonePhrase) rather than being a separate
+    // announcement, so a character with lots of AffectionPhrases still
+    // occasionally surfaces the actual elapsed time, and one with none
+    // still gets some variety instead of only ever these.
+    private static readonly string[] GenericTogetherTimePhrases =
+    {
+        "We've been together for {0} now!",
+        "That's {0} we've spent together so far.",
+        "{0} together and counting~",
     };
 
     // {0} is filled in with "wifi" or "internet" depending on what the
@@ -355,15 +375,29 @@ public sealed class CharacterController
     }
 
     /// <summary>
-    /// Picks a milestone celebration line - the character's own
-    /// AffectionPhrases if it defines any, otherwise a generic fallback -
-    /// fired once at each threshold in OnscreenMilestoneSeconds.
+    /// Picks a milestone celebration line - a mix of the character's own
+    /// AffectionPhrases (or a generic fallback) and its TogetherTimePhrases
+    /// (or a generic fallback) with the actual elapsed time filled in, so
+    /// a milestone sometimes calls out the real duration ("we've been
+    /// together for a day now!") and sometimes just a general celebratory
+    /// line, rather than always one or the other. Fired once at each
+    /// threshold in OnscreenMilestoneSeconds.
     /// </summary>
-    private string PickAffectionMilestonePhrase()
+    private string PickMilestonePhrase(string durationLabel)
     {
-        IReadOnlyList<string> pool = _definition.AffectionPhrases.Count > 0
+        IReadOnlyList<string> affectionPool = _definition.AffectionPhrases.Count > 0
             ? _definition.AffectionPhrases
             : GenericAffectionPhrases;
+        IReadOnlyList<string> togetherTemplates = _definition.TogetherTimePhrases.Count > 0
+            ? _definition.TogetherTimePhrases
+            : GenericTogetherTimePhrases;
+
+        var pool = new List<string>(affectionPool.Count + togetherTemplates.Count);
+        pool.AddRange(affectionPool);
+        foreach (var template in togetherTemplates)
+        {
+            pool.Add(string.Format(template, durationLabel));
+        }
 
         return pool[_random.Next(pool.Count)];
     }
@@ -792,7 +826,7 @@ public sealed class CharacterController
     /// <summary>
     /// Picks from a character's own custom phrase pool when it defines one,
     /// otherwise falls back to the generic pool - same shape as
-    /// PickAffectionMilestonePhrase, reused for every system-event phrase
+    /// PickMilestonePhrase, reused for every system-event phrase
     /// (network, disk space, lock/unlock, USB) so any character can
     /// override these in its own voice without every character needing to.
     /// </summary>
@@ -814,11 +848,12 @@ public sealed class CharacterController
         double previousTotal = _totalSecondsOnscreen;
         _totalSecondsOnscreen += dt;
 
-        foreach (var milestone in OnscreenMilestoneSeconds)
+        for (int i = 0; i < OnscreenMilestoneSeconds.Length; i++)
         {
+            double milestone = OnscreenMilestoneSeconds[i];
             if (previousTotal < milestone && _totalSecondsOnscreen >= milestone)
             {
-                SpeechRequested?.Invoke(PickAffectionMilestonePhrase());
+                SpeechRequested?.Invoke(PickMilestonePhrase(OnscreenMilestoneLabels[i]));
                 _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
                     _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
 

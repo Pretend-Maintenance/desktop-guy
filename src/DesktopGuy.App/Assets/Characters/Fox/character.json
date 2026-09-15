@@ -141,6 +141,11 @@
     "Okay, official record: we've been at this a while. Noted and appreciated.",
     "*happy tail wag intensifies*"
   ],
+  "togetherTimePhrases": [
+    "We've been together {0} now. My tail's kept very precise count~",
+    "Officially: {0} together. Noted, appreciated, tail-wagged about.",
+    "{0} and still my favorite way to spend time."
+  ],
   "networkDownPhrases": [
     "Uh oh, the {0} vanished. Very sneaky of it, actually.",
     "*ears drop* ...where did the {0} go?",
