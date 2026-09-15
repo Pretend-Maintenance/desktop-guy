@@ -60,56 +60,76 @@ public sealed class BluetoothWatcher
         }
     }
 
+    /// <summary>
+    /// Wraps the whole diff-and-notify step in a try/catch, not just the
+    /// enumeration below - the same whole-body shape UsbDriveWatcher's
+    /// RefreshOnce uses. Without this, an exception anywhere in here
+    /// (including, in principle, a subscriber's own event handler throwing)
+    /// would escape into PollLoopAsync's fire-and-forget task and silently
+    /// kill the polling loop forever, with nothing logged - not just fail
+    /// to report a device this one time.
+    /// </summary>
     private async Task RefreshOnceAsync()
     {
-        var current = await GetConnectedDeviceNamesAsync();
-
-        foreach (var name in current)
+        try
         {
-            if (!_lastConnectedNames.Contains(name))
-            {
-                DeviceConnected?.Invoke(name);
-            }
-        }
+            var current = await GetConnectedDeviceNamesAsync();
 
-        foreach (var name in _lastConnectedNames)
+            foreach (var name in current)
+            {
+                if (!_lastConnectedNames.Contains(name))
+                {
+                    DeviceConnected?.Invoke(name);
+                }
+            }
+
+            foreach (var name in _lastConnectedNames)
+            {
+                if (!current.Contains(name))
+                {
+                    DeviceDisconnected?.Invoke(name);
+                }
+            }
+
+            _lastConnectedNames = current;
+        }
+        catch (Exception ex)
         {
-            if (!current.Contains(name))
-            {
-                DeviceDisconnected?.Invoke(name);
-            }
+            ErrorLog.Record("BluetoothWatcher.RefreshOnceAsync", ex);
         }
-
-        _lastConnectedNames = current;
     }
 
     private static async Task<HashSet<string>> GetConnectedDeviceNamesAsync()
     {
         var result = new HashSet<string>();
 
-        try
-        {
-            await AddConnectedNamesAsync(BluetoothDevice.GetDeviceSelectorFromPairingState(true), result);
-            await AddConnectedNamesAsync(BluetoothLEDevice.GetDeviceSelectorFromPairingState(true), result);
-        }
-        catch (Exception ex)
-        {
-            ErrorLog.Record("BluetoothWatcher.GetConnectedDeviceNamesAsync", ex);
-        }
+        // Each API queried independently, with its own try/catch - classic
+        // and BLE are separate stacks under the hood, and a machine with
+        // one misbehaving (or a radio that only supports one) shouldn't
+        // lose the other's results too.
+        await TryAddConnectedNamesAsync(BluetoothDevice.GetDeviceSelectorFromPairingState(true), result);
+        await TryAddConnectedNamesAsync(BluetoothLEDevice.GetDeviceSelectorFromPairingState(true), result);
 
         return result;
     }
 
-    private static async Task AddConnectedNamesAsync(string selector, HashSet<string> result)
+    private static async Task TryAddConnectedNamesAsync(string selector, HashSet<string> result)
     {
-        var devices = await DeviceInformation.FindAllAsync(selector, IsConnectedProperty);
-        foreach (var device in devices)
+        try
         {
-            if (device.Properties.TryGetValue("System.Devices.Aep.IsConnected", out var value) &&
-                value is bool isConnected && isConnected)
+            var devices = await DeviceInformation.FindAllAsync(selector, IsConnectedProperty);
+            foreach (var device in devices)
             {
-                result.Add(string.IsNullOrWhiteSpace(device.Name) ? "a device" : device.Name);
+                if (device.Properties.TryGetValue("System.Devices.Aep.IsConnected", out var value) &&
+                    value is bool isConnected && isConnected)
+                {
+                    result.Add(string.IsNullOrWhiteSpace(device.Name) ? "a device" : device.Name);
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            ErrorLog.Record("BluetoothWatcher.TryAddConnectedNamesAsync", ex);
         }
     }
 }
