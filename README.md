@@ -120,6 +120,19 @@ has no per-app exception list to add this app to, and turning it off
 entirely is a one-way decision (it can't be re-enabled without a full
 Windows reset).
 
+**One real data point from hitting this in practice**: a build that
+included `BluetoothWatcher` (using `Windows.Devices.Bluetooth` /
+`Windows.Devices.Enumeration` to watch for paired devices connecting)
+got blocked; removing that watcher and rebuilding cleared it on the same
+machine. That's not proof Bluetooth enumeration specifically is what
+Smart App Control's cloud classifier objects to - it's still an opaque,
+hash-based decision, and it could just as easily have been another
+"never-seen-before hash" roll of the dice - but it's the one reproducible
+before/after result seen so far, so it's worth knowing about before
+re-adding Bluetooth support (or any other watcher touching a WinRT device
+API this app hasn't used before): rebuild once with it, once without, and
+compare, rather than assuming it's fine.
+
 ### Always on Top
 
 Right-click the character and toggle **"Always on Top"** to control
