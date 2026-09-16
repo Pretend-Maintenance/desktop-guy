@@ -194,21 +194,6 @@ public sealed class CharacterController
         "Plugged in - nice, free energy time.",
     };
 
-    // {0} is filled in with the Bluetooth device's own reported name.
-    private static readonly string[] GenericBluetoothConnectedPhrases =
-    {
-        "Ooh, {0} just connected.",
-        "{0}'s here! Hi, {0}.",
-        "Something called {0} just paired up.",
-    };
-
-    private static readonly string[] GenericBluetoothDisconnectedPhrases =
-    {
-        "{0} disconnected.",
-        "Huh, {0}'s gone now.",
-        "Bye, {0}.",
-    };
-
     public CharacterState State { get; private set; } = CharacterState.Idle;
     public double PositionX { get; private set; }
     public double PositionY { get; private set; }
@@ -354,22 +339,6 @@ public sealed class CharacterController
     public void OnUsbDriveDisconnected(string driveLetter)
     {
         SpeechRequested?.Invoke(string.Format(PickPhrase(_definition.UsbDisconnectedPhrases, GenericUsbDisconnectedPhrases), driveLetter));
-        _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
-            _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
-    }
-
-    /// <summary>Called by MainWindow when a Bluetooth device (headphones, a speaker, a mouse, ...) connects.</summary>
-    public void OnBluetoothDeviceConnected(string deviceName)
-    {
-        SpeechRequested?.Invoke(string.Format(PickPhrase(_definition.BluetoothConnectedPhrases, GenericBluetoothConnectedPhrases), deviceName));
-        _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
-            _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
-    }
-
-    /// <summary>Called by MainWindow when a Bluetooth device disconnects.</summary>
-    public void OnBluetoothDeviceDisconnected(string deviceName)
-    {
-        SpeechRequested?.Invoke(string.Format(PickPhrase(_definition.BluetoothDisconnectedPhrases, GenericBluetoothDisconnectedPhrases), deviceName));
         _secondsUntilNextSpeech = _definition.Behavior.SpeechDurationSeconds + RandomBetween(
             _definition.Behavior.SpeechIntervalMinSeconds, _definition.Behavior.SpeechIntervalMaxSeconds);
     }

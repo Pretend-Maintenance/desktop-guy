@@ -193,15 +193,5 @@
     "Ooh, plugged in. Powering up, just like me after a nap.",
     "There we go - charging. Foxes approve of naps and recharging alike.",
     "*tail curls contentedly* plugged in and cozy."
-  ],
-  "bluetoothConnectedPhrases": [
-    "Ooh, {0} just showed up. New friend?",
-    "*ears perk up* {0} connected. I shall investigate. Sneakily.",
-    "{0}'s here! Hello, {0}~"
-  ],
-  "bluetoothDisconnectedPhrases": [
-    "And {0} is gone. Vanished. Very sneaky of it.",
-    "Aw, {0} left. *tail droops*",
-    "{0} disconnected. No goodbye? Rude."
   ]
 }

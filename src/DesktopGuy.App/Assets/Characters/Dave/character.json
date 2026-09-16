@@ -212,16 +212,5 @@
     "Con con, we're charging now! Good, good.",
     "*sniffs the cable* power juice. Yum. For the computer, not me.",
     "Plugged in! Now we wait, snooks."
-  ],
-  "bluetoothConnectedPhrases": [
-    "*bark bark* something called {0} just showed up, con con!",
-    "Ooh, {0}! New friend? Con con, is {0} a friend?",
-    "*ears perk* {0} connected. Sniffing it out. Snooks.",
-    "{0}! Hi, {0}! *tail wag*"
-  ],
-  "bluetoothDisconnectedPhrases": [
-    "Aw, {0} left. *sad snook*",
-    "Huh, {0}'s gone. Where'd {0} go, con con?",
-    "Bye, {0}. *confused tilt*"
   ]
 }

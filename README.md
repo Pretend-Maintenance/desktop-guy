@@ -262,15 +262,6 @@ register that temporary path instead of your real install.
   D:\!" / "Huh, D:\ is gone now."). Checked via a 2-second poll of the
   drive list rather than a device-change hook - no window handle or native
   struct marshaling needed for something this low-stakes.
-- **Bluetooth device**: a speech bubble whenever a paired Bluetooth device
-  (headphones, a speaker, a mouse/keyboard, ...) connects or disconnects,
-  naming the device by whatever name it reports itself ("Ooh, Sony
-  WH-1000XM4 just connected." / "Sony WH-1000XM4 disconnected."). Covers
-  both classic and BLE devices, checked via a 5-second poll of which
-  paired devices currently report as connected - the app's very first
-  check on startup is silent (so nothing already connected at launch
-  triggers a false "just connected" bubble), only actual connects/
-  disconnects after that fire one.
 
 None of these have dedicated animations - just phrases, layered on top of
 whatever pose it's already in, the same way the battery nudges above work.
@@ -532,11 +523,7 @@ sprite sheet, which is how new characters get added.
      letter, e.g. `"ooh, {0}!"` becomes "ooh, D:\!".
    - `batteryPluggedInPhrases`: optional - same idea for the moment the
      laptop's plugged into power, no placeholder needed.
-   - `bluetoothConnectedPhrases` / `bluetoothDisconnectedPhrases`: optional -
-     same idea for a Bluetooth device connecting/disconnecting. Use `{0}`
-     as a placeholder for the device's own reported name, e.g. `"ooh,
-     {0}!"` becomes "ooh, Sony WH-1000XM4!".
-   - Any of the eleven above left out entirely (or set to an empty array)
+   - Any of the nine above left out entirely (or set to an empty array)
      just falls back to a generic line - only worth adding once a
      character has enough personality established to be worth writing
      event-specific lines for.
