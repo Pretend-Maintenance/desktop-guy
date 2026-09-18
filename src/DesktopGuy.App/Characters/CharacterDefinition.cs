@@ -52,6 +52,17 @@ public sealed class CharacterDefinition
     public Dictionary<string, List<string>> SeasonalPhrases { get; set; } = new();
 
     /// <summary>
+    /// Extra phrases mixed in alongside MorningPhrases (so only during
+    /// roughly 5am-noon, not all day) on the matching day of the week -
+    /// keyed by "monday" through "sunday", lowercase. A chance for a
+    /// character to greet the specific day in its own voice ("Happy
+    /// Froodooo, it's the end of the week!") rather than just morning in
+    /// general. Optional; leave a key out (or the whole thing empty) for
+    /// no day-specific flavor.
+    /// </summary>
+    public Dictionary<string, List<string>> DayPhrases { get; set; } = new();
+
+    /// <summary>
     /// Special lines that can be spoken instead of a normal phrase when a
     /// cumulative-onscreen-time milestone is reached (see
     /// CharacterController.TickOnscreenTime). Optional - a character with

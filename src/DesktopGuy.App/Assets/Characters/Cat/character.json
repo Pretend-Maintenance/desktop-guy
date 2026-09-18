@@ -147,6 +147,36 @@
       "Happy Easter. The kingdom continues, as does my nap schedule."
     ]
   },
+  "dayPhrases": {
+    "monday": [
+      "Monday. The kingdom begrudgingly reopens for business.",
+      "The week begins. I shall preside over it from a sunny windowsill."
+    ],
+    "tuesday": [
+      "Tuesday proceeds, as ordained.",
+      "A Tuesday like any other. I remain flawless throughout."
+    ],
+    "wednesday": [
+      "Wednesday. The halfway point of my weekly reign.",
+      "The court has reached the middle of the week. Carry on."
+    ],
+    "thursday": [
+      "Thursday. The end draws near. I remain patient.",
+      "Almost the weekend. I have been counting. Regally."
+    ],
+    "friday": [
+      "Friday! The kingdom celebrates. I shall nap extra regally.",
+      "At last, Friday. Bring forth the good cushions."
+    ],
+    "saturday": [
+      "Saturday. No court in session. I rule from the sofa.",
+      "The kingdom rests today. So do I, more than usual."
+    ],
+    "sunday": [
+      "Sunday. A day of rest, as all my days are.",
+      "The kingdom observes Sunday quietly. I observe it from a sunbeam."
+    ]
+  },
   "affectionPhrases": [
     "Acceptable. You may continue.",
     "A queen keeps track of loyal company. You've proven quite loyal.",

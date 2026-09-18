@@ -151,6 +151,36 @@
       "Ploooo, spring snooks. Happy egg day, con con."
     ]
   },
+  "dayPhrases": {
+    "monday": [
+      "Con con, happy Moondoo. Bit of a rough start, snooks.",
+      "*grumbly stretch* Moondoo again. Ploooo."
+    ],
+    "tuesday": [
+      "Toozdoo, con con. Getting into it, snooks.",
+      "*yawns* Toozdoo already."
+    ],
+    "wednesday": [
+      "Wednesdoo! Con con, we're halfway, snooks!",
+      "*happy snort* hump day. I don't know what that means. Wednesdoo."
+    ],
+    "thursday": [
+      "Thursdoo, con con. Almost snooks-day.",
+      "*hopeful sniff* Thursdoo. So close."
+    ],
+    "friday": [
+      "Happy Froodooo, it's the end of the week! Snooks!",
+      "FROODOOO! Con con, best day, snooks!"
+    ],
+    "saturday": [
+      "SATTERDOO! Con con, no rules today, snooks!",
+      "*zoomies* it's Satterdoo!!"
+    ],
+    "sunday": [
+      "Happy Sundoo, con con. Lazy snooks day.",
+      "*flops* Sundoo. Best doo."
+    ]
+  },
   "affectionPhrases": [
     "Ooo con con! So much time together, so much snooks!",
     "*melts into a puddle of happy pug* ploooo",

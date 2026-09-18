@@ -1097,12 +1097,20 @@ public sealed class CharacterController
         }
     }
 
+    // Lowercase day-of-week keys matching DateTime.DayOfWeek's ordering
+    // (Sunday = 0), used to look up CharacterDefinition.DayPhrases.
+    private static readonly string[] DayOfWeekKeys =
+        { "sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday" };
+
     /// <summary>
     /// The general phrase pool, plus whichever time-of-day pool (morning/
     /// afternoon/evening/late-night) matches the clock right now, if that
     /// character defines any for this time - so "he mentions coffee in the
     /// morning" is just extra lines layered on top of the always-available
-    /// ones, not a separate thing that replaces them.
+    /// ones, not a separate thing that replaces them. During the morning
+    /// window specifically, also mixes in that day's DayPhrases if defined
+    /// (e.g. a Friday-specific greeting) - a character's own take on
+    /// announcing the day as part of its morning routine.
     /// </summary>
     private IReadOnlyList<string> GetCurrentPhrasePool()
     {
@@ -1122,15 +1130,21 @@ public sealed class CharacterController
             ? list
             : EmptyPhrases;
 
-        if (timeSpecific.Count == 0 && seasonal.Count == 0)
+        List<string> dayOfWeek = now.Hour is >= 5 and < 12 &&
+            _definition.DayPhrases.TryGetValue(DayOfWeekKeys[(int)now.DayOfWeek], out var dayList)
+                ? dayList
+                : EmptyPhrases;
+
+        if (timeSpecific.Count == 0 && seasonal.Count == 0 && dayOfWeek.Count == 0)
         {
             return _definition.Phrases;
         }
 
-        var combined = new List<string>(_definition.Phrases.Count + timeSpecific.Count + seasonal.Count);
+        var combined = new List<string>(_definition.Phrases.Count + timeSpecific.Count + seasonal.Count + dayOfWeek.Count);
         combined.AddRange(_definition.Phrases);
         combined.AddRange(timeSpecific);
         combined.AddRange(seasonal);
+        combined.AddRange(dayOfWeek);
         return combined;
     }
 

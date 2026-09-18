@@ -123,6 +123,36 @@
       "Happy Easter. I'd hide eggs but I'd probably just become one."
     ]
   },
+  "dayPhrases": {
+    "monday": [
+      "Monday. *deep wobble breath* we can do this.",
+      "*slow blink* Monday's here. Squish through it with me."
+    ],
+    "tuesday": [
+      "Tuesday. Just a regular wobble day.",
+      "*gentle jiggle* Tuesday, nothing special, and that's fine."
+    ],
+    "wednesday": [
+      "Wednesday! Halfway through, squish squish.",
+      "*wobbles proudly* made it to Wednesday."
+    ],
+    "thursday": [
+      "Thursday. Nearly there, hang in there.",
+      "*determined wobble* Thursday. So close now."
+    ],
+    "friday": [
+      "It's Friday! *happy wobble* best news all week.",
+      "FRIDAY! *excited jiggling*"
+    ],
+    "saturday": [
+      "Saturday! No agenda, just vibes and wobbling.",
+      "*melts happily* Saturday. Perfect wobble weather."
+    ],
+    "sunday": [
+      "Sunday. Cozy blanket day. Recharge wobble.",
+      "*settles in* Sunday. My favorite shape today is 'horizontal.'"
+    ]
+  },
   "affectionPhrases": [
     "That's a lot of time together. I'm basically vibrating.",
     "Okay, official record: we've been at this a while. Noted and appreciated.",

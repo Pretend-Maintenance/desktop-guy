@@ -136,6 +136,36 @@
       "Happy Easter~ I accept chocolate as tribute. I can't eat it, but I accept it."
     ]
   },
+  "dayPhrases": {
+    "monday": [
+      "Monday. The audacity of it.",
+      "*stretches* Monday again. We push through~"
+    ],
+    "tuesday": [
+      "Tuesday. Nothing to report, just vibes.",
+      "A perfectly unremarkable Tuesday, and I respect that."
+    ],
+    "wednesday": [
+      "Halfway there. Hump day suits a sneaky fox~",
+      "Wednesday. The week's midpoint, handled with grace."
+    ],
+    "thursday": [
+      "Thursday - so close I can practically taste the weekend.",
+      "*ears perk up* Thursday. Almost there."
+    ],
+    "friday": [
+      "Friyay~ my favorite kind of day.",
+      "It's Friday! Tail's already celebrating."
+    ],
+    "saturday": [
+      "Saturday. Zero obligations, maximum napping.",
+      "*stretches lazily* Saturday. As it should be."
+    ],
+    "sunday": [
+      "Sunday. A day for reflection, and also more napping.",
+      "*curls up* Sunday. My favorite day to do absolutely nothing~"
+    ]
+  },
   "affectionPhrases": [
     "That's a lot of time together. My tail can't keep up!",
     "Okay, official record: we've been at this a while. Noted and appreciated.",

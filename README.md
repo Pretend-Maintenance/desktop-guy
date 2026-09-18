@@ -513,6 +513,12 @@ sprite sheet, which is how new characters get added.
      properly per year, Good Friday through Easter Monday, rather than
      hardcoded to one date). See `CharacterController.GetSeasonalKey` for
      the exact date ranges.
+   - `dayPhrases`: optional, keyed by `"monday"` through `"sunday"` -
+     extra lines mixed in alongside `morningPhrases` specifically (so only
+     during that same 5am-noon window, not all day) on the matching day of
+     the week - a character's own way of greeting the specific day as part
+     of its morning routine, e.g. `"Happy Froodooo, it's the end of the
+     week!"` for Friday.
    - `affectionPhrases`: optional - special lines it might say once a
      cumulative-onscreen-time milestone is reached (see "How it behaves" above)
    - `togetherTimePhrases`: optional - same milestone moment as

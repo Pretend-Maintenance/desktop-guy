@@ -141,6 +141,36 @@
       "Rawr! (egg rawr)"
     ]
   },
+  "dayPhrases": {
+    "monday": [
+      "*groggy squawk* (Monday...)",
+      "*slow stomp* (ugh, Monday)"
+    ],
+    "tuesday": [
+      "*chirp* (Tuesday)",
+      "*neutral squawk* (just Tuesday)"
+    ],
+    "wednesday": [
+      "Rawr! (halfway day)",
+      "*proud stomp* (Wednesday!)"
+    ],
+    "thursday": [
+      "*hopeful chirp* (almost there)",
+      "*tail sways* (Thursday, so close)"
+    ],
+    "friday": [
+      "SQUAWK! (it's Friday!!)",
+      "*happy zoomies* (FRIDAY)"
+    ],
+    "saturday": [
+      "*happy stomping* (Saturday!)",
+      "Rawr rawr! (best day)"
+    ],
+    "sunday": [
+      "*sleepy chirp* (Sunday)",
+      "*flops over, content* (lazy Sunday)"
+    ]
+  },
   "affectionPhrases": [
     "*chirps approvingly, still counting*",
     "*happy stomping intensifies*",
